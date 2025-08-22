@@ -82,7 +82,18 @@ header {
     width: 100%;
 }
 
-.score-container, .timer-container, .game-controls-header {
+.score-container {
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem; /* Match other header items */
+    font-weight: bold; /* Match other header items */
+}
+
+.score-label {
+    margin-right: 0.5rem; /* Control spacing manually */
+}
+
+.timer-container, .game-controls-header {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -242,6 +253,7 @@ header {
     margin-bottom: 0.5rem;
 }
 
+
 /* Tooltip for showing correct answers */
 .tooltip {
     visibility: hidden;
@@ -310,6 +322,9 @@ header {
 }
 
 /* Accessibility */
+.hidden {
+    display: none !important;
+}
 .sr-only {
     position: absolute;
     width: 1px;

@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Display
         timerDisplay: document.getElementById('timer'),
+        scoreDisplay: document.getElementById('score'), // Re-add score display
+        headerFinalScore: document.getElementById('header-final-score'),
         finalScoreDisplay: document.getElementById('final-score'),
         liveAnnouncer: document.getElementById('live-announcer'),
     };
@@ -81,6 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGameBoard(initialState.alphagrams);
         updateTimerDisplay(initialState.timeLeft);
         showOverlay(null); // Hide all overlays
+        // Ensure header score is hidden and controls are visible at game start
+        elements.headerFinalScore.classList.add('hidden');
+        elements.timerDisplay.classList.remove('hidden');
+        elements.doneBtn.classList.remove('hidden');
+        elements.extraTimeBtn.classList.remove('hidden');
 
         [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
 
@@ -92,6 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const endGame = () => {
         const results = game.endGame();
         elements.finalScoreDisplay.textContent = Math.round(results.score);
+        // Ensure header score is hidden on game over screen
+        elements.headerFinalScore.classList.add('hidden');
         showOverlay(elements.gameOverScreen);
         announce(`Game over. Your final score is ${Math.round(results.score)}.`);
 
@@ -166,7 +175,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const reviewAnswers = () => {
-        showOverlay(null); // Just hide the overlay to show the board with answers
+        showOverlay(null); // Hide the overlay to show the board
+
+        // Get final score and display it in the header
+        const finalScore = Math.round(game.getGameState().score);
+        elements.scoreDisplay.textContent = finalScore;
+        elements.headerFinalScore.classList.remove('hidden');
+
+        // Hide in-game controls
+        elements.timerDisplay.classList.add('hidden');
+        elements.doneBtn.classList.add('hidden');
+        elements.extraTimeBtn.classList.add('hidden');
     };
 
     // --- Event Listeners ---

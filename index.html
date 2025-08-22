@@ -12,6 +12,10 @@
         <div id="live-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
         <header>
             <div class="header-content">
+                <div id="header-final-score" class="score-container hidden">
+                    <span class="score-label">Score:</span>
+                    <span class="score-value"><span id="score">0</span>/200</span>
+                </div>
                 <div class="timer-container">
                     <span id="timer" role="status">2:00</span>
                 </div>
@@ -60,7 +64,7 @@
             <div id="game-over" class="overlay">
                 <div class="overlay-content">
                     <h2>Game Over!</h2>
-                    <p>Your score: <span id="final-score">0</span></p>
+                    <p>Your final score is <span id="final-score">0</span>.</p>
                     <button id="play-again-btn" class="btn primary-btn">Play Again</button>
                     <button id="review-btn" class="btn secondary-btn">Review Answers</button>
                 </div>
