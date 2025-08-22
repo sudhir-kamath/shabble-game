@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const showOverlay = (overlay) => {
-        console.log('showOverlay called with:', overlay);
         document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
         if (overlay) {
             overlay.classList.add('active');
@@ -99,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const endGame = () => {
         const results = game.endGame();
-        elements.finalScoreDisplay.textContent = results.score;
+        elements.finalScoreDisplay.textContent = Math.round(results.score);
         showOverlay(elements.gameOverScreen);
         announce(`Game over. Your final score is ${results.score}.`);
 
@@ -129,11 +128,41 @@ document.addEventListener('DOMContentLoaded', () => {
             tooltip.className = 'tooltip';
             tooltip.textContent = `Correct: ${result.validWords.join(', ') || 'None'}`;
             card.appendChild(tooltip);
+
+            // Add score display
+            const scoreEl = document.createElement('div');
+            scoreEl.className = 'alphagram-score';
+            scoreEl.textContent = `Score: ${Math.round(result.score)}`;
+            card.appendChild(scoreEl);
+
+            // Add event listeners for dynamic tooltip positioning
+            card.addEventListener('mouseover', (e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (!tooltip) return;
+
+                const cardRect = e.currentTarget.getBoundingClientRect();
+                const boardRect = elements.gameBoard.getBoundingClientRect();
+                const isTopHalf = (cardRect.top - boardRect.top) < (boardRect.height / 2);
+
+                tooltip.classList.remove('pos-above', 'pos-below');
+                if (isTopHalf) {
+                    tooltip.classList.add('pos-below');
+                } else {
+                    tooltip.classList.add('pos-above');
+                }
+                tooltip.classList.add('show');
+            });
+
+            card.addEventListener('mouseout', (e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (tooltip) {
+                    tooltip.classList.remove('show');
+                }
+            });
         });
     };
 
     const reviewAnswers = () => {
-        console.log('reviewAnswers called');
         showOverlay(null); // Just hide the overlay to show the board with answers
     };
 

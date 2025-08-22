@@ -250,7 +250,7 @@ class ShabbleGame {
             return { isCorrect: true, score: 10 };
         } else if (correctAnswers.length > 0) {
             // Partial credit for some correct answers
-            const partialScore = Math.round((10 * (correctAnswers.length / validAnswers.length)) * 100) / 100;
+            const partialScore = Math.round(10 * (correctAnswers.length / validAnswers.length));
             return { isCorrect: 'partial', score: partialScore };
         } else {
             return { isCorrect: false, score: 0 };
