@@ -218,6 +218,12 @@ class ShabbleGame {
         }
         
         // Handle real alphagrams
+
+        // If user incorrectly marks a real alphagram as fake, penalize them.
+        if (userInput.toLowerCase().trim() === 'x') {
+            return { isCorrect: false, score: -5 };
+        }
+
         const userAnswers = userInput
             .toLowerCase()
             .split(/[ ,]+/)
