@@ -15,8 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
         backBtn: document.getElementById('back-btn'),
         playAgainBtn: document.getElementById('play-again-btn'),
         reviewBtn: document.getElementById('review-btn'),
-        pauseBtn: document.getElementById('pause-btn'),
-        giveUpBtn: document.getElementById('give-up-btn'),
         doneBtn: document.getElementById('done-btn'),
         extraTimeBtn: document.getElementById('extra-time'),
         themeToggleBtn: document.getElementById('theme-toggle'),
@@ -89,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateScoreDisplay(initialState.score);
         showOverlay(null); // Hide all overlays
 
-        // Enable game buttons
-        [elements.pauseBtn, elements.giveUpBtn, elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
+        [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
+
 
         game.onTimeUpdate = updateTimerDisplay; // Hook up timer updates
         announce('Game started. Good luck!');
@@ -103,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         announce(`Game over. Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons
-        [elements.pauseBtn, elements.giveUpBtn, elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
+        [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board
         results.alphagrams.forEach(result => {
@@ -182,15 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.playAgainBtn.addEventListener('click', startGame);
     elements.reviewBtn.addEventListener('click', reviewAnswers);
     elements.doneBtn.addEventListener('click', endGame);
-    elements.giveUpBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to give up?')) {
-            endGame();
-        }
-    });
-
-    elements.instructionsBtn.addEventListener('click', () => showOverlay(elements.instructionsScreen));
-    elements.backBtn.addEventListener('click', () => showOverlay(elements.startScreen));
-
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
 
     // Load theme from localStorage

@@ -18,11 +18,14 @@
                 </div>
                 <div class="timer-container">
                     <span id="timer" role="status">2:00</span>
+                </div>
+                <div class="game-controls-header">
+                    <button id="done-btn" class="btn primary-btn" disabled>
+                        <i class="fas fa-check-circle"></i> Done
+                    </button>
                     <button id="extra-time" class="btn" title="Get 30 extra seconds (-25 points)" aria-label="Get 30 extra seconds for a cost of 25 points" disabled>
                         <i class="fas fa-hourglass-half"></i> +30s
                     </button>
-                </div>
-                <div class="theme-toggle">
                     <button id="theme-toggle" class="btn" aria-label="Toggle dark/light mode">
                         <i class="fas fa-moon"></i>
                     </button>
@@ -68,21 +71,7 @@
             </div>
         </main>
 
-        <footer>
-            <div class="footer-content">
-                <button id="pause-btn" class="btn" disabled>
-                    <i class="fas fa-pause"></i> Pause
-                </button>
-                <button id="give-up-btn" class="btn" disabled>
-                    <i class="fas fa-flag"></i> Give Up
-                </button>
-                <button id="done-btn" class="btn primary-btn" disabled>
-                    <i class="fas fa-check-circle"></i> Done
-                </button>
-            </div>
-        </footer>
+        <script type="module" src="js/main.js"></script>
     </div>
-
-    <script type="module" src="js/main.js"></script>
 </body>
 </html>

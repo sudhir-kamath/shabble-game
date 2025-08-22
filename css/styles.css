@@ -65,8 +65,9 @@ body {
 /* Header */
 header {
     background-color: var(--card-bg);
-    padding: 1rem 0;
-    box-shadow: var(--shadow);
+    padding: 1rem;
+    border-bottom: 2px solid var(--card-border);
+    border-radius: 8px 8px 0 0;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -76,17 +77,22 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 1rem;
+    width: 100%;
 }
 
-.score-container, .timer-container {
+.score-container, .timer-container, .game-controls-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
     font-size: 1.2rem;
     font-weight: bold;
+}
+
+.game-controls-header {
+    justify-content: flex-end;
+    flex-grow: 1;
 }
 
 /* Game Board */
@@ -184,25 +190,6 @@ header {
     background-color: rgba(49, 130, 206, 0.1);
 }
 
-/* Footer */
-footer {
-    background-color: var(--card-bg);
-    padding: 1rem 0;
-    margin-top: auto;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    bottom: 0;
-    z-index: 100;
-}
-
-.footer-content {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-}
 
 /* Overlays */
 .overlay {
@@ -340,14 +327,18 @@ footer {
     .game-board {
         grid-template-columns: repeat(3, 1fr); /* 3 columns on tablets */
     }
-    
+
     .header-content {
         flex-direction: column;
-        gap: 1rem;
+        align-items: stretch;
     }
-    
-    .footer-content {
-        flex-wrap: wrap;
+
+    .score-container, .timer-container, .game-controls-header {
+        justify-content: space-between;
+    }
+
+    .game-controls-header {
+        justify-content: center;
     }
 }
 
