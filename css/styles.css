@@ -333,7 +333,7 @@ header {
         align-items: stretch;
     }
 
-    .score-container, .timer-container, .game-controls-header {
+    .timer-container, .game-controls-header {
         justify-content: space-between;
     }
 

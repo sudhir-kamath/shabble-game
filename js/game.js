@@ -262,15 +262,18 @@ class ShabbleGame {
         if (this.gameState.usedExtraTime || !this.gameState.isPlaying || this.gameState.isPaused) {
             return { success: false, message: 'Extra time already used or game not active' };
         }
-        
-        this.gameState.timeLeft += 30;
+
+        this.gameState.timeLeft = Math.min(120, this.gameState.timeLeft + 30); // Add 30s, cap at 120
         this.gameState.usedExtraTime = true;
-        this.gameState.score = Math.max(0, this.gameState.score - 25); // Deduct 25 points
-        
+        this.gameState.score -= 25; // Deduct 25 points, allow negative score
+
+        // Manually trigger a timer update for the UI
+        if (typeof this.onTimeUpdate === 'function') {
+            this.onTimeUpdate(this.gameState.timeLeft);
+        }
+
         return {
             success: true,
-            timeAdded: 30,
-            scoreDeduction: 25,
             newScore: this.gameState.score,
             newTimeLeft: this.gameState.timeLeft
         };

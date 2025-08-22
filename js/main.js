@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Display
         timerDisplay: document.getElementById('timer'),
-        scoreDisplay: document.getElementById('score'),
         finalScoreDisplay: document.getElementById('final-score'),
         liveAnnouncer: document.getElementById('live-announcer'),
     };
@@ -44,9 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (timeLeft === 10) announce('Ten seconds remaining.');
     };
 
-    const updateScoreDisplay = (score) => {
-        elements.scoreDisplay.textContent = score;
-    };
 
     const renderGameBoard = (alphagrams) => {
         elements.gameBoard.innerHTML = '';
@@ -84,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const initialState = game.startNewGame();
         renderGameBoard(initialState.alphagrams);
         updateTimerDisplay(initialState.timeLeft);
-        updateScoreDisplay(initialState.score);
         showOverlay(null); // Hide all overlays
 
         [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
@@ -181,6 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.reviewBtn.addEventListener('click', reviewAnswers);
     elements.doneBtn.addEventListener('click', endGame);
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
+
+    elements.extraTimeBtn.addEventListener('click', () => {
+        const result = game.useExtraTime();
+        if (result.success) {
+            updateTimerDisplay(result.newTimeLeft);
+            elements.extraTimeBtn.disabled = true; // Disable after use
+            announce('30 seconds added. 25 points deducted.');
+        }
+    });
 
     // Load theme from localStorage
     if (localStorage.getItem('theme') === 'light') {
