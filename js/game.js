@@ -133,6 +133,11 @@ class ShabbleGame {
             }
         });
         
+        // Apply penalty for extra time if used
+        if (this.gameState.usedExtraTime) {
+            totalScore -= 25;
+        }
+
         this.gameState.score = totalScore;
         
         // Calculate time taken
@@ -153,6 +158,7 @@ class ShabbleGame {
         };
     }
     
+
     // Update the timer display
     updateTimer() {
         if (typeof this.onTimeUpdate === 'function') {
@@ -271,8 +277,6 @@ class ShabbleGame {
 
         this.gameState.timeLeft = Math.min(120, this.gameState.timeLeft + 30); // Add 30s, cap at 120
         this.gameState.usedExtraTime = true;
-        this.gameState.score -= 25; // Deduct 25 points, allow negative score
-
         // Manually trigger a timer update for the UI
         if (typeof this.onTimeUpdate === 'function') {
             this.onTimeUpdate(this.gameState.timeLeft);
@@ -280,7 +284,6 @@ class ShabbleGame {
 
         return {
             success: true,
-            newScore: this.gameState.score,
             newTimeLeft: this.gameState.timeLeft
         };
     }

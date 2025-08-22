@@ -234,7 +234,14 @@ header {
     box-shadow: var(--shadow);
 }
 
-.overlay h1, .overlay h2 {
+#instructions {
+    align-items: flex-start; /* Align content to the top */
+    overflow-y: auto; /* Allow the entire overlay to scroll */
+    padding-top: 5vh; /* Add some padding at the top */
+    padding-bottom: 5vh; /* Add padding at the bottom */
+}
+
+.overlay-content h1, .overlay-content h2 {
     margin-bottom: 1rem;
     color: var(--primary);
 }

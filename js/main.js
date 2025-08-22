@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Buttons
         startBtn: document.getElementById('start-btn'),
         instructionsBtn: document.getElementById('instructions-btn'),
+        headerInstructionsBtn: document.getElementById('header-instructions-btn'),
         backBtn: document.getElementById('back-btn'),
         playAgainBtn: document.getElementById('play-again-btn'),
         reviewBtn: document.getElementById('review-btn'),
@@ -193,6 +194,27 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.startBtn.addEventListener('click', startGame);
     elements.playAgainBtn.addEventListener('click', startGame);
     elements.reviewBtn.addEventListener('click', reviewAnswers);
+
+    const showInstructions = () => {
+        elements.instructionsScreen.classList.add('active');
+    };
+
+    elements.instructionsBtn.addEventListener('click', showInstructions);
+
+    elements.headerInstructionsBtn.addEventListener('click', () => {
+        if (game.getGameState().isPlaying) {
+            game.pauseGame();
+            showInstructions();
+        }
+    });
+
+    elements.backBtn.addEventListener('click', () => {
+        elements.instructionsScreen.classList.remove('active');
+        if (game.getGameState().isPaused) {
+            game.resumeGame();
+        }
+    });
+
     elements.doneBtn.addEventListener('click', endGame);
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
 

@@ -26,6 +26,9 @@
                     <button id="extra-time" class="btn" title="Get 30 extra seconds (-25 points)" aria-label="Get 30 extra seconds for a cost of 25 points" disabled>
                         <i class="fas fa-hourglass-half"></i> +30s
                     </button>
+                    <button id="header-instructions-btn" class="btn" aria-label="How to Play">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
                     <button id="theme-toggle" class="btn" aria-label="Toggle dark/light mode">
                         <i class="fas fa-moon"></i>
                     </button>
@@ -55,7 +58,14 @@
                         <li>Type 'x' if you think the letter set cannot form a valid word.</li>
                         <li>For multiple valid words, separate them with spaces or commas.</li>
                         <li>You have 2 minutes to solve as many as you can.</li>
-                        <li>Use the +30s button once for extra time (costs 25 points).</li>
+                    </ul>
+                    <h2>Scoring</h2>
+                    <ul>
+                        <li><strong>+10 points</strong> for a fully correct answer or correctly identifying a fake with 'x'.</li>
+                        <li><strong>Partial points</strong> are awarded for partially correct answers.</li>
+                        <li><strong>-5 points</strong> for submitting any incorrect words.</li>
+                        <li><strong>-5 points</strong> for incorrectly marking a real word set as 'x'.</li>
+                        <li><strong>-25 points</strong> for using the extra time button.</li>
                     </ul>
                     <button id="back-btn" class="btn primary-btn">Back to Game</button>
                 </div>
