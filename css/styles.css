@@ -99,23 +99,25 @@ header {
 }
 
 .alphagram-card {
+    position: relative; /* For tooltip positioning */
     background-color: var(--card-bg);
     border: 2px solid var(--card-border);
     border-radius: 8px;
-    padding: 1rem;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.alphagram-card {
-    position: relative; /* Needed for tooltip positioning */
+    align-items: center;
+    justify-content: center; /* Center content vertically */
+    gap: 10px; /* Add space between elements */
+    transition: all 0.3s ease;
+    min-height: 100px; /* Ensure a minimum height */
+    overflow: visible; /* Allow tooltip to overflow */
 }
 
 .alphagram-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    z-index: 20; /* Bring hovered card to the front */
 }
 
 .alphagram {
@@ -256,19 +258,23 @@ footer {
 /* Tooltip for showing correct answers */
 .tooltip {
     visibility: hidden;
-    width: 120px;
+    width: auto; /* Allow width to adjust to content */
+    min-width: 120px; /* Set a minimum width */
+    max-width: 200px; /* Set a maximum width */
     background-color: #555;
     color: #fff;
     text-align: center;
     border-radius: 6px;
-    padding: 5px 0;
+    padding: 8px;
     position: absolute;
     z-index: 10;
     left: 50%;
-    margin-left: -60px;
+    transform: translateX(-50%); /* Center the tooltip */
     opacity: 0;
     transition: opacity 0.3s, transform 0.3s;
     pointer-events: none; /* Prevent tooltip from interfering with mouse events */
+    white-space: normal; /* Allow text to wrap */
+    word-wrap: break-word; /* Break long words */
 }
 
 .tooltip.show {
@@ -277,8 +283,9 @@ footer {
 }
 
 .tooltip.pos-above {
-    bottom: 105%;
+    bottom: 100%;
     top: auto;
+    transform: translate(-50%, -10px); /* Adjust vertical position */
 }
 
 .tooltip.pos-below {

@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const results = game.endGame();
         elements.finalScoreDisplay.textContent = Math.round(results.score);
         showOverlay(elements.gameOverScreen);
-        announce(`Game over. Your final score is ${results.score}.`);
+        announce(`Game over. Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons
         [elements.pauseBtn, elements.giveUpBtn, elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
@@ -140,17 +140,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tooltip = e.currentTarget.querySelector('.tooltip');
                 if (!tooltip) return;
 
+                // First, make it visible to measure it
+                tooltip.classList.add('show');
+
                 const cardRect = e.currentTarget.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
                 const boardRect = elements.gameBoard.getBoundingClientRect();
-                const isTopHalf = (cardRect.top - boardRect.top) < (boardRect.height / 2);
+
+                // Check if there's enough space below
+                const spaceBelow = boardRect.bottom - cardRect.bottom;
+                const spaceAbove = cardRect.top - boardRect.top;
 
                 tooltip.classList.remove('pos-above', 'pos-below');
-                if (isTopHalf) {
+
+                if (spaceBelow >= tooltipRect.height + 10) {
                     tooltip.classList.add('pos-below');
-                } else {
+                } else if (spaceAbove >= tooltipRect.height + 10) {
                     tooltip.classList.add('pos-above');
+                } else {
+                    // Default to below if neither has enough space (should be rare)
+                    tooltip.classList.add('pos-below');
                 }
-                tooltip.classList.add('show');
             });
 
             card.addEventListener('mouseout', (e) => {
