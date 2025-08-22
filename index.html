@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shabble! - 4-Letter Word Game</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <div id="live-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+        <header>
+            <div class="header-content">
+                <div class="score-container">
+                    <span>Score: </span>
+                    <span id="score" role="status">0</span>
+                </div>
+                <div class="timer-container">
+                    <span id="timer" role="status">2:00</span>
+                    <button id="extra-time" class="btn" title="Get 30 extra seconds (-25 points)" aria-label="Get 30 extra seconds for a cost of 25 points" disabled>
+                        <i class="fas fa-hourglass-half"></i> +30s
+                    </button>
+                </div>
+                <div class="theme-toggle">
+                    <button id="theme-toggle" class="btn" aria-label="Toggle dark/light mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div id="game-board" class="game-board">
+                <!-- Alphagram cards will be generated here by JavaScript -->
+            </div>
+
+            <div id="start-screen" class="overlay active">
+                <div class="overlay-content">
+                    <h1>Shabble!</h1>
+                    <p>Unscramble the letters to form valid 4-letter words. Mark fakes with 'x'.</p>
+                    <button id="start-btn" class="btn primary-btn">Start Game</button>
+                    <button id="instructions-btn" class="btn secondary-btn">How to Play</button>
+                </div>
+            </div>
+
+            <div id="instructions" class="overlay">
+                <div class="overlay-content">
+                    <h2>How to Play</h2>
+                    <ul>
+                        <li>Unscramble each set of letters to form valid 4-letter words.</li>
+                        <li>Type 'x' if you think the letter set cannot form a valid word.</li>
+                        <li>For multiple valid words, separate them with spaces or commas.</li>
+                        <li>You have 2 minutes to solve as many as you can.</li>
+                        <li>Use the +30s button once for extra time (costs 25 points).</li>
+                    </ul>
+                    <button id="back-btn" class="btn primary-btn">Back to Game</button>
+                </div>
+            </div>
+
+            <div id="game-over" class="overlay">
+                <div class="overlay-content">
+                    <h2>Game Over!</h2>
+                    <p>Your score: <span id="final-score">0</span></p>
+                    <button id="play-again-btn" class="btn primary-btn">Play Again</button>
+                    <button id="review-btn" class="btn secondary-btn">Review Answers</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <button id="pause-btn" class="btn" disabled>
+                    <i class="fas fa-pause"></i> Pause
+                </button>
+                <button id="give-up-btn" class="btn" disabled>
+                    <i class="fas fa-flag"></i> Give Up
+                </button>
+                <button id="done-btn" class="btn primary-btn" disabled>
+                    <i class="fas fa-check-circle"></i> Done
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

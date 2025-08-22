@@ -1,0 +1,171 @@
+import { game } from './game.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
+    const elements = {
+        // Screens & Overlays
+        startScreen: document.getElementById('start-screen'),
+        instructionsScreen: document.getElementById('instructions'),
+        gameOverScreen: document.getElementById('game-over'),
+        gameBoard: document.getElementById('game-board'),
+
+        // Buttons
+        startBtn: document.getElementById('start-btn'),
+        instructionsBtn: document.getElementById('instructions-btn'),
+        backBtn: document.getElementById('back-btn'),
+        playAgainBtn: document.getElementById('play-again-btn'),
+        reviewBtn: document.getElementById('review-btn'),
+        pauseBtn: document.getElementById('pause-btn'),
+        giveUpBtn: document.getElementById('give-up-btn'),
+        doneBtn: document.getElementById('done-btn'),
+        extraTimeBtn: document.getElementById('extra-time'),
+        themeToggleBtn: document.getElementById('theme-toggle'),
+
+        // Display
+        timerDisplay: document.getElementById('timer'),
+        scoreDisplay: document.getElementById('score'),
+        finalScoreDisplay: document.getElementById('final-score'),
+        liveAnnouncer: document.getElementById('live-announcer'),
+    };
+
+    // --- UI Update Functions ---
+
+    const announce = (message) => {
+        elements.liveAnnouncer.textContent = message;
+    };
+
+    const updateTimerDisplay = (timeLeft) => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        elements.timerDisplay.textContent = timeString;
+
+        // Announce time at key intervals
+        if (timeLeft === 60) announce('One minute remaining.');
+        if (timeLeft === 30) announce('Thirty seconds remaining.');
+        if (timeLeft === 10) announce('Ten seconds remaining.');
+    };
+
+    const updateScoreDisplay = (score) => {
+        elements.scoreDisplay.textContent = score;
+    };
+
+    const renderGameBoard = (alphagrams) => {
+        elements.gameBoard.innerHTML = '';
+        alphagrams.forEach(({ alphagram }, index) => {
+            const card = document.createElement('div');
+            card.className = 'alphagram-card';
+            card.dataset.alphagram = alphagram;
+            const inputId = `alphagram-input-${index}`;
+
+            card.innerHTML = `
+                <label for="${inputId}" class="alphagram">${alphagram}</label>
+                <input type="text" id="${inputId}" class="answer-input" placeholder="Your answer..." autocomplete="off">
+            `;
+            elements.gameBoard.appendChild(card);
+        });
+    };
+
+    const showOverlay = (overlay) => {
+        console.log('showOverlay called with:', overlay);
+        document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
+        if (overlay) {
+            overlay.classList.add('active');
+        }
+    };
+
+    const toggleTheme = () => {
+        document.body.classList.toggle('light-mode');
+        const isLightMode = document.body.classList.contains('light-mode');
+        elements.themeToggleBtn.innerHTML = isLightMode ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+        localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+    };
+
+    // --- Game Logic Integration ---
+
+    const startGame = () => {
+        const initialState = game.startNewGame();
+        renderGameBoard(initialState.alphagrams);
+        updateTimerDisplay(initialState.timeLeft);
+        updateScoreDisplay(initialState.score);
+        showOverlay(null); // Hide all overlays
+
+        // Enable game buttons
+        [elements.pauseBtn, elements.giveUpBtn, elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
+
+        game.onTimeUpdate = updateTimerDisplay; // Hook up timer updates
+        announce('Game started. Good luck!');
+    };
+
+    const endGame = () => {
+        const results = game.endGame();
+        elements.finalScoreDisplay.textContent = results.score;
+        showOverlay(elements.gameOverScreen);
+        announce(`Game over. Your final score is ${results.score}.`);
+
+        // Disable game buttons
+        [elements.pauseBtn, elements.giveUpBtn, elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
+
+        // Show results on the board
+        results.alphagrams.forEach(result => {
+            const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
+            if (!card) return; // Card might not be on the board if the game resets quickly
+            const input = card.querySelector('.answer-input');
+            input.value = result.userInput;
+            input.disabled = true;
+
+            card.classList.remove('correct', 'incorrect', 'partial');
+            if (result.isCorrect === true) card.classList.add('correct');
+            else if (result.isCorrect === false) card.classList.add('incorrect');
+            else if (result.isCorrect === 'partial') card.classList.add('partial');
+
+            // Prevent adding duplicate tooltips
+            if (card.querySelector('.tooltip')) {
+                card.querySelector('.tooltip').remove();
+            }
+
+            // Add tooltip with correct answers
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = `Correct: ${result.validWords.join(', ') || 'None'}`;
+            card.appendChild(tooltip);
+        });
+    };
+
+    const reviewAnswers = () => {
+        console.log('reviewAnswers called');
+        showOverlay(null); // Just hide the overlay to show the board with answers
+    };
+
+    // --- Event Listeners ---
+
+    elements.startBtn.addEventListener('click', startGame);
+    elements.playAgainBtn.addEventListener('click', startGame);
+    elements.reviewBtn.addEventListener('click', reviewAnswers);
+    elements.doneBtn.addEventListener('click', endGame);
+    elements.giveUpBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to give up?')) {
+            endGame();
+        }
+    });
+
+    elements.instructionsBtn.addEventListener('click', () => showOverlay(elements.instructionsScreen));
+    elements.backBtn.addEventListener('click', () => showOverlay(elements.startScreen));
+
+    elements.themeToggleBtn.addEventListener('click', toggleTheme);
+
+    // Load theme from localStorage
+    if (localStorage.getItem('theme') === 'light') {
+        toggleTheme();
+    }
+
+    // Handle answer submission on input change
+    elements.gameBoard.addEventListener('change', (e) => {
+        if (e.target.classList.contains('answer-input')) {
+            const card = e.target.closest('.alphagram-card');
+            const alphagram = card.dataset.alphagram;
+            const answer = e.target.value;
+            game.submitAnswer(alphagram, answer);
+        }
+    });
+});
