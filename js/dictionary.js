@@ -659,8 +659,20 @@ function generateFakeAlphagram() {
     };
 }
 
-// Generate a game with the specified number of real and fake alphagrams
-function generateGame(realCount = 15, fakeCount = 5) {
+// Generate a game with randomized real and fake alphagrams (always totaling 20)
+function generateGame() {
+    console.log('generateGame() function called!');
+    
+    // Randomly choose between 15-17 real alphagrams
+    const randomValue = Math.random();
+    const randomMultiplied = randomValue * 3;
+    const randomFloored = Math.floor(randomMultiplied);
+    const realCount = 15 + randomFloored;
+    const fakeCount = 20 - realCount;
+    
+    console.log(`Random value: ${randomValue}, Real count: ${realCount}, Fake count: ${fakeCount}`);
+    
+    
     // Make sure we don't exceed available alphagrams with multiple words
     const alphagrams = Array.from(ALPHAGRAM_MAP.entries())
         .filter(([_, words]) => words.length > 0)

@@ -1,6 +1,9 @@
 import { game } from './game.js';
 
+console.log('main.js loaded successfully');
+
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing game...');
     // DOM Elements
     const elements = {
         // Screens & Overlays
@@ -81,17 +84,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const startGame = () => {
         const initialState = game.startNewGame();
-        renderGameBoard(initialState.alphagrams);
-        updateTimerDisplay(initialState.timeLeft);
-        showOverlay(null); // Hide all overlays
-        // Ensure header score is hidden and controls are visible at game start
-        elements.headerFinalScore.classList.add('hidden');
-        elements.timerDisplay.classList.remove('hidden');
-        elements.doneBtn.classList.remove('hidden');
-        elements.extraTimeBtn.classList.remove('hidden');
 
+        // --- UI Reset --- 
+        // Ensure a clean slate regardless of the previous screen (e.g., review screen)
+        showOverlay(null); // Hide all overlays (like game-over)
+        elements.headerFinalScore.classList.add('hidden'); // Hide review score
+        elements.timerDisplay.classList.remove('hidden'); // Show timer
+        elements.doneBtn.classList.remove('hidden'); // Show game buttons
+        elements.extraTimeBtn.classList.remove('hidden');
         [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
 
+        // --- Render New Game --- 
+        renderGameBoard(initialState.alphagrams);
+        updateTimerDisplay(initialState.timeLeft);
+
+        // --- Final Setup ---
+        // This is critical: ensures the new inputs are enabled and empty.
+        elements.gameBoard.querySelectorAll('.answer-input').forEach(input => {
+            input.disabled = false;
+            input.value = '';
+        });
 
         game.onTimeUpdate = updateTimerDisplay; // Hook up timer updates
         announce('Game started. Good luck!');

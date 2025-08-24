@@ -27,6 +27,11 @@ class ShabbleGame {
     
     // Start a new game
     startNewGame() {
+        console.log('Starting new game...');
+        console.log('About to call generateGame()...');
+        const generatedAlphagrams = generateGame();
+        console.log('generateGame() returned:', generatedAlphagrams.length, 'alphagrams');
+        
         // Reset game state
         this.gameState = {
             isPlaying: true,
@@ -34,7 +39,7 @@ class ShabbleGame {
             timeLeft: 120,
             score: 0,
             usedExtraTime: false,
-            alphagrams: generateGame(15, 5), // 15 real, 5 fake
+            alphagrams: generatedAlphagrams, // Randomized: 15-17 real, 3-5 fake (total 20)
             answers: {},
             startTime: new Date(),
             timerInterval: null
