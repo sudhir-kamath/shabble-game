@@ -27,10 +27,7 @@ class ShabbleGame {
     
     // Start a new game
     startNewGame() {
-        console.log('Starting new game...');
-        console.log('About to call generateGame()...');
         const generatedAlphagrams = generateGame();
-        console.log('generateGame() returned:', generatedAlphagrams.length, 'alphagrams');
         
         // Reset game state
         this.gameState = {

@@ -606,43 +606,54 @@ function getRandomWord() {
     return DICTIONARY[Math.floor(Math.random() * DICTIONARY.length)];
 }
 
-// Generate a fake alphagram that has no valid words
+// Generate a fake alphagram that doesn't have valid anagrams
 function generateFakeAlphagram() {
-    const vowels = 'aeiou';
-    const consonants = 'bcdfghjklmnpqrstvwxyz';
-    let attempts = 0;
+    const vowels = ['A', 'E', 'I', 'O', 'U'];
+    const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'W']; // Excluded J, X, Q, K, Z, Y
+    const excludedLetters = ['J', 'X', 'Q', 'K', 'Z', 'Y'];
+    
     const maxAttempts = 100;
+    let attempts = 0;
+    
+    // Get all valid alphagrams as an array for random selection
+    const validAlphagrams = Array.from(ALPHAGRAM_MAP.keys());
     
     while (attempts < maxAttempts) {
-        // Generate a random 4-letter combination with at least one vowel
-        let letters = '';
-        const hasVowel = Math.random() > 0.2; // 80% chance to have at least one vowel
+        // Step 1: Select a random valid alphagram
+        const baseAlphagram = validAlphagrams[Math.floor(Math.random() * validAlphagrams.length)];
+        const letters = baseAlphagram.toUpperCase().split('');
         
-        if (hasVowel) {
-            // Add 1-2 vowels
-            const vowelCount = Math.random() > 0.5 ? 2 : 1;
-            for (let i = 0; i < vowelCount; i++) {
-                letters += vowels[Math.floor(Math.random() * vowels.length)];
-            }
-            // Add remaining consonants
-            for (let i = 0; i < 4 - vowelCount; i++) {
-                letters += consonants[Math.floor(Math.random() * consonants.length)];
-            }
-        } else {
-            // All consonants (rare)
-            for (let i = 0; i < 4; i++) {
-                letters += consonants[Math.floor(Math.random() * consonants.length)];
-            }
+        // Step 2: Remove a random letter
+        const positionToRemove = Math.floor(Math.random() * letters.length);
+        const removedLetter = letters[positionToRemove];
+        letters.splice(positionToRemove, 1);
+        
+        // Step 3: Determine if removed letter was a vowel or consonant
+        const wasVowel = vowels.includes(removedLetter);
+        const replacementOptions = wasVowel ? vowels : consonants;
+        
+        // Step 4: Add a new letter of the same type (avoiding excluded letters)
+        let newLetter;
+        let letterAttempts = 0;
+        do {
+            newLetter = replacementOptions[Math.floor(Math.random() * replacementOptions.length)];
+            letterAttempts++;
+        } while (excludedLetters.includes(newLetter) && letterAttempts < 20);
+        
+        // If we couldn't find a non-excluded letter, skip this attempt
+        if (excludedLetters.includes(newLetter)) {
+            attempts++;
+            continue;
         }
         
-        // Shuffle the letters
-        letters = letters.split('').sort(() => Math.random() - 0.5).join('');
-        const alphagram = createAlphagram(letters);
+        // Step 5: Add the new letter and create alphagram (ensure alphabetic order)
+        letters.push(newLetter);
+        const newAlphagram = letters.sort().join('');
         
-        // Check if this alphagram has no valid words
-        if (!ALPHAGRAM_MAP.has(alphagram)) {
+        // Step 6: Check if this new alphagram has any valid anagrams
+        if (!hasValidAnagrams(newAlphagram)) {
             return {
-                alphagram: alphagram.toUpperCase(),
+                alphagram: newAlphagram,
                 validWords: [],
                 isFake: true
             };
@@ -653,24 +664,87 @@ function generateFakeAlphagram() {
     
     // Fallback: return a known fake if we couldn't generate one
     return {
-        alphagram: 'XZYK',
+        alphagram: 'CDPS',
         validWords: [],
         isFake: true
     };
 }
 
+// Helper function to check if an alphagram has any valid anagrams
+function hasValidAnagrams(alphagram) {
+    // First check if it's already in our valid alphagram map
+    if (ALPHAGRAM_MAP.has(alphagram.toLowerCase())) {
+        return true;
+    }
+    
+    // Generate all permutations and check against dictionary
+    const permutations = generatePermutations(alphagram);
+    
+    for (const permutation of permutations) {
+        if (DICTIONARY_SET.has(permutation.toLowerCase())) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Helper function to generate all permutations of a string
+function generatePermutations(str) {
+    if (str.length <= 1) return [str];
+    
+    const permutations = [];
+    const chars = str.split('');
+    
+    // Use a more efficient approach for longer strings
+    if (str.length > 7) {
+        // For longer strings, just sample some permutations to avoid performance issues
+        const sampleSize = Math.min(1000, factorial(str.length));
+        const seen = new Set();
+        
+        for (let i = 0; i < sampleSize; i++) {
+            const shuffled = [...chars].sort(() => Math.random() - 0.5).join('');
+            if (!seen.has(shuffled)) {
+                seen.add(shuffled);
+                permutations.push(shuffled);
+            }
+        }
+        
+        return permutations;
+    }
+    
+    // For shorter strings, generate all permutations
+    function permute(arr, start = 0) {
+        if (start === arr.length - 1) {
+            permutations.push(arr.join(''));
+            return;
+        }
+        
+        for (let i = start; i < arr.length; i++) {
+            [arr[start], arr[i]] = [arr[i], arr[start]];
+            permute(arr, start + 1);
+            [arr[start], arr[i]] = [arr[i], arr[start]];
+        }
+    }
+    
+    permute([...chars]);
+    return [...new Set(permutations)]; // Remove duplicates
+}
+
+// Helper function to calculate factorial (for sampling logic)
+function factorial(n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
 // Generate a game with randomized real and fake alphagrams (always totaling 20)
 function generateGame() {
-    console.log('generateGame() function called!');
-    
     // Randomly choose between 15-17 real alphagrams
     const randomValue = Math.random();
     const randomMultiplied = randomValue * 3;
     const randomFloored = Math.floor(randomMultiplied);
     const realCount = 15 + randomFloored;
     const fakeCount = 20 - realCount;
-    
-    console.log(`Random value: ${randomValue}, Real count: ${realCount}, Fake count: ${fakeCount}`);
     
     
     // Make sure we don't exceed available alphagrams with multiple words
