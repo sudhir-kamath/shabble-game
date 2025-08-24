@@ -204,7 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
 
     elements.startBtn.addEventListener('click', startGame);
-    elements.playAgainBtn.addEventListener('click', startGame);
+    elements.playAgainBtn.addEventListener('click', () => {
+        console.log('Play Again button clicked');
+        startGame();
+    });
     elements.reviewBtn.addEventListener('click', reviewAnswers);
 
     const showInstructions = () => {
