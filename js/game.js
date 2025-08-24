@@ -33,7 +33,7 @@ class ShabbleGame {
         this.gameState = {
             isPlaying: true,
             isPaused: false,
-            timeLeft: 10,
+            timeLeft: 120,
             score: 0,
             usedExtraTime: false,
             alphagrams: generatedAlphagrams, // Randomized: 15-17 real, 3-5 fake (total 20)

@@ -372,8 +372,90 @@ header {
 #instructions {
     align-items: flex-start; /* Align content to the top */
     overflow-y: auto; /* Allow the entire overlay to scroll */
-    padding-top: 5vh; /* Add some padding at the top */
+    padding-top: 5vh; /* Speech bubble styles */
     padding-bottom: 5vh; /* Add padding at the bottom */
+}
+
+.speech-bubble {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 25px;
+    padding: 20px 25px;
+    margin: 25px auto 10px;
+    max-width: 400px;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4), 
+                0 0 0 3px rgba(255, 255, 255, 0.1);
+    animation: bubbleFloat 4s ease-in-out infinite;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.speech-bubble:hover {
+    transform: scale(1);
+}
+
+.speech-bubble::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 20px solid #667eea;
+    filter: drop-shadow(0 -3px 6px rgba(102, 126, 234, 0.3));
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 17px solid transparent;
+    border-right: 17px solid transparent;
+    border-bottom: 17px solid #764ba2;
+}
+
+.speech-bubble p {
+    margin: 0;
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    line-height: 1.4;
+}
+
+@keyframes bubbleFloat {
+    0%, 100% { transform: scale(0.95) translateY(0px); }
+    50% { transform: scale(0.95) translateY(-8px); }
+}
+
+/* Light mode speech bubble */
+.light-mode .speech-bubble {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    box-shadow: 0 8px 25px rgba(168, 237, 234, 0.5), 
+                0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.light-mode .speech-bubble::before {
+    border-bottom-color: #a8edea;
+    filter: drop-shadow(0 -3px 6px rgba(168, 237, 234, 0.4));
+}
+
+.light-mode .speech-bubble::after {
+    border-bottom-color: #fed6e3;
+}
+
+.light-mode .speech-bubble p {
+    color: #2d3748;
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9);
 }
 
 .overlay-content h1, .overlay-content h2 {

@@ -30,13 +30,31 @@ document.addEventListener('DOMContentLoaded', () => {
         headerFinalScore: document.getElementById('header-final-score'),
         finalScoreDisplay: document.getElementById('final-score'),
         gameOverMessage: document.getElementById('game-over-message'),
+        quoteText: document.getElementById('quote-text'),
         liveAnnouncer: document.getElementById('live-announcer'),
     };
 
     // --- UI Update Functions ---
 
+    // Collection of pithy one-liners involving the number 4
+    const fourOneliners = [
+        "May the 4s be with you!",
+        "Seen 4 weddings and a Funeral? Don't let the 4s kill your scrabble game",
+        "Got 4 aces? That's a hand worth fighting for - but not in scrabble shabble!",
+        "Spelling success, one S at a time!",
+        "4 seasons in a year, but only one chance to shine",
+        "Shabble is a valid word in scrabble!!",
+        "4 wheels move the body, but 4 coffees move the soul!",
+        "4 wheels good, 2 wheels better.. the cycle of life!"
+    ];
+
     const announce = (message) => {
         elements.liveAnnouncer.textContent = message;
+    };
+
+    const setRandomQuote = () => {
+        const randomQuote = fourOneliners[Math.floor(Math.random() * fourOneliners.length)];
+        elements.quoteText.textContent = randomQuote;
     };
 
     const updateTimerDisplay = (timeLeft) => {
@@ -87,6 +105,18 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.themeToggleBtn.innerHTML = isLightMode ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
         localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
     };
+
+    // Initialize theme on page load
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        elements.themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+
+    // Set initial random quote
+    setRandomQuote();
+
+    elements.themeToggleBtn.addEventListener('click', toggleTheme);
 
     // --- Game Logic Integration ---
 
@@ -295,17 +325,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
 
-    elements.startBtn.addEventListener('click', startGame);
+    elements.startBtn.addEventListener('click', () => {
+        setRandomQuote();
+        startGame();
+    });
     elements.playAgainBtn.addEventListener('click', (e) => {
         console.log('Play Again button clicked');
         e.preventDefault();
         e.stopPropagation();
+        setRandomQuote();
         startGame();
     });
     elements.playAgainHeaderBtn.addEventListener('click', (e) => {
         console.log('Header Play Again button clicked');
         e.preventDefault();
         e.stopPropagation();
+        setRandomQuote();
         startGame();
     });
     elements.reviewBtn.addEventListener('click', reviewAnswers);
