@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         doneBtn: document.getElementById('done-btn'),
         extraTimeBtn: document.getElementById('extra-time'),
         themeToggleBtn: document.getElementById('theme-toggle'),
+        playAgainHeaderBtn: document.getElementById('play-again-header-btn'),
 
         // Display
         timerDisplay: document.getElementById('timer'),
@@ -204,8 +205,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
 
     elements.startBtn.addEventListener('click', startGame);
-    elements.playAgainBtn.addEventListener('click', () => {
+    elements.playAgainBtn.addEventListener('click', (e) => {
         console.log('Play Again button clicked');
+        e.preventDefault();
+        e.stopPropagation();
+        startGame();
+    });
+    elements.playAgainHeaderBtn.addEventListener('click', (e) => {
+        console.log('Header Play Again button clicked');
+        e.preventDefault();
+        e.stopPropagation();
         startGame();
     });
     elements.reviewBtn.addEventListener('click', reviewAnswers);
