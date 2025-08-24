@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreDisplay: document.getElementById('score'), // Re-add score display
         headerFinalScore: document.getElementById('header-final-score'),
         finalScoreDisplay: document.getElementById('final-score'),
+        gameOverMessage: document.getElementById('game-over-message'),
         liveAnnouncer: document.getElementById('live-announcer'),
     };
 
@@ -44,10 +45,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         elements.timerDisplay.textContent = timeString;
 
+        // Check if time has run out
+        if (timeLeft <= 0 && game.getGameState().isPlaying) {
+            endGameDueToTimeout();
+            return;
+        }
+
         // Announce time at key intervals
         if (timeLeft === 60) announce('One minute remaining.');
-        if (timeLeft === 30) announce('Thirty seconds remaining.');
-        if (timeLeft === 10) announce('Ten seconds remaining.');
+        if (timeLeft === 30) announce('30 seconds remaining.');
+        if (timeLeft === 10) announce('10 seconds remaining.');
     };
 
 
@@ -113,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const endGame = () => {
         const results = game.endGame();
         elements.finalScoreDisplay.textContent = Math.round(results.score);
+        elements.gameOverMessage.innerHTML = `Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
         // Ensure header score is hidden on game over screen
         elements.headerFinalScore.classList.add('hidden');
         showOverlay(elements.gameOverScreen);
@@ -148,6 +156,89 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add score display
             const scoreEl = document.createElement('div');
             scoreEl.className = 'alphagram-score';
+            scoreEl.textContent = `Score: ${Math.round(result.score)}`;
+            card.appendChild(scoreEl);
+
+            // Add event listeners for dynamic tooltip positioning
+            card.addEventListener('mouseover', (e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (!tooltip) return;
+
+                // First, make it visible to measure it
+                tooltip.classList.add('show');
+
+                const cardRect = e.currentTarget.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                const boardRect = elements.gameBoard.getBoundingClientRect();
+
+                // Check if there's enough space below
+                const spaceBelow = boardRect.bottom - cardRect.bottom;
+                const spaceAbove = cardRect.top - boardRect.top;
+
+                tooltip.classList.remove('pos-above', 'pos-below');
+
+                if (spaceBelow >= tooltipRect.height + 10) {
+                    tooltip.classList.add('pos-below');
+                } else if (spaceAbove >= tooltipRect.height + 10) {
+                    tooltip.classList.add('pos-above');
+                } else {
+                    // Default to below if neither has enough space (should be rare)
+                    tooltip.classList.add('pos-below');
+                }
+            });
+
+            card.addEventListener('mouseout', (e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (tooltip) {
+                    tooltip.classList.remove('show');
+                }
+            });
+        });
+    };
+
+    const endGameDueToTimeout = () => {
+        const results = game.endGame();
+        elements.finalScoreDisplay.textContent = Math.round(results.score);
+        elements.gameOverMessage.innerHTML = `You ran out of time! Next time you can buy an extra 30 seconds at a cost of 25 points.<br><br>Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
+        // Ensure header score is hidden on game over screen
+        elements.headerFinalScore.classList.add('hidden');
+        showOverlay(elements.gameOverScreen);
+        announce(`Time's up! Your final score is ${Math.round(results.score)}.`);
+
+        // Disable game buttons
+        [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
+
+        // Show results on the board
+        results.alphagrams.forEach(result => {
+            const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
+            if (!card) return;
+            const input = card.querySelector('.answer-input');
+            input.value = result.userInput;
+            input.disabled = true;
+
+            // Apply styling based on correctness
+            if (result.isCorrect === true) {
+                card.classList.add('correct');
+            } else if (result.isCorrect === false) {
+                card.classList.add('incorrect');
+            } else if (result.isCorrect === 'partial') {
+                card.classList.add('partial');
+            }
+
+            // Prevent adding duplicate tooltips
+            if (card.querySelector('.tooltip')) {
+                card.querySelector('.tooltip').remove();
+            }
+
+            // Add tooltip with correct answers
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = `Correct: ${result.validWords.join(', ') || 'None'}`;
+            card.appendChild(tooltip);
+
+            // Add score display
+            const scoreEl = document.createElement('div');
+            scoreEl.className = 'score-display';
             scoreEl.textContent = `Score: ${Math.round(result.score)}`;
             card.appendChild(scoreEl);
 
