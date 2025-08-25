@@ -677,6 +677,21 @@ document.addEventListener('DOMContentLoaded', function() {
         showProfileSetupModal();
     };
 
+    function showProfileSetupModal() {
+        elements.profileSetupModal.classList.remove('hidden');
+        elements.profileSetupModal.classList.add('active');
+        
+        // Focus on nickname input
+        setTimeout(() => {
+            elements.nicknameInput.focus();
+        }, 100);
+    }
+
+    function hideProfileSetupModal() {
+        elements.profileSetupModal.classList.add('hidden');
+        elements.profileSetupModal.classList.remove('active');
+    }
+
     // Google sign-in
     elements.googleSigninBtn.addEventListener('click', async () => {
         const result = await authManager.signInWithGoogle();

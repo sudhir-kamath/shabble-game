@@ -29,13 +29,25 @@ class AuthManager {
         try {
             // Check if there's already a sign-in in progress
             if (this.signingIn) {
+                console.log('Sign-in already in progress, ignoring request');
                 return {
                     success: false,
                     error: 'Sign-in already in progress'
                 };
             }
             
+            // Check if user is already signed in
+            if (this.user) {
+                console.log('User already signed in');
+                return {
+                    success: true,
+                    user: this.user,
+                    isFirstTime: false
+                };
+            }
+            
             this.signingIn = true;
+            console.log('Starting Google sign-in...');
             const result = await signInWithPopup(auth, provider);
             this.signingIn = false;
             
