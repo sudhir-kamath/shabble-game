@@ -1,0 +1,17 @@
+{
+  "name": "shabble-multiplayer",
+  "version": "1.0.0",
+  "description": "Multiplayer word anagram game",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "install-server": "cd server && npm install"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": ["game", "multiplayer", "websockets"],
+  "author": "",
+  "license": "MIT"
+}
