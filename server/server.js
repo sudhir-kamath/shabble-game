@@ -14,9 +14,29 @@ const io = socketIo(server, {
         methods: ["GET", "POST"]
     }
 });
-
 const PORT = process.env.PORT || 3000;
 const gameManager = new GameManager();
+
+// Global timer for all active games
+setInterval(() => {
+    gameManager.rooms.forEach((room) => {
+        if (room.gameState.status === 'playing') {
+            // Send timer update
+            io.to(room.roomCode).emit('timer-update', {
+                timeLeft: room.gameState.timeLeft
+            });
+            
+            // Check if game should end due to timeout
+            if (room.gameState.timeLeft <= 0) {
+                room.endGame();
+                io.to(room.roomCode).emit('game-ended', {
+                    results: room.getGameResults()
+                });
+                console.log(`Game ended due to timeout in room ${room.roomCode}`);
+            }
+        }
+    });
+}, 1000);
 
 // Middleware
 app.use(cors());
@@ -147,38 +167,9 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Handle timer updates
-    const sendTimerUpdates = () => {
-        const room = gameManager.getRoomBySocket(socket.id);
-        if (room && room.gameState.status === 'playing') {
-            io.to(room.roomCode).emit('timer-update', {
-                timeLeft: room.gameState.timeLeft
-            });
-            
-            // Auto-end game when time runs out
-            if (room.gameState.timeLeft <= 0) {
-                room.endGame();
-                io.to(room.roomCode).emit('game-ended', {
-                    results: room.getGameResults()
-                });
-            }
-        }
-    };
-
-    // Send timer updates every second for active games
-    const timerInterval = setInterval(() => {
-        const room = gameManager.getRoomBySocket(socket.id);
-        if (room && room.gameState.status === 'playing') {
-            io.to(room.roomCode).emit('timer-update', {
-                timeLeft: room.gameState.timeLeft
-            });
-        }
-    }, 1000);
-
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log(`Player disconnected: ${socket.id}`);
-        clearInterval(timerInterval);
         
         const room = gameManager.removePlayer(socket.id);
         if (room) {

@@ -180,18 +180,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const endGame = () => {
         if (isMultiplayer) {
+            // In multiplayer, send end game signal to server
             multiplayerClient.endGame();
             return;
         }
         
         const results = game.endGame();
         elements.finalScoreDisplay.textContent = Math.round(results.score);
-        elements.gameOverMessage.innerHTML = `Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
-        elements.headerFinalScore.classList.add('hidden');
-        elements.opponentScoreContainer.classList.add('hidden');
+        elements.gameOverMessage.innerHTML = `Great job! You completed the game with a score of <span id="final-score">${Math.round(results.score)}</span>.`;
         showOverlay(elements.gameOverScreen);
-        announce(`Game over. Your final score is ${Math.round(results.score)}.`);
+        announce(`Game over! Your final score is ${Math.round(results.score)}.`);
 
+        // Disable game buttons
         [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board
@@ -564,6 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         multiplayerClient.on('timer-update', (data) => {
             updateTimerDisplay(data.timeLeft);
+            // Don't disable DONE button here - let server handle game ending
         });
         
         multiplayerClient.on('score-update', (data) => {
@@ -571,6 +572,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         multiplayerClient.on('game-ended', (data) => {
+            // Disable DONE button only when game actually ends
+            elements.doneBtn.disabled = true;
             showMultiplayerResults(data.results);
         });
         
@@ -655,6 +658,9 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.timerDisplay.classList.remove('hidden');
         elements.doneBtn.classList.remove('hidden');
         elements.extraTimeBtn.classList.add('hidden'); // Disable extra time in multiplayer
+        
+        // Enable DONE button for multiplayer
+        elements.doneBtn.disabled = false;
         
         // Render game board
         renderGameBoard(gameState.alphagrams);

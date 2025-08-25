@@ -181,6 +181,8 @@ class GameRoom {
             
             if (this.gameState.timeLeft <= 0) {
                 this.endGame();
+                // Emit game-ended event will be handled by the caller
+                return;
             }
         }, 1000);
     }
