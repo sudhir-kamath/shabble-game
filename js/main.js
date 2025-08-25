@@ -35,9 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         themeToggleBtn: document.getElementById('theme-toggle'),
         gameOverMessage: document.getElementById('game-over-message'),
         liveAnnouncer: document.getElementById('live-announcer'),
-        settingsBtn: document.getElementById('settings-btn'),
-        closeSettingsBtn: document.getElementById('close-settings'),
-        settingsModal: document.getElementById('settings-modal')
+        headerFinalScore: document.getElementById('header-final-score')
     };
 
     // --- UI Update Functions ---
@@ -152,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
         [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
 
         // --- Render New Game --- 
+        elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
         renderGameBoard(initialState.alphagrams);
         updateTimerDisplay(initialState.timeLeft);
 
@@ -350,6 +349,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const reviewAnswers = () => {
         showOverlay(null); // Hide the overlay to show the board
+        
+        // Make sure game board is visible
+        elements.gameBoard.style.display = 'grid';
 
         // Get final score and display it in the header
         const finalScore = Math.round(game.getGameState().score);
@@ -401,8 +403,22 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Header Play Again button clicked');
         e.preventDefault();
         e.stopPropagation();
+        
+        // Return to start screen instead of immediately starting a new game
+        if (game.getGameState().isPlaying) {
+            game.endGame(); // End current game if playing
+        }
+        
+        // Hide game elements
+        elements.gameBoard.style.display = 'none';
+        elements.extraTimeBtn.classList.add('hidden');
+        elements.headerFinalScore.classList.add('hidden');
+        
+        // Show start screen with active class
+        elements.startScreen.classList.add('active');
+        showOverlay(null); // Clear any other overlays first
+        elements.startScreen.classList.add('active'); // Then show start screen
         setRandomQuote();
-        startGame();
     });
 
     elements.instructionsBtn.addEventListener('click', showInstructions);
@@ -424,20 +440,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Settings modal event listeners
-    if (elements.settingsBtn) {
-        elements.settingsBtn.addEventListener('click', () => {
-            console.log('Settings button clicked');
-            elements.settingsModal.classList.add('active');
-        });
-    }
-
-    if (elements.closeSettingsBtn) {
-        elements.closeSettingsBtn.addEventListener('click', () => {
-            console.log('Close settings button clicked');
-            elements.settingsModal.classList.remove('active');
-        });
-    }
 
     // Game over modal close button (Review Answers)
     if (elements.closeModalBtn) {
