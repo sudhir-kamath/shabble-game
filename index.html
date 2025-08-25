@@ -50,8 +50,17 @@
 
             <div id="start-screen" class="overlay active">
                 <div class="overlay-content">
-                    <h1>Shabble!</h1>
-                    <p>Unscramble the letters to form valid words. Mark fakes with 'x'.</p>
+                    <div class="title-section">
+                        <div class="logo-title">
+                            <div class="scrabble-tile">
+                                <span class="tile-letter">S</span>
+                                <span class="tile-exclamation">!</span>
+                                <span class="tile-score">1</span>
+                            </div>
+                            <h1 class="game-title">Shabble!</h1>
+                        </div>
+                        <p class="game-subtitle">Unscramble the letters to form valid words. Mark fakes with 'x'.</p>
+                    </div>
                     
                     <!-- Authentication Section -->
                     <div id="auth-section" class="auth-section">
@@ -75,24 +84,27 @@
                         </div>
                     </div>
                     
+                    <!-- Word length selection -->
                     <div class="word-length-selection">
-                        <h3>Select Word Lengths:</h3>
-                        <div class="checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="length-2" value="2" checked>
-                                <span class="checkmark"></span>
-                                2-letter words
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="length-3" value="3" checked>
-                                <span class="checkmark"></span>
-                                3-letter words
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="length-4" value="4" checked>
-                                <span class="checkmark"></span>
-                                4-letter words
-                            </label>
+                        <div class="checkbox-container inline">
+                            <span class="checkbox-title">Word Lengths:</span>
+                            <div class="checkbox-group horizontal">
+                                <label class="checkbox-label compact">
+                                    <input type="checkbox" id="length-2" value="2" checked>
+                                    <span class="checkmark small"></span>
+                                    2L
+                                </label>
+                                <label class="checkbox-label compact">
+                                    <input type="checkbox" id="length-3" value="3" checked>
+                                    <span class="checkmark small"></span>
+                                    3L
+                                </label>
+                                <label class="checkbox-label compact">
+                                    <input type="checkbox" id="length-4" value="4" checked>
+                                    <span class="checkmark small"></span>
+                                    4L
+                                </label>
+                            </div>
                         </div>
                     </div>
                     
@@ -103,6 +115,7 @@
                     </div>
                 </div>
             </div>
+
 
             <div id="instructions" class="overlay">
                 <div class="overlay-content">
