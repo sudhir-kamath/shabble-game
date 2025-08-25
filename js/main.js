@@ -92,9 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const inputId = `alphagram-input-${index}`;
 
             card.innerHTML = `
-                <div class="card-header">
-                    <span class="word-length-badge">${length || alphagram.length}-letter</span>
-                </div>
                 <label for="${inputId}" class="alphagram">${alphagram}</label>
                 <input type="text" id="${inputId}" class="answer-input" placeholder="Your answer..." autocomplete="off">
             `;
@@ -415,11 +412,83 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Game over modal close button
+    // Game over modal close button (Review Answers)
     if (elements.closeModalBtn) {
         elements.closeModalBtn.addEventListener('click', () => {
-            console.log('Close modal button clicked');
+            console.log('Review Answers button clicked');
             elements.gameOverModal.classList.remove('active');
+            
+            // Setup tooltips for the review answers page
+            setTimeout(() => {
+                setupTooltips();
+            }, 100);
+        });
+    }
+
+    // Function to setup tooltips for cards
+    function setupTooltips() {
+        const cards = elements.gameBoard.querySelectorAll('.alphagram-card');
+        
+        cards.forEach((card) => {
+            const tooltip = card.querySelector('.tooltip');
+            if (!tooltip) return;
+
+            // Clear existing listeners
+            card.onmouseover = null;
+            card.onmouseout = null;
+
+            // Add fresh event listeners
+            card.addEventListener('mouseover', (e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (!tooltip) return;
+
+                // Ensure card has relative positioning for tooltip positioning
+                if (window.getComputedStyle(card).position === 'static') {
+                    card.style.position = 'relative';
+                }
+
+                // Create a new tooltip element and append to body for absolute positioning
+                const newTooltip = document.createElement('div');
+                newTooltip.textContent = tooltip.textContent;
+                
+                const cardRect = card.getBoundingClientRect();
+                
+                newTooltip.style.cssText = `
+                    position: fixed;
+                    background: rgba(45, 55, 72, 0.95);
+                    color: #e2e8f0;
+                    padding: 8px 12px;
+                    border: 1px solid rgba(160, 174, 192, 0.3);
+                    z-index: 999999;
+                    font-size: 12px;
+                    border-radius: 6px;
+                    pointer-events: none;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    max-width: ${cardRect.width}px;
+                    word-wrap: break-word;
+                    white-space: normal;
+                    line-height: 1.4;
+                `;
+                
+                newTooltip.style.left = cardRect.left + 'px';
+                newTooltip.style.top = cardRect.top + 'px';
+                
+                document.body.appendChild(newTooltip);
+                card.tempTooltip = newTooltip;
+            });
+
+            card.addEventListener('mouseout', (e) => {
+                // Remove temporary tooltip
+                if (card.tempTooltip) {
+                    document.body.removeChild(card.tempTooltip);
+                    card.tempTooltip = null;
+                }
+                
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (tooltip) {
+                    tooltip.classList.remove('show');
+                }
+            });
         });
     }
 

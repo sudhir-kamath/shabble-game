@@ -690,7 +690,11 @@ function initializeAlphagramMaps() {
             if (!ALPHAGRAM_MAPS[lengthNum].has(alphagram)) {
                 ALPHAGRAM_MAPS[lengthNum].set(alphagram, []);
             }
-            ALPHAGRAM_MAPS[lengthNum].get(alphagram).push(word);
+            // Only add if not already present to avoid duplicates
+            const existingWords = ALPHAGRAM_MAPS[lengthNum].get(alphagram);
+            if (!existingWords.includes(word)) {
+                existingWords.push(word);
+            }
         }
     }
 }
@@ -884,7 +888,7 @@ function generateGame(selectedLengths = [4]) {
         for (const [alphagram, words] of availableAlphagrams) {
             alphagrams.push({
                 alphagram: alphagram.toUpperCase(),
-                validWords: words,
+                validWords: [...new Set(words)], // Remove duplicates using Set
                 isFake: false,
                 length: length
             });

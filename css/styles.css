@@ -622,24 +622,26 @@ header {
 
 /* Tooltip for showing correct answers */
 .tooltip {
-    visibility: hidden;
     width: auto; /* Allow width to adjust to content */
     min-width: 120px; /* Set a minimum width */
-    max-width: 200px; /* Set a maximum width */
-    background-color: #555;
-    color: #fff;
+    max-width: 200px;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
     text-align: center;
+    padding: 8px 12px;
     border-radius: 6px;
-    padding: 8px;
+    font-size: 12px;
     position: absolute;
-    z-index: 10;
+    z-index: 9999;
     left: 50%;
-    transform: translateX(-50%); /* Center the tooltip */
+    top: 100%;
+    transform: translateX(-50%);
     opacity: 0;
-    transition: opacity 0.3s, transform 0.3s;
-    pointer-events: none; /* Prevent tooltip from interfering with mouse events */
-    white-space: normal; /* Allow text to wrap */
-    word-wrap: break-word; /* Break long words */
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .tooltip.show {
