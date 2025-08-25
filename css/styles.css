@@ -149,23 +149,51 @@ header {
 }
 
 .alphagram-card {
-    position: relative;
     background: var(--card-bg);
     border: 2px solid var(--card-border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 120px;
-    overflow: visible;
-    box-shadow: var(--card-shadow);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transform-style: preserve-3d;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.card-header {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+}
+
+.word-length-badge {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Different colors for different word lengths */
+.alphagram-card[data-length="2"] .word-length-badge {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+}
+
+.alphagram-card[data-length="3"] .word-length-badge {
+    background: linear-gradient(135deg, #4ecdc4, #44a08d);
+}
+
+.alphagram-card[data-length="4"] .word-length-badge {
+    background: linear-gradient(135deg, #667eea, #764ba2);
 }
 
 .light-mode .alphagram-card {
@@ -372,22 +400,131 @@ header {
 #instructions {
     align-items: flex-start; /* Align content to the top */
     overflow-y: auto; /* Allow the entire overlay to scroll */
-    padding-top: 5vh; /* Speech bubble styles */
+    padding-top: 5vh;
     padding-bottom: 5vh; /* Add padding at the bottom */
+}
+
+.word-length-selection {
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.word-length-selection h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.checkbox-label:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(2px);
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    margin-right: 12px;
+    position: relative;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.checkmark:hover {
+    border-color: var(--secondary-color);
+    transform: scale(1.05);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-color: var(--primary-color);
+    box-shadow: 
+        0 2px 8px rgba(102, 126, 234, 0.4),
+        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 7px;
+    width: 6px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    animation: checkmark-appear 0.2s ease-in-out;
+}
+
+@keyframes checkmark-appear {
+    0% {
+        opacity: 0;
+        transform: rotate(45deg) scale(0.5);
+    }
+    100% {
+        opacity: 1;
+        transform: rotate(45deg) scale(1);
+    }
+}
+
+/* Light mode checkbox styling */
+.light-mode .checkmark {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #6366f1;
+    box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.1),
+        inset 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+.light-mode .checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-color: #6366f1;
 }
 
 .speech-bubble {
     position: relative;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 25px;
-    padding: 20px 25px;
-    margin: 25px auto 10px;
-    max-width: 400px;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4), 
-                0 0 0 3px rgba(255, 255, 255, 0.1);
-    animation: bubbleFloat 4s ease-in-out infinite;
-    transform: scale(0.95);
-    transition: transform 0.3s ease;
+    border-radius: 20px;
+    padding: 15px 20px;
+    margin-top: 20px;
+    color: white;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    animation: float 3s ease-in-out infinite;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .speech-bubble:hover {

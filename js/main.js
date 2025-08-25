@@ -1,37 +1,43 @@
 import { game } from './game.js';
+import { initializeAlphagramMaps } from './dictionary.js';
 
 console.log('main.js loaded successfully');
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing game...');
-    // DOM Elements
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize alphagram maps for all word lengths
+    initializeAlphagramMaps();
+    
+    // Get DOM elements
     const elements = {
-        // Screens & Overlays
         startScreen: document.getElementById('start-screen'),
-        instructionsScreen: document.getElementById('instructions'),
-        gameOverScreen: document.getElementById('game-over'),
         gameBoard: document.getElementById('game-board'),
-
-        // Buttons
         startBtn: document.getElementById('start-btn'),
         instructionsBtn: document.getElementById('instructions-btn'),
+        instructions: document.getElementById('instructions'),
+        closeInstructionsBtn: document.getElementById('close-instructions'),
+        gameOverModal: document.getElementById('game-over-modal'),
+        closeModalBtn: document.getElementById('close-modal'),
+        playAgainBtn: document.getElementById('play-again'),
+        playAgainHeaderBtn: document.getElementById('play-again-header-btn'),
+        finalScore: document.getElementById('final-score'),
+        timerDisplay: document.getElementById('timer'),
+        scoreDisplay: document.getElementById('score'),
+        quoteText: document.getElementById('quote-text'),
+        lengthCheckboxes: {
+            2: document.getElementById('length-2'),
+            3: document.getElementById('length-3'),
+            4: document.getElementById('length-4')
+        },
         headerInstructionsBtn: document.getElementById('header-instructions-btn'),
         backBtn: document.getElementById('back-btn'),
-        playAgainBtn: document.getElementById('play-again-btn'),
-        reviewBtn: document.getElementById('review-btn'),
         doneBtn: document.getElementById('done-btn'),
         extraTimeBtn: document.getElementById('extra-time'),
         themeToggleBtn: document.getElementById('theme-toggle'),
-        playAgainHeaderBtn: document.getElementById('play-again-header-btn'),
-
-        // Display
-        timerDisplay: document.getElementById('timer'),
-        scoreDisplay: document.getElementById('score'), // Re-add score display
-        headerFinalScore: document.getElementById('header-final-score'),
-        finalScoreDisplay: document.getElementById('final-score'),
         gameOverMessage: document.getElementById('game-over-message'),
-        quoteText: document.getElementById('quote-text'),
         liveAnnouncer: document.getElementById('live-announcer'),
+        settingsBtn: document.getElementById('settings-btn'),
+        closeSettingsBtn: document.getElementById('close-settings'),
+        settingsModal: document.getElementById('settings-modal')
     };
 
     // --- UI Update Functions ---
@@ -78,13 +84,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderGameBoard = (alphagrams) => {
         elements.gameBoard.innerHTML = '';
-        alphagrams.forEach(({ alphagram }, index) => {
+        alphagrams.forEach(({ alphagram, length }, index) => {
             const card = document.createElement('div');
             card.className = 'alphagram-card';
             card.dataset.alphagram = alphagram;
+            card.dataset.length = length || alphagram.length; // Use provided length or calculate from alphagram
             const inputId = `alphagram-input-${index}`;
 
             card.innerHTML = `
+                <div class="card-header">
+                    <span class="word-length-badge">${length || alphagram.length}-letter</span>
+                </div>
                 <label for="${inputId}" class="alphagram">${alphagram}</label>
                 <input type="text" id="${inputId}" class="answer-input" placeholder="Your answer..." autocomplete="off">
             `;
@@ -121,15 +131,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Game Logic Integration ---
 
     const startGame = () => {
-        const initialState = game.startNewGame();
+        console.log('Starting game...');
+        
+        // Get selected word lengths
+        const selectedLengths = getSelectedWordLengths();
+        console.log('Selected word lengths:', selectedLengths);
+        
+        // Set random motivational quote
+        setRandomQuote();
+        
+        const initialState = game.startNewGame(selectedLengths);
 
         // --- UI Reset --- 
-        // Ensure a clean slate regardless of the previous screen (e.g., review screen)
-        showOverlay(null); // Hide all overlays (like game-over)
-        elements.headerFinalScore.classList.add('hidden'); // Hide review score
-        elements.timerDisplay.classList.remove('hidden'); // Show timer
-        elements.doneBtn.classList.remove('hidden'); // Show game buttons
+        elements.startScreen.classList.remove('active');
+        elements.gameOverModal.classList.remove('active');
+
+        // Show in-game controls
+        elements.timerDisplay.classList.remove('hidden');
+        elements.doneBtn.classList.remove('hidden');
         elements.extraTimeBtn.classList.remove('hidden');
+
+        // Reset button states
         [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
 
         // --- Render New Game --- 
@@ -137,23 +159,16 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTimerDisplay(initialState.timeLeft);
 
         // --- Final Setup ---
-        // This is critical: ensures the new inputs are enabled and empty.
-        elements.gameBoard.querySelectorAll('.answer-input').forEach(input => {
-            input.disabled = false;
-            input.value = '';
-        });
-
         game.onTimeUpdate = updateTimerDisplay; // Hook up timer updates
         announce('Game started. Good luck!');
     };
 
     const endGame = () => {
         const results = game.endGame();
-        elements.finalScoreDisplay.textContent = Math.round(results.score);
-        elements.gameOverMessage.innerHTML = `Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
-        // Ensure header score is hidden on game over screen
-        elements.headerFinalScore.classList.add('hidden');
-        showOverlay(elements.gameOverScreen);
+        elements.finalScore.textContent = Math.round(results.score);
+        elements.gameOverMessage.innerHTML = `Great job!`;
+        // Show game over modal
+        elements.gameOverModal.classList.add('active');
         announce(`Game over. Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons
@@ -228,10 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const endGameDueToTimeout = () => {
         const results = game.endGame();
-        elements.finalScoreDisplay.textContent = Math.round(results.score);
+        elements.finalScore.textContent = Math.round(results.score);
         elements.gameOverMessage.innerHTML = `You ran out of time! Next time you can buy an extra 30 seconds at a cost of 25 points.<br><br>Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
-        // Ensure header score is hidden on game over screen
-        elements.headerFinalScore.classList.add('hidden');
+        // Show game over modal
+        elements.gameOverModal.classList.add('active');
         showOverlay(elements.gameOverScreen);
         announce(`Time's up! Your final score is ${Math.round(results.score)}.`);
 
@@ -323,12 +338,34 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.extraTimeBtn.classList.add('hidden');
     };
 
-    // --- Event Listeners ---
+    // --- Helper Functions ---
+    
+    const showInstructions = () => {
+        console.log('Instructions button clicked');
+        elements.instructions.classList.add('active');
+    };
 
-    elements.startBtn.addEventListener('click', () => {
-        setRandomQuote();
-        startGame();
-    });
+    // --- Event Listeners ---
+    
+    // Debug: Check if elements exist
+    console.log('Start button element:', elements.startBtn);
+    console.log('Instructions button element:', elements.instructionsBtn);
+
+    if (elements.startBtn) {
+        elements.startBtn.addEventListener('click', () => {
+            console.log('Start button clicked');
+            setRandomQuote();
+            startGame();
+        });
+    } else {
+        console.error('Start button not found!');
+    }
+
+    if (elements.instructionsBtn) {
+        elements.instructionsBtn.addEventListener('click', showInstructions);
+    } else {
+        console.error('Instructions button not found!');
+    }
     elements.playAgainBtn.addEventListener('click', (e) => {
         console.log('Play Again button clicked');
         e.preventDefault();
@@ -343,11 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setRandomQuote();
         startGame();
     });
-    elements.reviewBtn.addEventListener('click', reviewAnswers);
-
-    const showInstructions = () => {
-        elements.instructionsScreen.classList.add('active');
-    };
 
     elements.instructionsBtn.addEventListener('click', showInstructions);
 
@@ -358,12 +390,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    elements.backBtn.addEventListener('click', () => {
-        elements.instructionsScreen.classList.remove('active');
-        if (game.getGameState().isPaused) {
-            game.resumeGame();
+    if (elements.backBtn) {
+        elements.backBtn.addEventListener('click', () => {
+            console.log('Back to Game button clicked');
+            elements.instructions.classList.remove('active');
+            if (game.getGameState().isPlaying) {
+                game.resumeGame();
+            }
+        });
+    }
+
+    // Settings modal event listeners
+    if (elements.settingsBtn) {
+        elements.settingsBtn.addEventListener('click', () => {
+            console.log('Settings button clicked');
+            elements.settingsModal.classList.add('active');
+        });
+    }
+
+    if (elements.closeSettingsBtn) {
+        elements.closeSettingsBtn.addEventListener('click', () => {
+            console.log('Close settings button clicked');
+            elements.settingsModal.classList.remove('active');
+        });
+    }
+
+    // Game over modal close button
+    if (elements.closeModalBtn) {
+        elements.closeModalBtn.addEventListener('click', () => {
+            console.log('Close modal button clicked');
+            elements.gameOverModal.classList.remove('active');
+        });
+    }
+
+    // Get selected word lengths from checkboxes
+    function getSelectedWordLengths() {
+        const selectedLengths = [];
+        for (const [length, checkbox] of Object.entries(elements.lengthCheckboxes)) {
+            if (checkbox.checked) {
+                selectedLengths.push(parseInt(length));
+            }
         }
-    });
+        return selectedLengths.length > 0 ? selectedLengths : [4]; // Default to 4-letter if none selected
+    }
+
 
     elements.doneBtn.addEventListener('click', endGame);
     elements.themeToggleBtn.addEventListener('click', toggleTheme);

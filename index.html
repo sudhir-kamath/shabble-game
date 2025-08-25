@@ -36,8 +36,11 @@
                     <button id="theme-toggle" class="btn" aria-label="Toggle dark/light mode">
                         <i class="fas fa-moon"></i>
                     </button>
-                    <button id="play-again-header-btn" class="btn" aria-label="Play Again">
+                    <button id="play-again-header-btn" class="icon-btn" title="Play Again">
                         <i class="fas fa-redo"></i>
+                    </button>
+                    <button id="settings-btn" class="icon-btn" title="Settings">
+                        <i class="fas fa-cog"></i>
                     </button>
                 </div>
             </div>
@@ -51,7 +54,29 @@
             <div id="start-screen" class="overlay active">
                 <div class="overlay-content">
                     <h1>Shabble!</h1>
-                    <p>Unscramble the letters to form valid 4-letter words. Mark fakes with 'x'.</p>
+                    <p>Unscramble the letters to form valid words. Mark fakes with 'x'.</p>
+                    
+                    <div class="word-length-selection">
+                        <h3>Select Word Lengths:</h3>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="length-2" value="2" checked>
+                                <span class="checkmark"></span>
+                                2-letter words
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="length-3" value="3" checked>
+                                <span class="checkmark"></span>
+                                3-letter words
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="length-4" value="4" checked>
+                                <span class="checkmark"></span>
+                                4-letter words
+                            </label>
+                        </div>
+                    </div>
+                    
                     <button id="start-btn" class="btn primary-btn">Start Game</button>
                     <button id="instructions-btn" class="btn secondary-btn">How to Play</button>
                     <div id="motivational-quote" class="speech-bubble">
@@ -81,12 +106,40 @@
                 </div>
             </div>
 
-            <div id="game-over" class="overlay">
+            <div id="game-over-modal" class="overlay">
                 <div class="overlay-content">
                     <h2>Game Over!</h2>
-                    <p id="game-over-message">Your final score is <span id="final-score">0</span>.</p>
-                    <button id="play-again-btn" class="btn primary-btn">Play Again</button>
-                    <button id="review-btn" class="btn secondary-btn">Review Answers</button>
+                    <p id="game-over-message">Time's up!</p>
+                    <p>Your final score: <span id="final-score">0</span></p>
+                    <button id="play-again" class="btn secondary-btn">Play Again</button>
+                    <button id="close-modal" class="btn primary-btn">Review Answers</button>
+                </div>
+            </div>
+
+            <div id="settings-modal" class="overlay">
+                <div class="overlay-content">
+                    <h2>Settings</h2>
+                    <div class="settings-section">
+                        <h3>Word Lengths</h3>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="settings-length-2" value="2" checked>
+                                <span class="checkmark"></span>
+                                2-letter words
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="settings-length-3" value="3" checked>
+                                <span class="checkmark"></span>
+                                3-letter words
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="settings-length-4" value="4" checked>
+                                <span class="checkmark"></span>
+                                4-letter words
+                            </label>
+                        </div>
+                    </div>
+                    <button id="close-settings" class="btn secondary-btn">Close</button>
                 </div>
             </div>
         </main>

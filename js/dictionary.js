@@ -1,5 +1,96 @@
+// Dictionary of valid 2-letter words
+const DICTIONARY_2 = [
+    'aa', 'ab', 'ad', 'ae', 'ag', 'ah', 'ai', 'al', 'am', 'an', 'ar', 'as', 'at', 'aw', 'ax', 'ay',
+    'ba', 'be', 'bi', 'bo', 'by', 'ch', 'da', 'de', 'do', 'ed', 'ef', 'eh', 'el', 'em', 'en', 'er',
+    'es', 'et', 'ex', 'fa', 'fe', 'gi', 'go', 'ha', 'he', 'hi', 'hm', 'ho', 'id', 'if', 'in', 'is',
+    'it', 'jo', 'ka', 'ki', 'la', 'li', 'lo', 'ma', 'me', 'mi', 'mm', 'mo', 'mu', 'my', 'na', 'ne',
+    'no', 'nu', 'od', 'oe', 'of', 'oh', 'oi', 'ok', 'om', 'on', 'oo', 'op', 'or', 'os', 'ow', 'ox',
+    'oy', 'pa', 'pe', 'pi', 'po', 're', 'sh', 'si', 'so', 'ta', 'ti', 'to', 'uh', 'um', 'un', 'up',
+    'us', 'ut', 'we', 'wo', 'xi', 'xu', 'ya', 'ye', 'yo', 'za', 'zo'
+];
+
+// Dictionary of valid 3-letter words
+const DICTIONARY_3 = [
+    'aah', 'aal', 'aas', 'aba', 'abb', 'abo', 'abs', 'aby', 'ace', 'act', 'add', 'ado', 'ads', 'adz',
+    'aff', 'aft', 'aga', 'age', 'ago', 'ags', 'aha', 'ahi', 'ahs', 'aid', 'aim', 'ain', 'air', 'ais',
+    'ait', 'aka', 'ake', 'ala', 'alb', 'ale', 'all', 'alp', 'als', 'alt', 'ama', 'ami', 'amp', 'amu',
+    'ana', 'and', 'ane', 'ani', 'ant', 'any', 'ape', 'apo', 'app', 'apt', 'arb', 'arc', 'ard', 'are',
+    'arf', 'ark', 'arm', 'ars', 'art', 'ash', 'ask', 'asp', 'ass', 'ate', 'att', 'auk', 'ava', 'ave',
+    'avo', 'awa', 'awe', 'awn', 'axe', 'aye', 'ays', 'ayu', 'baa', 'bad', 'bag', 'bah', 'bal', 'bam',
+    'ban', 'bap', 'bar', 'bas', 'bat', 'bay', 'bed', 'bee', 'beg', 'bel', 'ben', 'bes', 'bet', 'bey',
+    'bib', 'bid', 'big', 'bin', 'bio', 'bis', 'bit', 'boa', 'bob', 'bod', 'bog', 'boh', 'boo', 'bop',
+    'bot', 'bow', 'box', 'boy', 'brr', 'bub', 'bud', 'bug', 'bum', 'bun', 'bur', 'bus', 'but', 'buy',
+    'bye', 'cab', 'cad', 'cam', 'can', 'cap', 'car', 'cat', 'caw', 'cay', 'cee', 'chi', 'cig', 'cis',
+    'cob', 'cod', 'cog', 'con', 'coo', 'cop', 'cor', 'cos', 'cot', 'cow', 'cox', 'coy', 'coz', 'cru',
+    'cry', 'cub', 'cud', 'cue', 'cum', 'cup', 'cur', 'cut', 'cwm', 'dab', 'dad', 'dag', 'dah', 'dak',
+    'dam', 'dan', 'dap', 'das', 'daw', 'day', 'deb', 'dee', 'def', 'del', 'den', 'dev', 'dew', 'dex',
+    'dey', 'dib', 'did', 'die', 'dig', 'dim', 'din', 'dip', 'dis', 'dit', 'doc', 'doe', 'dog', 'dom',
+    'don', 'dor', 'dos', 'dot', 'dow', 'dry', 'dub', 'dud', 'due', 'dug', 'duh', 'dui', 'dun', 'duo',
+    'dup', 'dye', 'dzs', 'ear', 'eat', 'eau', 'ebb', 'ecu', 'edh', 'eds', 'eel', 'eff', 'efs', 'eft',
+    'egg', 'ego', 'eke', 'eld', 'elf', 'elk', 'ell', 'elm', 'els', 'eme', 'emo', 'ems', 'emu', 'end',
+    'eng', 'ens', 'eon', 'era', 'ere', 'erg', 'ern', 'err', 'eta', 'eth', 'eve', 'ewe', 'eye', 'fab',
+    'fad', 'fag', 'fan', 'far', 'fas', 'fat', 'fax', 'fay', 'fed', 'fee', 'fem', 'fen', 'fer', 'fet',
+    'few', 'fey', 'fez', 'fib', 'fid', 'fie', 'fig', 'fil', 'fin', 'fir', 'fit', 'fix', 'flu', 'fly',
+    'fob', 'foe', 'fog', 'foh', 'fon', 'foo', 'fop', 'for', 'fou', 'fox', 'foy', 'fro', 'fry', 'fub',
+    'fud', 'fug', 'fun', 'fur', 'gab', 'gad', 'gae', 'gag', 'gal', 'gam', 'gan', 'gap', 'gar', 'gas',
+    'gat', 'gau', 'gay', 'ged', 'gee', 'gel', 'gem', 'gen', 'get', 'gey', 'ghi', 'gib', 'gid', 'gie',
+    'gig', 'gin', 'gip', 'git', 'gnu', 'goa', 'gob', 'god', 'goo', 'gor', 'gos', 'got', 'gox', 'goy',
+    'gul', 'gum', 'gun', 'gup', 'gur', 'gus', 'gut', 'guv', 'guy', 'gym', 'gyp', 'had', 'hae', 'hag',
+    'hah', 'haj', 'ham', 'hao', 'hap', 'has', 'hat', 'haw', 'hay', 'heh', 'hem', 'hen', 'hep', 'her',
+    'hes', 'het', 'hew', 'hex', 'hey', 'hic', 'hid', 'hie', 'him', 'hin', 'hip', 'his', 'hit', 'hmm',
+    'hob', 'hod', 'hoe', 'hog', 'hom', 'hon', 'hoo', 'hop', 'hos', 'hot', 'how', 'hoy', 'hub', 'hue',
+    'hug', 'huh', 'hum', 'hun', 'hup', 'hut', 'hyp', 'ice', 'ich', 'ick', 'icy', 'ids', 'iff', 'ifs',
+    'ilk', 'ill', 'imp', 'ink', 'inn', 'ins', 'ion', 'ire', 'irk', 'ism', 'its', 'ivy', 'jab', 'jag',
+    'jam', 'jar', 'jaw', 'jay', 'jee', 'jet', 'jeu', 'jew', 'jib', 'jig', 'jin', 'job', 'joe', 'jog',
+    'jot', 'jow', 'joy', 'jug', 'jun', 'jus', 'jut', 'kab', 'kae', 'kaf', 'kas', 'kat', 'kaw', 'kay',
+    'kea', 'kef', 'keg', 'ken', 'kep', 'ket', 'kex', 'key', 'khi', 'kid', 'kif', 'kin', 'kip', 'kir',
+    'kis', 'kit', 'koa', 'kob', 'koi', 'kop', 'kor', 'kos', 'kue', 'kye', 'lab', 'lac', 'lad', 'lag',
+    'lah', 'lam', 'lap', 'lar', 'las', 'lat', 'lav', 'law', 'lax', 'lay', 'lea', 'led', 'lee', 'leg',
+    'lei', 'lek', 'les', 'let', 'leu', 'lev', 'lew', 'lex', 'ley', 'lez', 'lib', 'lid', 'lie', 'lin',
+    'lip', 'lis', 'lit', 'lob', 'log', 'loo', 'lop', 'lot', 'low', 'lox', 'lud', 'lug', 'luv', 'lux',
+    'luz', 'lye', 'mac', 'mad', 'mae', 'mag', 'man', 'map', 'mar', 'mas', 'mat', 'maw', 'max', 'may',
+    'med', 'meg', 'mel', 'mem', 'men', 'met', 'mew', 'mho', 'mib', 'mic', 'mid', 'mig', 'mil', 'mim',
+    'mir', 'mis', 'mix', 'miz', 'moa', 'mob', 'mod', 'mog', 'mom', 'mon', 'moo', 'mop', 'mor', 'mos',
+    'mot', 'mow', 'mud', 'mug', 'mum', 'mun', 'mus', 'mut', 'mux', 'myc', 'nab', 'nae', 'nag', 'nah',
+    'nam', 'nan', 'nap', 'naw', 'nay', 'neb', 'nee', 'neg', 'net', 'new', 'nib', 'nil', 'nim', 'nip',
+    'nit', 'nix', 'nob', 'nod', 'nog', 'noh', 'nom', 'noo', 'nor', 'nos', 'not', 'now', 'nth', 'nub',
+    'nun', 'nut', 'oaf', 'oak', 'oar', 'oat', 'oba', 'obe', 'obi', 'oca', 'och', 'odd', 'ode', 'ods',
+    'oes', 'off', 'oft', 'ohm', 'oho', 'ohs', 'oik', 'oil', 'oka', 'oke', 'old', 'ole', 'oms', 'one',
+    'ons', 'ooh', 'oom', 'oon', 'oop', 'oor', 'oos', 'oot', 'ope', 'ops', 'opt', 'orb', 'orc', 'ore',
+    'orf', 'ors', 'ort', 'ose', 'oud', 'our', 'out', 'ova', 'owe', 'owl', 'own', 'owt', 'oxo', 'oxy',
+    'oye', 'oys', 'pac', 'pad', 'pah', 'pal', 'pam', 'pan', 'pap', 'par', 'pas', 'pat', 'pav', 'paw',
+    'pax', 'pay', 'pea', 'pec', 'ped', 'pee', 'peg', 'pen', 'pep', 'per', 'pes', 'pet', 'pew', 'phi',
+    'pho', 'pic', 'pie', 'pig', 'pin', 'pip', 'pis', 'pit', 'piu', 'pix', 'ply', 'poa', 'pod', 'poh',
+    'poi', 'pol', 'pom', 'poo', 'pop', 'pos', 'pot', 'pow', 'pox', 'poz', 'pro', 'pry', 'psi', 'pst',
+    'pub', 'pud', 'pug', 'pul', 'pun', 'pup', 'pur', 'pus', 'put', 'puy', 'pya', 'pye', 'pyx', 'qat',
+    'qis', 'qua', 'rad', 'rag', 'rah', 'rai', 'raj', 'ram', 'ran', 'rap', 'ras', 'rat', 'raw', 'rax',
+    'ray', 'reb', 'rec', 'red', 'ref', 'reg', 'rei', 'rem', 'rep', 'res', 'ret', 'rev', 'rex', 'rho',
+    'rib', 'rid', 'rif', 'rig', 'rim', 'rin', 'rip', 'rit', 'rob', 'roc', 'rod', 'roe', 'rom', 'rot',
+    'row', 'rub', 'rue', 'rug', 'rum', 'run', 'rut', 'rya', 'rye', 'sab', 'sac', 'sad', 'sae', 'sag',
+    'sal', 'sap', 'sar', 'sat', 'sau', 'saw', 'sax', 'say', 'sea', 'sed', 'see', 'seg', 'sei', 'sel',
+    'sen', 'ser', 'set', 'sew', 'sex', 'sha', 'she', 'shh', 'shy', 'sib', 'sic', 'sim', 'sin', 'sip',
+    'sir', 'sis', 'sit', 'six', 'ska', 'ski', 'sky', 'sly', 'sob', 'sod', 'soh', 'sol', 'som', 'son',
+    'sop', 'sos', 'sot', 'sou', 'sow', 'sox', 'soy', 'spa', 'spy', 'sty', 'sub', 'sud', 'sue', 'suk',
+    'sum', 'sun', 'sup', 'suq', 'syn', 'tab', 'tad', 'tae', 'tag', 'taj', 'tak', 'tam', 'tan', 'tao',
+    'tap', 'tar', 'tas', 'tat', 'tau', 'tav', 'taw', 'tax', 'tea', 'ted', 'tee', 'teg', 'tel', 'ten',
+    'tes', 'tet', 'tew', 'the', 'tho', 'thy', 'tic', 'tid', 'tie', 'tig', 'tik', 'til', 'tin', 'tip',
+    'tis', 'tit', 'tix', 'tiz', 'tod', 'toe', 'tog', 'tom', 'ton', 'too', 'top', 'tor', 'tot', 'tow',
+    'toy', 'try', 'tsk', 'tub', 'tug', 'tui', 'tum', 'tun', 'tup', 'tut', 'tux', 'twa', 'two', 'tye',
+    'udo', 'uds', 'ugh', 'ugs', 'uke', 'ule', 'ulu', 'uma', 'umm', 'ump', 'ums', 'una', 'uns', 'upo',
+    'ups', 'urb', 'urd', 'urn', 'urp', 'use', 'uta', 'ute', 'uts', 'vac', 'van', 'var', 'vas', 'vat',
+    'vau', 'vav', 'vaw', 'vee', 'veg', 'vet', 'vex', 'via', 'vib', 'vid', 'vie', 'vig', 'vim', 'vis',
+    'voe', 'von', 'vow', 'vox', 'vug', 'vum', 'wab', 'wad', 'wae', 'wag', 'wan', 'wap', 'war', 'was',
+    'wat', 'waw', 'wax', 'way', 'web', 'wed', 'wee', 'wen', 'wet', 'wey', 'wha', 'who', 'why', 'wig',
+    'win', 'wis', 'wit', 'wiz', 'woe', 'wog', 'wok', 'won', 'woo', 'wop', 'wos', 'wot', 'wow', 'wry',
+    'wud', 'wye', 'wyn', 'xis', 'yag', 'yah', 'yak', 'yam', 'yap', 'yar', 'yas', 'yat', 'yaw', 'yay',
+    'yea', 'yeh', 'yen', 'yep', 'yer', 'yes', 'yet', 'yew', 'yex', 'yid', 'yin', 'yip', 'yob', 'yod',
+    'yon', 'you', 'yow', 'yuk', 'yum', 'yup', 'yus', 'zag', 'zap', 'zas', 'zax', 'zea', 'zed', 'zee',
+    'zek', 'zen', 'zep', 'zet', 'zho', 'zig', 'zin', 'zip', 'zit', 'ziz', 'zoa', 'zol', 'zoo', 'zos',
+    'zuz', 'zzz'
+];
+
 // Dictionary of valid 4-letter words
-const DICTIONARY = [
+const DICTIONARY_4 = [
     'aahs',     'aals',     'abac',     'abas',     'abba',     'abbe',     'abbs',     'abed',     'aber',     'abet',
     'abid',     'able',     'ably',     'abri',     'abut',     'abye',     'abys',     'acai',     'acca',     'aced',
     'acer',     'aces',     'ache',     'achy',     'acid',     'acme',     'acne',     'acre',     'acro',     'acta',
@@ -569,20 +660,38 @@ const DICTIONARY = [
     'zyme',     'zzzs'
 ];
 
-// Create a Set for O(1) lookups
-const DICTIONARY_SET = new Set(DICTIONARY);
+// Create dictionaries object for easy access
+const DICTIONARIES = {
+    2: DICTIONARY_2,
+    3: DICTIONARY_3,
+    4: DICTIONARY_4
+};
 
-// Create a map of alphagrams to their valid words
-const ALPHAGRAM_MAP = new Map();
+// Create Sets for O(1) lookups
+const DICTIONARY_SETS = {
+    2: new Set(DICTIONARY_2),
+    3: new Set(DICTIONARY_3),
+    4: new Set(DICTIONARY_4)
+};
 
-// Initialize the alphagram map
-function initializeAlphagramMap() {
-    for (const word of DICTIONARY) {
-        const alphagram = createAlphagram(word);
-        if (!ALPHAGRAM_MAP.has(alphagram)) {
-            ALPHAGRAM_MAP.set(alphagram, []);
+// Create maps of alphagrams to their valid words
+const ALPHAGRAM_MAPS = {
+    2: new Map(),
+    3: new Map(),
+    4: new Map()
+};
+
+// Initialize the alphagram maps for all word lengths
+function initializeAlphagramMaps() {
+    for (const [length, dictionary] of Object.entries(DICTIONARIES)) {
+        const lengthNum = parseInt(length);
+        for (const word of dictionary) {
+            const alphagram = createAlphagram(word);
+            if (!ALPHAGRAM_MAPS[lengthNum].has(alphagram)) {
+                ALPHAGRAM_MAPS[lengthNum].set(alphagram, []);
+            }
+            ALPHAGRAM_MAPS[lengthNum].get(alphagram).push(word);
         }
-        ALPHAGRAM_MAP.get(alphagram).push(word);
     }
 }
 
@@ -591,23 +700,30 @@ function createAlphagram(word) {
     return word.toLowerCase().split('').sort().join('');
 }
 
-// Check if a word is valid (case-insensitive)
-function isValidWord(word) {
-    return DICTIONARY_SET.has(word.toLowerCase());
+// Check if a word is valid for a specific length (case-insensitive)
+function isValidWord(word, length = null) {
+    const lowerWord = word.toLowerCase();
+    if (length) {
+        return DICTIONARY_SETS[length] && DICTIONARY_SETS[length].has(lowerWord);
+    }
+    // Check all lengths if no specific length provided
+    return Object.values(DICTIONARY_SETS).some(set => set.has(lowerWord));
 }
 
-// Get all valid anagrams for a given alphagram
-function getValidAnagrams(alphagram) {
-    return ALPHAGRAM_MAP.get(alphagram) || [];
+// Get all valid anagrams for a given alphagram and word length
+function getValidAnagrams(alphagram, length) {
+    return ALPHAGRAM_MAPS[length] && ALPHAGRAM_MAPS[length].get(alphagram) || [];
 }
 
-// Generate a random word from the dictionary
-function getRandomWord() {
-    return DICTIONARY[Math.floor(Math.random() * DICTIONARY.length)];
+// Generate a random word from the dictionary of specified length
+function getRandomWord(length = 4) {
+    const dictionary = DICTIONARIES[length];
+    if (!dictionary) return null;
+    return dictionary[Math.floor(Math.random() * dictionary.length)];
 }
 
-// Generate a fake alphagram that doesn't have valid anagrams
-function generateFakeAlphagram() {
+// Generate a fake alphagram that doesn't have valid anagrams for specified length
+function generateFakeAlphagram(length = 4) {
     const vowels = ['A', 'E', 'I', 'O', 'U'];
     const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'W']; // Excluded J, X, Q, K, Z, Y
     const excludedLetters = ['J', 'X', 'Q', 'K', 'Z', 'Y'];
@@ -615,8 +731,8 @@ function generateFakeAlphagram() {
     const maxAttempts = 100;
     let attempts = 0;
     
-    // Get all valid alphagrams as an array for random selection
-    const validAlphagrams = Array.from(ALPHAGRAM_MAP.keys());
+    // Get all valid alphagrams for this length as an array for random selection
+    const validAlphagrams = Array.from(ALPHAGRAM_MAPS[length].keys());
     
     while (attempts < maxAttempts) {
         // Step 1: Select a random valid alphagram
@@ -628,60 +744,55 @@ function generateFakeAlphagram() {
         const removedLetter = letters[positionToRemove];
         letters.splice(positionToRemove, 1);
         
-        // Step 3: Determine if removed letter was a vowel or consonant
-        const wasVowel = vowels.includes(removedLetter);
-        const replacementOptions = wasVowel ? vowels : consonants;
-        
-        // Step 4: Add a new letter of the same type (avoiding excluded letters)
-        let newLetter;
-        let letterAttempts = 0;
-        do {
-            newLetter = replacementOptions[Math.floor(Math.random() * replacementOptions.length)];
-            letterAttempts++;
-        } while (excludedLetters.includes(newLetter) && letterAttempts < 20);
-        
-        // If we couldn't find a non-excluded letter, skip this attempt
-        if (excludedLetters.includes(newLetter)) {
-            attempts++;
-            continue;
+        // Step 3: Add a replacement letter that creates an invalid alphagram
+        let replacementLetter;
+        if (vowels.includes(removedLetter)) {
+            // Replace vowel with consonant
+            replacementLetter = consonants[Math.floor(Math.random() * consonants.length)];
+        } else {
+            // Replace consonant with vowel or different consonant
+            const allReplacements = [...vowels, ...consonants];
+            replacementLetter = allReplacements[Math.floor(Math.random() * allReplacements.length)];
         }
         
-        // Step 5: Add the new letter and create alphagram (ensure alphabetic order)
-        letters.push(newLetter);
-        const newAlphagram = letters.sort().join('');
+        letters.push(replacementLetter);
         
-        // Step 6: Check if this new alphagram has any valid anagrams
-        if (!hasValidAnagrams(newAlphagram)) {
-            return {
-                alphagram: newAlphagram,
-                validWords: [],
-                isFake: true
-            };
+        // Create the fake alphagram
+        const fakeAlphagram = letters.sort().join('').toLowerCase();
+        
+        // Step 4: Verify it's not a valid alphagram for this length
+        if (!ALPHAGRAM_MAPS[length].has(fakeAlphagram)) {
+            return fakeAlphagram.toUpperCase();
         }
         
         attempts++;
     }
     
-    // Fallback: return a known fake if we couldn't generate one
-    return {
-        alphagram: 'CDPS',
-        validWords: [],
-        isFake: true
-    };
+    // Fallback: create a completely random invalid combination
+    const letters = [];
+    for (let i = 0; i < length; i++) {
+        if (i === 0 || Math.random() < 0.3) {
+            letters.push(vowels[Math.floor(Math.random() * vowels.length)]);
+        } else {
+            letters.push(consonants[Math.floor(Math.random() * consonants.length)]);
+        }
+    }
+    
+    return letters.sort().join('');
 }
 
-// Helper function to check if an alphagram has any valid anagrams
-function hasValidAnagrams(alphagram) {
-    // First check if it's already in our valid alphagram map
-    if (ALPHAGRAM_MAP.has(alphagram.toLowerCase())) {
+// Helper function to check if an alphagram has any valid anagrams for a specific length
+function hasValidAnagrams(alphagram, length) {
+    // First check if it's already in our valid alphagram map for this length
+    if (ALPHAGRAM_MAPS[length] && ALPHAGRAM_MAPS[length].has(alphagram.toLowerCase())) {
         return true;
     }
     
-    // Generate all permutations and check against dictionary
+    // Generate all permutations and check against dictionary for this length
     const permutations = generatePermutations(alphagram);
     
     for (const permutation of permutations) {
-        if (DICTIONARY_SET.has(permutation.toLowerCase())) {
+        if (DICTIONARY_SETS[length] && DICTIONARY_SETS[length].has(permutation.toLowerCase())) {
             return true;
         }
     }
@@ -738,47 +849,79 @@ function factorial(n) {
 }
 
 // Generate a game with randomized real and fake alphagrams (always totaling 20)
-function generateGame() {
-    // Randomly choose between 15-17 real alphagrams
-    const randomValue = Math.random();
-    const randomMultiplied = randomValue * 3;
-    const randomFloored = Math.floor(randomMultiplied);
-    const realCount = 15 + randomFloored;
-    const fakeCount = 20 - realCount;
+function generateGame(selectedLengths = [4]) {
+    const totalAlphagrams = 20;
+    const alphagrams = [];
     
+    // Calculate distribution per length (approximately equal)
+    const lengthsCount = selectedLengths.length;
+    const baseCount = Math.floor(totalAlphagrams / lengthsCount);
+    const remainder = totalAlphagrams % lengthsCount;
     
-    // Make sure we don't exceed available alphagrams with multiple words
-    const alphagrams = Array.from(ALPHAGRAM_MAP.entries())
-        .filter(([_, words]) => words.length > 0)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, realCount)
-        .map(([alphagram, words]) => ({
-            alphagram: alphagram.toUpperCase(),
-            validWords: words,
-            isFake: false
-        }));
+    // Create distribution array
+    const distribution = selectedLengths.map((length, index) => ({
+        length,
+        count: baseCount + (index < remainder ? 1 : 0)
+    }));
     
-    // Add fake alphagrams
-    for (let i = 0; i < fakeCount; i++) {
-        alphagrams.push(generateFakeAlphagram());
+    console.log('Word length distribution:', distribution);
+    
+    // Generate alphagrams for each length
+    for (const { length, count } of distribution) {
+        // 15-25% should be fake (aim for ~20%)
+        const fakeCount = Math.max(1, Math.floor(count * 0.2));
+        const realCount = count - fakeCount;
+        
+        console.log(`Length ${length}: ${realCount} real, ${fakeCount} fake`);
+        
+        // Get real alphagrams for this length
+        const availableAlphagrams = Array.from(ALPHAGRAM_MAPS[length].entries())
+            .filter(([_, words]) => words.length > 0)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, realCount);
+        
+        // Add real alphagrams
+        for (const [alphagram, words] of availableAlphagrams) {
+            alphagrams.push({
+                alphagram: alphagram.toUpperCase(),
+                validWords: words,
+                isFake: false,
+                length: length
+            });
+        }
+        
+        // Add fake alphagrams for this length
+        for (let i = 0; i < fakeCount; i++) {
+            const fakeAlphagram = generateFakeAlphagram(length);
+            alphagrams.push({
+                alphagram: fakeAlphagram,
+                validWords: [],
+                isFake: true,
+                length: length
+            });
+        }
     }
     
-    // Shuffle the alphagrams
+    // Shuffle the final alphagrams
     return alphagrams.sort(() => Math.random() - 0.5);
 }
 
-// Initialize the alphagram map when this module loads
-initializeAlphagramMap();
+// Initialize the alphagram maps when this module loads
+initializeAlphagramMaps();
 
 // Export the public API
 export {
-    DICTIONARY,
-    DICTIONARY_SET,
-    ALPHAGRAM_MAP,
+    DICTIONARIES,
+    DICTIONARY_SETS,
+    ALPHAGRAM_MAPS,
+    DICTIONARY_2,
+    DICTIONARY_3,
+    DICTIONARY_4,
     createAlphagram,
     isValidWord,
     getValidAnagrams,
     getRandomWord,
     generateFakeAlphagram,
-    generateGame
+    generateGame,
+    initializeAlphagramMaps
 };

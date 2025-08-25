@@ -1,4 +1,4 @@
-import { generateGame } from './dictionary.js';
+import { generateGame, isValidWord } from './dictionary.js';
 
 class ShabbleGame {
     constructor() {
@@ -26,8 +26,8 @@ class ShabbleGame {
     }
     
     // Start a new game
-    startNewGame() {
-        const generatedAlphagrams = generateGame();
+    startNewGame(selectedLengths = [4]) {
+        const generatedAlphagrams = generateGame(selectedLengths);
         
         // Reset game state
         this.gameState = {
@@ -245,11 +245,14 @@ class ShabbleGame {
         // Check for invalid words
         const validAnswers = alphagram.validWords || [];
         const uniqueUserAnswers = [...new Set(userAnswers)]; // Remove duplicates
+        const expectedLength = alphagram.length || alphagram.alphagram.length;
         
-        // Check for any incorrect answers
-        const hasIncorrectAnswer = uniqueUserAnswers.some(answer => 
-            answer !== 'x' && !validAnswers.includes(answer)
-        );
+        // Check for any incorrect answers (wrong words or wrong length)
+        const hasIncorrectAnswer = uniqueUserAnswers.some(answer => {
+            if (answer === 'x') return false;
+            // Check if word has correct length and is valid for that length
+            return answer.length !== expectedLength || !isValidWord(answer, expectedLength);
+        });
         
         if (hasIncorrectAnswer) {
             return { isCorrect: false, score: -5 };
