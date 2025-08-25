@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body class="dark-mode">
     <div class="container">
@@ -22,6 +23,10 @@
                 </div>
                 <div class="timer-container">
                     <span id="timer" role="status">2:00</span>
+                </div>
+                <div id="opponent-score" class="score-container hidden">
+                    <span class="score-label">Opponent:</span>
+                    <span class="score-value"><span id="opponent-score-value">0</span>/200</span>
                 </div>
                 <div class="game-controls-header">
                     <button id="done-btn" class="btn primary-btn" disabled>
@@ -52,11 +57,63 @@
                 <div class="overlay-content">
                     <h1>Shabble!</h1>
                     <p>Unscramble the letters to form valid 4-letter words. Mark fakes with 'x'.</p>
-                    <button id="start-btn" class="btn primary-btn">Start Game</button>
+                    <div class="game-mode-selection">
+                        <button id="single-player-btn" class="btn primary-btn">Single Player</button>
+                        <button id="multiplayer-btn" class="btn secondary-btn">Multiplayer</button>
+                    </div>
                     <button id="instructions-btn" class="btn secondary-btn">How to Play</button>
                     <div id="motivational-quote" class="speech-bubble">
                         <p id="quote-text">Success starts with the letter S!</p>
                     </div>
+                </div>
+            </div>
+
+            <div id="multiplayer-setup" class="overlay">
+                <div class="overlay-content">
+                    <h2>Multiplayer Setup</h2>
+                    <div class="player-name-input">
+                        <label for="player-name">Your Name:</label>
+                        <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+                    </div>
+                    <div class="multiplayer-options">
+                        <button id="create-room-btn" class="btn primary-btn">Create Room</button>
+                        <div class="join-room-section">
+                            <input type="text" id="room-code-input" placeholder="Enter room code" maxlength="6">
+                            <button id="join-room-btn" class="btn secondary-btn">Join Room</button>
+                        </div>
+                    </div>
+                    <button id="back-to-menu-btn" class="btn secondary-btn">Back to Menu</button>
+                </div>
+            </div>
+
+            <div id="waiting-room" class="overlay">
+                <div class="overlay-content">
+                    <h2>Waiting Room</h2>
+                    <div id="room-info">
+                        <p>Room Code: <span id="room-code-display"></span></p>
+                        <p>Share this code with your opponent!</p>
+                    </div>
+                    <div id="players-list">
+                        <h3>Players:</h3>
+                        <ul id="players-ul"></ul>
+                    </div>
+                    <div id="waiting-message">
+                        <p>Waiting for opponent to join...</p>
+                    </div>
+                    <div id="game-ready" class="hidden">
+                        <button id="start-multiplayer-game-btn" class="btn primary-btn">Start Game</button>
+                    </div>
+                    <button id="leave-room-btn" class="btn secondary-btn">Leave Room</button>
+                </div>
+            </div>
+
+            <div id="game-starting" class="overlay">
+                <div class="overlay-content">
+                    <h2>Game Starting!</h2>
+                    <div id="countdown-display">
+                        <span id="countdown-number">3</span>
+                    </div>
+                    <p>Get ready to compete!</p>
                 </div>
             </div>
 
