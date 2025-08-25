@@ -163,7 +163,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const endGame = () => {
         const results = game.endGame();
         elements.finalScore.textContent = Math.round(results.score);
-        elements.gameOverMessage.innerHTML = `Great job!`;
+        
+        // Calculate score percentage and set dynamic message
+        const maxPossibleScore = 200; // 20 alphagrams × 10 points each
+        const scorePercentage = (results.score / maxPossibleScore) * 100;
+        
+        let congratsMessage;
+        if (scorePercentage >= 75) {
+            congratsMessage = "Great job!";
+        } else if (scorePercentage > 50) {
+            congratsMessage = "Good job! You're on the right track";
+        } else {
+            congratsMessage = "Well tried! Better luck next time";
+        }
+        
+        elements.gameOverMessage.innerHTML = congratsMessage;
         // Show game over modal
         elements.gameOverModal.classList.add('active');
         announce(`Game over. Your final score is ${Math.round(results.score)}.`);
@@ -241,10 +255,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const endGameDueToTimeout = () => {
         const results = game.endGame();
         elements.finalScore.textContent = Math.round(results.score);
-        elements.gameOverMessage.innerHTML = `You ran out of time! Next time you can buy an extra 30 seconds at a cost of 25 points.<br><br>Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
+        
+        // Calculate score percentage and set dynamic message
+        const maxPossibleScore = 200; // 20 alphagrams × 10 points each
+        const scorePercentage = (results.score / maxPossibleScore) * 100;
+        
+        let congratsMessage;
+        if (scorePercentage >= 75) {
+            congratsMessage = "Great job!";
+        } else if (scorePercentage > 50) {
+            congratsMessage = "Good job! You're on the right track";
+        } else {
+            congratsMessage = "Well tried! Better luck next time";
+        }
+        
+        elements.gameOverMessage.innerHTML = `You ran out of time! Next time you can buy an extra 30 seconds at a cost of 25 points.<br><br>${congratsMessage}<br><br>Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
         // Show game over modal
-        elements.gameOverModal.classList.add('active');
-        showOverlay(elements.gameOverScreen);
+        showOverlay(elements.gameOverModal);
         announce(`Time's up! Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons

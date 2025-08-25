@@ -79,11 +79,6 @@ class ShabbleGame {
                 if (typeof this.onTimeUpdate === 'function') {
                     this.onTimeUpdate(this.gameState.timeLeft);
                 }
-                
-                // Check if time's up
-                if (this.gameState.timeLeft <= 0) {
-                    this.endGame();
-                }
             }
         }, 1000);
     }
