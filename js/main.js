@@ -43,7 +43,12 @@ document.addEventListener('DOMContentLoaded', function() {
         themeToggleBtn: document.getElementById('theme-toggle'),
         gameOverMessage: document.getElementById('game-over-message'),
         liveAnnouncer: document.getElementById('live-announcer'),
-        headerFinalScore: document.getElementById('header-final-score')
+        headerFinalScore: document.getElementById('header-final-score'),
+        // Profile setup elements
+        profileSetupModal: document.getElementById('profile-setup-modal'),
+        profileSetupForm: document.getElementById('profile-setup-form'),
+        nicknameInput: document.getElementById('nickname-input'),
+        countrySelect: document.getElementById('country-select')
     };
 
     // --- UI Update Functions ---
@@ -217,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.extraTimeBtn.classList.remove('hidden');
 
         // Reset button states
-        [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = false);
+        [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = false);
 
         // --- Render New Game --- 
         elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
@@ -252,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         announce(`Game over. Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons
-        [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
+        [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board
         results.alphagrams.forEach(result => {
@@ -344,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
         announce(`Time's up! Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons
-        [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
+        [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board
         results.alphagrams.forEach(result => {
@@ -605,6 +610,122 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load theme from localStorage
     if (localStorage.getItem('theme') === 'light') {
         toggleTheme();
+    }
+
+    // --- Authentication Event Handlers ---
+    
+    // Set up auth state change handler
+    authManager.onUserStateChange = (user) => {
+        updateAuthUI(user);
+    };
+
+    // Set up profile setup handler
+    authManager.onProfileSetupNeeded = (user) => {
+        showProfileSetupModal();
+    };
+
+    // Google sign-in
+    elements.googleSigninBtn.addEventListener('click', async () => {
+        const result = await authManager.signInWithGoogle();
+        if (!result.success) {
+            console.error('Sign-in failed:', result.error);
+            // Could show error message to user here
+        }
+    });
+
+    // Sign out
+    elements.signoutBtn.addEventListener('click', async () => {
+        const result = await authManager.signOutUser();
+        if (!result.success) {
+            console.error('Sign-out failed:', result.error);
+        }
+    });
+
+    // Profile setup form submission
+    elements.profileSetupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const nickname = elements.nicknameInput.value.trim();
+        const country = elements.countrySelect.value;
+        
+        const result = await authManager.completeProfileSetup(nickname, country);
+        
+        if (result.success) {
+            hideProfileSetupModal();
+            updateAuthUI(authManager.getCurrentUser());
+            console.log('Profile setup completed:', result.profile);
+        } else {
+            // Show error message
+            showProfileError(result.error);
+        }
+    });
+
+    // --- Profile Setup Functions ---
+    
+    function showProfileSetupModal() {
+        elements.profileSetupModal.classList.remove('hidden');
+        elements.profileSetupModal.classList.add('active');
+        // Clear any previous values
+        elements.nicknameInput.value = '';
+        elements.countrySelect.value = '';
+        clearProfileError();
+    }
+
+    function hideProfileSetupModal() {
+        elements.profileSetupModal.classList.add('hidden');
+        elements.profileSetupModal.classList.remove('active');
+    }
+
+    function showProfileError(message) {
+        // Remove any existing error message
+        clearProfileError();
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'profile-error';
+        errorDiv.textContent = message;
+        errorDiv.style.cssText = `
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        `;
+        
+        elements.profileSetupForm.insertBefore(errorDiv, elements.profileSetupForm.querySelector('.form-actions'));
+    }
+
+    function clearProfileError() {
+        const existingError = elements.profileSetupForm.querySelector('.profile-error');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+
+    function updateAuthUI(user) {
+        if (user) {
+            // User is signed in
+            elements.signedOutView.classList.add('hidden');
+            elements.signedInView.classList.remove('hidden');
+            
+            // Update user info
+            const profile = authManager.getCurrentUserProfile();
+            if (profile && profile.nickname) {
+                elements.userName.textContent = profile.nickname;
+            } else {
+                elements.userName.textContent = authManager.getUserDisplayName();
+            }
+            
+            const photoURL = authManager.getUserPhotoURL();
+            if (photoURL) {
+                elements.userAvatar.src = photoURL;
+                elements.userAvatar.style.display = 'block';
+            } else {
+                elements.userAvatar.style.display = 'none';
+            }
+        } else {
+            // User is signed out
+            elements.signedOutView.classList.remove('hidden');
+            elements.signedInView.classList.add('hidden');
+        }
     }
 
     // Handle answer submission on input change

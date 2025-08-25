@@ -1144,3 +1144,98 @@ header {
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
     border-color: #6366f1;
 }
+
+/* Profile Setup Modal Styling */
+.profile-setup {
+    max-width: 500px;
+    padding: 2rem;
+}
+
+.profile-setup-subtitle {
+    color: var(--text-color);
+    opacity: 0.8;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.75rem 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: var(--input-bg);
+    color: var(--input-text);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-hint {
+    font-size: 0.8rem;
+    color: var(--text-color);
+    opacity: 0.6;
+}
+
+.country-selector select {
+    cursor: pointer;
+}
+
+.country-selector select option {
+    background: var(--card-bg);
+    color: var(--text-color);
+    padding: 0.5rem;
+}
+
+.form-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.form-actions .btn {
+    min-width: 200px;
+}
+
+/* Light mode form styling */
+.light-mode .form-group input,
+.light-mode .form-group select {
+    border-color: rgba(124, 58, 237, 0.2);
+    background: var(--input-bg);
+    color: var(--input-text);
+}
+
+.light-mode .form-group input:focus,
+.light-mode .form-group select:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.light-mode .country-selector select option {
+    background: var(--card-bg);
+    color: var(--text-color);
+}
