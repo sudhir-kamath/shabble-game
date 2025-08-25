@@ -29,13 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
             3: document.getElementById('length-3'),
             4: document.getElementById('length-4')
         },
-        // Auth elements
-        googleSigninBtn: document.getElementById('google-signin-btn'),
-        signoutBtn: document.getElementById('signout-btn'),
-        signedOutView: document.getElementById('signed-out-view'),
-        signedInView: document.getElementById('signed-in-view'),
-        userAvatar: document.getElementById('user-avatar'),
-        userName: document.getElementById('user-name'),
         headerInstructionsBtn: document.getElementById('header-instructions-btn'),
         backBtn: document.getElementById('back-btn'),
         doneBtn: document.getElementById('done-btn'),
@@ -43,7 +36,109 @@ document.addEventListener('DOMContentLoaded', function() {
         themeToggleBtn: document.getElementById('theme-toggle'),
         gameOverMessage: document.getElementById('game-over-message'),
         liveAnnouncer: document.getElementById('live-announcer'),
-        headerFinalScore: document.getElementById('header-final-score')
+        headerFinalScore: document.getElementById('header-final-score'),
+        // Auth elements
+        googleSigninBtn: document.getElementById('google-signin-btn'),
+        signoutBtn: document.getElementById('signout-btn'),
+        signedOutView: document.getElementById('signed-out-view'),
+        signedInView: document.getElementById('signed-in-view'),
+        userName: document.getElementById('user-name'),
+        // Profile setup elements
+        profileSetup: document.getElementById('profile-setup'),
+        nicknameInput: document.getElementById('nickname-input'),
+        countrySelect: document.getElementById('country-select'),
+        saveProfileBtn: document.getElementById('save-profile-btn'),
+        skipProfileBtn: document.getElementById('skip-profile-btn')
+    };
+
+    // --- Authentication Functions ---
+    
+    const updateAuthUI = (user) => {
+        if (user) {
+            // User is signed in
+            elements.signedOutView.classList.add('hidden');
+            elements.signedInView.classList.remove('hidden');
+            elements.userName.textContent = user.displayName || 'User';
+            
+            // Check if user needs to complete profile
+            checkUserProfile(user);
+        } else {
+            // User is signed out
+            elements.signedOutView.classList.remove('hidden');
+            elements.signedInView.classList.add('hidden');
+        }
+    };
+
+    const checkUserProfile = async (user) => {
+        // Check if user has completed profile setup
+        const userProfileKey = `profile_${user.uid}`;
+        const savedProfile = localStorage.getItem(userProfileKey);
+        
+        if (!savedProfile) {
+            // Show profile setup modal
+            showProfileSetup(user);
+        }
+    };
+
+    const showProfileSetup = (user) => {
+        // Pre-fill nickname with display name if available
+        if (user.displayName) {
+            elements.nicknameInput.value = user.displayName;
+        }
+        
+        // Show the profile setup modal
+        elements.profileSetup.classList.add('active');
+    };
+
+    const saveUserProfile = (user) => {
+        const nickname = elements.nicknameInput.value.trim();
+        const country = elements.countrySelect.value;
+        
+        if (!nickname) {
+            announce('Please enter a nickname');
+            return;
+        }
+        
+        const profile = {
+            nickname: nickname,
+            country: country,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Save to localStorage (in future this could be saved to Firebase)
+        const userProfileKey = `profile_${user.uid}`;
+        localStorage.setItem(userProfileKey, JSON.stringify(profile));
+        
+        // Update UI to show nickname
+        elements.userName.textContent = nickname;
+        
+        // Hide profile setup modal
+        elements.profileSetup.classList.remove('active');
+        
+        announce(`Welcome, ${nickname}! Profile saved successfully.`);
+    };
+
+    const skipProfileSetup = () => {
+        elements.profileSetup.classList.remove('active');
+        announce('You can set up your profile later from settings');
+    };
+
+    const handleGoogleSignIn = async () => {
+        try {
+            await authManager.signInWithGoogle();
+            // Redirect will happen automatically
+        } catch (error) {
+            announce(`Sign-in failed: ${error.message}`);
+        }
+    };
+
+    const handleSignOut = async () => {
+        const result = await authManager.signOutUser();
+        if (result.success) {
+            announce('Signed out successfully');
+        } else {
+            announce(`Sign-out failed: ${result.error}`);
+        }
     };
 
     // --- UI Update Functions ---
@@ -126,70 +221,11 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
     }
 
-    // Initialize auth state management
-    setupAuthListeners();
-    
-    // Initialize game event listeners
-    setupEventListeners();
-    
-    function setupEventListeners() {
-        // Event listeners are already set up below in the existing code
-        // This function exists to prevent the ReferenceError
-    }
-    
-    // Setup authentication functions
-    function setupAuthListeners() {
-        // Set up auth state change listener
-        authManager.onUserStateChange = (user) => {
-            updateAuthUI(user);
-        };
-        
-        // Google sign-in button
-        if (elements.googleSigninBtn) {
-            elements.googleSigninBtn.addEventListener('click', async () => {
-                const result = await authManager.signInWithGoogle();
-                if (!result.success) {
-                    console.error('Sign-in failed:', result.error);
-                    // You could show an error message to the user here
-                }
-            });
-        }
-        
-        // Sign-out button
-        if (elements.signoutBtn) {
-            elements.signoutBtn.addEventListener('click', async () => {
-                const result = await authManager.signOutUser();
-                if (!result.success) {
-                    console.error('Sign-out failed:', result.error);
-                }
-            });
-        }
-    }
-    
-    function updateAuthUI(user) {
-        if (user) {
-            // User is signed in
-            elements.signedOutView.classList.add('hidden');
-            elements.signedInView.classList.remove('hidden');
-            
-            // Update user info
-            if (elements.userAvatar && user.photoURL) {
-                elements.userAvatar.src = user.photoURL;
-                elements.userAvatar.style.display = 'block';
-            }
-            
-            if (elements.userName) {
-                elements.userName.textContent = user.displayName || 'User';
-            }
-        } else {
-            // User is signed out
-            elements.signedOutView.classList.remove('hidden');
-            elements.signedInView.classList.add('hidden');
-        }
-    }
-
     // Set initial random quote
     setRandomQuote();
+
+    // Initialize authentication
+    authManager.onUserStateChange = updateAuthUI;
 
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
 
@@ -443,32 +479,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Event Listeners ---
     
-    // Debug: Check if elements exist
-    console.log('Start button element:', elements.startBtn);
-    console.log('Instructions button element:', elements.instructionsBtn);
+    // Set up event listeners
+    elements.startBtn.addEventListener('click', startGame);
+    elements.instructionsBtn.addEventListener('click', () => elements.instructions.classList.add('active'));
+    elements.closeInstructionsBtn.addEventListener('click', () => elements.instructions.classList.remove('active'));
+    elements.closeModalBtn.addEventListener('click', () => elements.gameOverModal.classList.remove('active'));
+    elements.playAgainBtn.addEventListener('click', startGame);
+    elements.playAgainHeaderBtn.addEventListener('click', startGame);
+    elements.headerInstructionsBtn.addEventListener('click', () => elements.instructions.classList.add('active'));
+    elements.backBtn.addEventListener('click', goHome);
+    elements.doneBtn.addEventListener('click', endGame);
+    elements.extraTimeBtn.addEventListener('click', addExtraTime);
+    elements.themeToggleBtn.addEventListener('click', toggleTheme);
 
-    if (elements.startBtn) {
-        elements.startBtn.addEventListener('click', () => {
-            console.log('Start button clicked');
-            setRandomQuote();
-            startGame();
-        });
-    } else {
-        console.error('Start button not found!');
-    }
-
-    if (elements.instructionsBtn) {
-        elements.instructionsBtn.addEventListener('click', showInstructions);
-    } else {
-        console.error('Instructions button not found!');
-    }
-    elements.playAgainBtn.addEventListener('click', (e) => {
-        console.log('Play Again button clicked');
-        e.preventDefault();
-        e.stopPropagation();
-        setRandomQuote();
-        startGame();
+    // Auth event listeners
+    elements.googleSigninBtn.addEventListener('click', handleGoogleSignIn);
+    elements.signoutBtn.addEventListener('click', handleSignOut);
+    
+    // Profile setup event listeners
+    elements.saveProfileBtn.addEventListener('click', () => {
+        const currentUser = authManager.getCurrentUser();
+        if (currentUser) {
+            saveUserProfile(currentUser);
+        }
     });
+    elements.skipProfileBtn.addEventListener('click', skipProfileSetup);
+
     elements.playAgainHeaderBtn.addEventListener('click', (e) => {
         console.log('Header Play Again button clicked');
         e.preventDefault();
@@ -482,39 +518,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hide game elements
         elements.gameBoard.style.display = 'none';
         elements.extraTimeBtn.classList.add('hidden');
-        elements.headerFinalScore.classList.add('hidden');
-        
-        // Show start screen with active class
-        elements.startScreen.classList.add('active');
-        showOverlay(null); // Clear any other overlays first
-        elements.startScreen.classList.add('active'); // Then show start screen
-        setRandomQuote();
-    });
-
-    elements.instructionsBtn.addEventListener('click', showInstructions);
-
-    elements.headerInstructionsBtn.addEventListener('click', () => {
-        if (game.getGameState().isPlaying) {
-            game.pauseGame();
-            showInstructions();
-        }
-    });
-
-    if (elements.backBtn) {
-        elements.backBtn.addEventListener('click', () => {
-            console.log('Back to Game button clicked');
-            elements.instructions.classList.remove('active');
-            if (game.getGameState().isPlaying) {
-                game.resumeGame();
-            }
-        });
-    }
-
-
-    // Game over modal close button (Review Answers)
-    if (elements.closeModalBtn) {
-        elements.closeModalBtn.addEventListener('click', () => {
-            console.log('Review Answers button clicked');
             elements.gameOverModal.classList.remove('active');
             
             // Setup tooltips for the review answers page
@@ -522,17 +525,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 setupTooltips();
             }, 100);
         });
-    }
+    };
 
     // Function to setup tooltips for cards
-    function setupTooltips() {
+    const setupTooltips = () => {
         const cards = elements.gameBoard.querySelectorAll('.alphagram-card');
         
         cards.forEach((card) => {
             const tooltip = card.querySelector('.tooltip');
             if (!tooltip) return;
 
+            // Clear existing listeners
+            card.onmouseover = null;
+            card.onmouseout = null;
+
+            // Add fresh event listeners
             card.addEventListener('mouseover', (e) => {
+                const tooltip = e.currentTarget.querySelector('.tooltip');
+                if (!tooltip) return;
+
+                // Ensure card has relative positioning for tooltip positioning
+                if (window.getComputedStyle(card).position === 'static') {
+                    card.style.position = 'relative';
+                }
+
                 // Create a new tooltip element and append to body for absolute positioning
                 const newTooltip = document.createElement('div');
                 newTooltip.textContent = tooltip.textContent;
@@ -588,19 +604,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return selectedLengths.length > 0 ? selectedLengths : [4]; // Default to 4-letter if none selected
     }
-
-
-    elements.doneBtn.addEventListener('click', endGame);
-    elements.themeToggleBtn.addEventListener('click', toggleTheme);
-
-    elements.extraTimeBtn.addEventListener('click', () => {
-        const result = game.useExtraTime();
-        if (result.success) {
-            updateTimerDisplay(result.newTimeLeft);
-            elements.extraTimeBtn.disabled = true; // Disable after use
-            announce('30 seconds added. 25 points deducted.');
-        }
-    });
 
     // Load theme from localStorage
     if (localStorage.getItem('theme') === 'light') {

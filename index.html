@@ -53,6 +53,28 @@
                     <h1>Shabble!</h1>
                     <p>Unscramble the letters to form valid words. Mark fakes with 'x'.</p>
                     
+                    <!-- Authentication Section -->
+                    <div id="auth-section" class="auth-section">
+                        <div id="signed-out-view" class="auth-view">
+                            <p>Sign in to save your scores and track your progress!</p>
+                            <button id="google-signin-btn" class="btn auth-btn">
+                                <i class="fab fa-google"></i>
+                                Sign in with Google
+                            </button>
+                            <p class="auth-note">Or continue as guest</p>
+                        </div>
+                        
+                        <div id="signed-in-view" class="auth-view hidden">
+                            <div class="user-info">
+                                <img id="user-avatar" src="" alt="User Avatar" class="user-avatar">
+                                <div class="user-details">
+                                    <span id="user-name">User Name</span>
+                                    <button id="signout-btn" class="btn secondary-btn small">Sign Out</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="word-length-selection">
                         <h3>Select Word Lengths:</h3>
                         <div class="checkbox-group">
@@ -115,6 +137,7 @@
 
         </main>
 
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <script type="module" src="js/main.js"></script>
     </div>
 </body>
