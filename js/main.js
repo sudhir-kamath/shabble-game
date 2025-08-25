@@ -455,6 +455,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (elements.startBtn) {
         elements.startBtn.addEventListener('click', () => {
             console.log('Start button clicked');
+            // Check if user is signed in before starting game
+            if (!authManager.isSignedIn()) {
+                alert('Please sign in with Google to play the game.');
+                return;
+            }
             setRandomQuote();
             startGame();
         });
@@ -471,6 +476,11 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Play Again button clicked');
         e.preventDefault();
         e.stopPropagation();
+        // Check if user is signed in before starting game
+        if (!authManager.isSignedIn()) {
+            alert('Please sign in with Google to play the game.');
+            return;
+        }
         setRandomQuote();
         startGame();
     });
@@ -706,6 +716,11 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.signedOutView.classList.add('hidden');
             elements.signedInView.classList.remove('hidden');
             
+            // Enable start game button
+            elements.startBtn.disabled = false;
+            elements.startBtn.style.opacity = '1';
+            elements.startBtn.style.cursor = 'pointer';
+            
             // Update user info
             const profile = authManager.getCurrentUserProfile();
             if (profile && profile.nickname) {
@@ -725,6 +740,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // User is signed out
             elements.signedOutView.classList.remove('hidden');
             elements.signedInView.classList.add('hidden');
+            
+            // Disable start game button
+            elements.startBtn.disabled = true;
+            elements.startBtn.style.opacity = '0.5';
+            elements.startBtn.style.cursor = 'not-allowed';
         }
     }
 
