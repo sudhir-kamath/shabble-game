@@ -51,7 +51,13 @@ document.addEventListener('DOMContentLoaded', function() {
         profileSetupModal: document.getElementById('profile-setup-modal'),
         profileSetupForm: document.getElementById('profile-setup-form'),
         nicknameInput: document.getElementById('nickname-input'),
-        countrySelect: document.getElementById('country-select')
+        countrySelect: document.getElementById('country-select'),
+        // Edit profile elements
+        editProfileModal: document.getElementById('edit-profile-modal'),
+        editProfileForm: document.getElementById('edit-profile-form'),
+        editNicknameInput: document.getElementById('edit-nickname-input'),
+        editCountrySelect: document.getElementById('edit-country-select'),
+        cancelEditBtn: document.getElementById('cancel-edit-btn')
     };
 
     // --- UI Update Functions ---
@@ -233,6 +239,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const startGame = () => {
         console.log('Starting game...');
         
+        // Hide start screen
+        elements.startScreen.classList.remove('active');
+        
         // Get selected word lengths
         const selectedLengths = getSelectedWordLengths();
         console.log('Selected word lengths:', selectedLengths);
@@ -241,23 +250,18 @@ document.addEventListener('DOMContentLoaded', function() {
         setRandomQuote();
         
         const initialState = game.startNewGame(selectedLengths);
+        elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
+        renderGameBoard(initialState.alphagrams);
+        updateTimerDisplay(initialState.timeLeft);
 
-        // --- UI Reset --- 
-        elements.startScreen.classList.remove('active');
-        elements.gameOverModal.classList.remove('active');
-
-        // Show in-game controls
+        // Show header elements for game
         elements.timerDisplay.classList.remove('hidden');
-        elements.doneBtn.classList.remove('hidden');
+        elements.doneBtn.disabled = false;
+        elements.extraTimeBtn.disabled = false;
         elements.extraTimeBtn.classList.remove('hidden');
 
         // Reset button states
         [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = false);
-
-        // --- Render New Game --- 
-        elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
-        renderGameBoard(initialState.alphagrams);
-        updateTimerDisplay(initialState.timeLeft);
 
         // --- Final Setup ---
         game.onTimeUpdate = updateTimerDisplay; // Hook up timer updates
@@ -511,8 +515,17 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Please sign in with Google to play the game.');
             return;
         }
+        
+        // Hide game over modal first
+        elements.gameOverModal.classList.remove('active');
+        
+        // Reset to start screen
+        elements.startScreen.classList.add('active');
+        elements.gameBoard.style.display = 'none';
+        elements.timerDisplay.classList.add('hidden');
+        elements.extraTimeBtn.classList.add('hidden');
+        
         setRandomQuote();
-        startGame();
     });
     elements.playAgainHeaderBtn.addEventListener('click', (e) => {
         console.log('Header Play Again button clicked');
@@ -702,24 +715,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- Profile Setup Functions ---
-    
-    function showProfileSetupModal() {
-        elements.profileSetupModal.classList.remove('hidden');
-        elements.profileSetupModal.classList.add('active');
-        // Clear any previous values
-        elements.nicknameInput.value = '';
-        elements.countrySelect.value = '';
-        clearProfileError();
-    }
-
-    function hideProfileSetupModal() {
-        elements.profileSetupModal.classList.add('hidden');
-        elements.profileSetupModal.classList.remove('active');
-    }
-
     function showProfileError(message) {
-        // Remove any existing error message
+        // Clear any existing error
         clearProfileError();
         
         const errorDiv = document.createElement('div');
@@ -795,4 +792,90 @@ document.addEventListener('DOMContentLoaded', function() {
             game.submitAnswer(alphagram, answer);
         }
     });
+
+    // --- Edit Profile Functions ---
+    
+    function showEditProfileModal() {
+        const profile = authManager.getCurrentUserProfile();
+        if (!profile) return;
+        
+        // Pre-fill current values
+        elements.editNicknameInput.value = profile.nickname || '';
+        elements.editCountrySelect.value = profile.country || '';
+        
+        elements.editProfileModal.classList.remove('hidden');
+        elements.editProfileModal.classList.add('active');
+        
+        // Focus on nickname input
+        setTimeout(() => {
+            elements.editNicknameInput.focus();
+        }, 100);
+    }
+
+    function hideEditProfileModal() {
+        elements.editProfileModal.classList.add('hidden');
+        elements.editProfileModal.classList.remove('active');
+    }
+
+    // Header click handlers for editing profile
+    elements.headerCountryFlag.addEventListener('click', () => {
+        if (authManager.isSignedIn()) {
+            showEditProfileModal();
+        }
+    });
+
+    elements.headerNickname.addEventListener('click', () => {
+        if (authManager.isSignedIn()) {
+            showEditProfileModal();
+        }
+    });
+
+    // Edit profile form submission
+    elements.editProfileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const nickname = elements.editNicknameInput.value.trim();
+        const country = elements.editCountrySelect.value;
+        
+        const result = await authManager.completeProfileSetup(nickname, country);
+        
+        if (result.success) {
+            hideEditProfileModal();
+            updateAuthUI(authManager.getCurrentUser());
+            updateHeaderPlayerInfo(authManager.getCurrentUser());
+            console.log('Profile updated:', result.profile);
+        } else {
+            // Show error message in edit modal
+            showEditProfileError(result.error);
+        }
+    });
+
+    // Cancel edit profile
+    elements.cancelEditBtn.addEventListener('click', () => {
+        hideEditProfileModal();
+    });
+
+    function showEditProfileError(message) {
+        // Clear any existing error
+        clearEditProfileError();
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'edit-profile-error';
+        errorDiv.textContent = message;
+        errorDiv.style.cssText = `
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        `;
+        
+        elements.editProfileForm.insertBefore(errorDiv, elements.editProfileForm.querySelector('.form-actions'));
+    }
+
+    function clearEditProfileError() {
+        const existingError = elements.editProfileForm.querySelector('.edit-profile-error');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
 });

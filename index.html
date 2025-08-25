@@ -18,8 +18,8 @@
             <div class="header-content">
                 <div class="header-left">
                     <div id="header-player-info" class="header-player-info hidden">
-                        <span id="header-country-flag" class="country-flag"></span>
-                        <span id="header-nickname" class="player-nickname"></span>
+                        <span id="header-country-flag" class="country-flag clickable" title="Click to edit country"></span>
+                        <span id="header-nickname" class="player-nickname clickable" title="Click to edit nickname"></span>
                     </div>
                 </div>
                 <div class="header-center">
@@ -188,6 +188,80 @@
                         
                         <div class="form-actions">
                             <button type="submit" class="btn primary-btn">Complete Setup</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Edit Profile Modal -->
+            <div id="edit-profile-modal" class="overlay hidden">
+                <div class="overlay-content profile-setup">
+                    <h2>Edit Profile</h2>
+                    <p class="profile-setup-subtitle">Update your nickname and country</p>
+                    
+                    <form id="edit-profile-form" class="profile-form">
+                        <div class="form-group">
+                            <label for="edit-nickname-input">Nickname</label>
+                            <input type="text" id="edit-nickname-input" placeholder="Enter your nickname" maxlength="20" required>
+                            <span class="form-hint">3-20 characters, letters and numbers only</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-country-select">Country</label>
+                            <div class="country-selector">
+                                <select id="edit-country-select" required>
+                                    <option value="">Select your country</option>
+                                    <option value="AR">🇦🇷 Argentina</option>
+                                    <option value="AU">🇦🇺 Australia</option>
+                                    <option value="AT">🇦🇹 Austria</option>
+                                    <option value="BE">🇧🇪 Belgium</option>
+                                    <option value="BR">🇧🇷 Brazil</option>
+                                    <option value="CA">🇨🇦 Canada</option>
+                                    <option value="CN">🇨🇳 China</option>
+                                    <option value="CZ">🇨🇿 Czech Republic</option>
+                                    <option value="DK">🇩🇰 Denmark</option>
+                                    <option value="EG">🇪🇬 Egypt</option>
+                                    <option value="FI">🇫🇮 Finland</option>
+                                    <option value="FR">🇫🇷 France</option>
+                                    <option value="DE">🇩🇪 Germany</option>
+                                    <option value="GR">🇬🇷 Greece</option>
+                                    <option value="HU">🇭🇺 Hungary</option>
+                                    <option value="IS">🇮🇸 Iceland</option>
+                                    <option value="IN">🇮🇳 India</option>
+                                    <option value="ID">🇮🇩 Indonesia</option>
+                                    <option value="IE">🇮🇪 Ireland</option>
+                                    <option value="IT">🇮🇹 Italy</option>
+                                    <option value="JP">🇯🇵 Japan</option>
+                                    <option value="LU">🇱🇺 Luxembourg</option>
+                                    <option value="MY">🇲🇾 Malaysia</option>
+                                    <option value="MX">🇲🇽 Mexico</option>
+                                    <option value="NL">🇳🇱 Netherlands</option>
+                                    <option value="NZ">🇳🇿 New Zealand</option>
+                                    <option value="NG">🇳🇬 Nigeria</option>
+                                    <option value="NO">🇳🇴 Norway</option>
+                                    <option value="PH">🇵🇭 Philippines</option>
+                                    <option value="PL">🇵🇱 Poland</option>
+                                    <option value="PT">🇵🇹 Portugal</option>
+                                    <option value="RU">🇷🇺 Russia</option>
+                                    <option value="SG">🇸🇬 Singapore</option>
+                                    <option value="ZA">🇿🇦 South Africa</option>
+                                    <option value="KR">🇰🇷 South Korea</option>
+                                    <option value="ES">🇪🇸 Spain</option>
+                                    <option value="SE">🇸🇪 Sweden</option>
+                                    <option value="CH">🇨🇭 Switzerland</option>
+                                    <option value="TH">🇹🇭 Thailand</option>
+                                    <option value="TR">🇹🇷 Turkey</option>
+                                    <option value="GB">🇬🇧 United Kingdom</option>
+                                    <option value="US">🇺🇸 United States</option>
+                                    <option value="VN">🇻🇳 Vietnam</option>
+                                    <option value="OTHER">🏳️ Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" id="cancel-edit-btn" class="btn secondary-btn">Cancel</button>
+                            <button type="submit" class="btn primary-btn">Save Changes</button>
                         </div>
                     </form>
                 </div>
