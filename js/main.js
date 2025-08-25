@@ -672,11 +672,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateAuthUI(user);
     };
 
-    // Set up profile setup handler
-    authManager.onProfileSetupNeeded = (user) => {
-        showProfileSetupModal();
-    };
-
     function showProfileSetupModal() {
         elements.profileSetupModal.classList.remove('hidden');
         elements.profileSetupModal.classList.add('active');
@@ -691,6 +686,11 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.profileSetupModal.classList.add('hidden');
         elements.profileSetupModal.classList.remove('active');
     }
+
+    // Set up profile setup handler
+    authManager.onProfileSetupNeeded = (user) => {
+        showProfileSetupModal();
+    };
 
     // Google sign-in
     elements.googleSigninBtn.addEventListener('click', async () => {
