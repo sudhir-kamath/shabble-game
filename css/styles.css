@@ -107,9 +107,19 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
+}
+
+.header-logo {
+    flex-shrink: 0;
+}
+
+.header-tile {
+    transform: scale(0.8);
+    margin: 0;
 }
 
 .header-left {

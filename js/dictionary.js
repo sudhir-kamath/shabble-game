@@ -739,8 +739,8 @@ function getRandomWord(length = 4) {
 // Generate a fake alphagram that doesn't have valid anagrams for specified length
 function generateFakeAlphagram(length = 4) {
     const vowels = ['A', 'E', 'I', 'O', 'U'];
-    const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'V', 'W']; // Excluded J, X, Q, K, Z, Y
-    const excludedLetters = ['J', 'X', 'Q', 'K', 'Z', 'Y'];
+    const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'L', 'M', 'N', 'P', 'R', 'S', 'T']; // Excluded J, X, Q, K, Z, Y, V, W
+    const excludedLetters = ['J', 'X', 'Q', 'K', 'Z', 'Y', 'V', 'W'];
     
     const maxAttempts = 100;
     let attempts = 0;
@@ -761,12 +761,13 @@ function generateFakeAlphagram(length = 4) {
         // Step 3: Add a replacement letter that creates an invalid alphagram
         let replacementLetter;
         if (vowels.includes(removedLetter)) {
-            // Replace vowel with consonant
-            replacementLetter = consonants[Math.floor(Math.random() * consonants.length)];
+            // Replace vowel with different vowel
+            const otherVowels = vowels.filter(v => v !== removedLetter);
+            replacementLetter = otherVowels[Math.floor(Math.random() * otherVowels.length)];
         } else {
-            // Replace consonant with vowel or different consonant
-            const allReplacements = [...vowels, ...consonants];
-            replacementLetter = allReplacements[Math.floor(Math.random() * allReplacements.length)];
+            // Replace consonant with different consonant (excluding the removed one)
+            const otherConsonants = consonants.filter(c => c !== removedLetter);
+            replacementLetter = otherConsonants[Math.floor(Math.random() * otherConsonants.length)];
         }
         
         letters.push(replacementLetter);
