@@ -2,16 +2,16 @@ import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './
 
 class AuthManager {
     constructor() {
-        this.currentUser = null;
+        this.user = null;
+        this.signingIn = false;
         this.onUserStateChange = null;
         this.onProfileSetupNeeded = null;
-        this.init();
-    }
-
-    init() {
+        
         // Listen for authentication state changes
         onAuthStateChanged(auth, (user) => {
-            this.currentUser = user;
+            this.user = user;
+            console.log('Auth state changed:', user ? user.email : 'No user');
+            
             if (this.onUserStateChange) {
                 this.onUserStateChange(user);
             }
@@ -27,14 +27,45 @@ class AuthManager {
 
     async signInWithGoogle() {
         try {
+            // Check if there's already a sign-in in progress
+            if (this.signingIn) {
+                return {
+                    success: false,
+                    error: 'Sign-in already in progress'
+                };
+            }
+            
+            this.signingIn = true;
             const result = await signInWithPopup(auth, provider);
+            this.signingIn = false;
+            
             return {
                 success: true,
                 user: result.user,
                 isFirstTime: this.isFirstTimeUser(result.user)
             };
         } catch (error) {
+            this.signingIn = false;
             console.error('Sign-in error:', error);
+            
+            // Handle specific Firebase auth errors
+            if (error.code === 'auth/cancelled-popup-request') {
+                return {
+                    success: false,
+                    error: 'Sign-in was cancelled. Please try again.'
+                };
+            } else if (error.code === 'auth/popup-blocked') {
+                return {
+                    success: false,
+                    error: 'Popup was blocked by browser. Please allow popups and try again.'
+                };
+            } else if (error.code === 'auth/popup-closed-by-user') {
+                return {
+                    success: false,
+                    error: 'Sign-in popup was closed. Please try again.'
+                };
+            }
+            
             return {
                 success: false,
                 error: error.message
