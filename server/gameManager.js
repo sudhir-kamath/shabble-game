@@ -49,6 +49,11 @@ class GameManager {
         return { success: true, room };
     }
 
+    // Get room by room code
+    getRoom(roomCode) {
+        return this.rooms.get(roomCode);
+    }
+
     // Get room by socket ID
     getRoomBySocket(socketId) {
         const roomCode = this.playerRooms.get(socketId);
@@ -113,7 +118,8 @@ class GameRoom {
                 isHost: true,
                 score: 0,
                 answers: {},
-                connected: true
+                connected: true,
+                finished: false
             }
         ];
         
@@ -134,7 +140,8 @@ class GameRoom {
             isHost: false,
             score: 0,
             answers: {},
-            connected: true
+            connected: true,
+            finished: false
         });
     }
 
@@ -159,6 +166,7 @@ class GameRoom {
         this.players.forEach(player => {
             player.score = 0;
             player.answers = {};
+            player.finished = false;
             this.gameState.alphagrams.forEach(item => {
                 player.answers[item.alphagram] = {
                     userInput: '',
@@ -229,6 +237,22 @@ class GameRoom {
                 totalScore: player.score
             }
         };
+    }
+
+    // Mark a player as finished
+    finishPlayer(socketId) {
+        const player = this.getPlayer(socketId);
+        if (player) {
+            player.finished = true;
+            
+            // Check if game should end (all players finished or timer ran out)
+            const allFinished = this.players.every(p => p.finished);
+            if (allFinished || this.gameState.timeLeft <= 0) {
+                this.endGame();
+                return true; // Game ended
+            }
+        }
+        return false; // Game continues
     }
 
     endGame() {

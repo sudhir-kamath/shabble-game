@@ -165,10 +165,10 @@ class MultiplayerClient {
         }
     }
     
-    // End the game (host only)
+    // End the game
     endGame() {
-        if (this.socket && this.isHost) {
-            this.socket.emit('end-game');
+        if (this.socket && this.roomCode) {
+            this.socket.emit('end-game', { roomCode: this.roomCode });
         }
     }
     

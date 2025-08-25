@@ -768,14 +768,14 @@ header {
 
 .connection-status {
     position: fixed;
-    top: 1rem;
-    right: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    z-index: 1001;
-    transition: all 0.3s ease;
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    z-index: 1000;
+    box-shadow: var(--shadow);
 }
 
 .connection-status.connected {
@@ -791,6 +791,61 @@ header {
 .connection-status.connecting {
     background: var(--warning);
     color: white;
+}
+
+/* Multiplayer results display */
+.multiplayer-results {
+    margin-top: 10px;
+    font-size: 0.85em;
+}
+
+.correct-answers {
+    background: rgba(46, 204, 113, 0.1);
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--success);
+}
+
+.player-answers {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.player-answer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.player-answer.correct {
+    background: rgba(46, 204, 113, 0.15);
+    border-left: 2px solid var(--success);
+}
+
+.player-answer.incorrect {
+    background: rgba(231, 76, 60, 0.15);
+    border-left: 2px solid var(--error);
+}
+
+.player-name {
+    font-weight: 600;
+    min-width: 40px;
+}
+
+.answer {
+    flex: 1;
+    font-family: monospace;
+}
+
+.score {
+    color: var(--success);
+    font-weight: 600;
+    font-size: 0.85em;
 }
 
 /* Opponent score styling */

@@ -21,6 +21,9 @@ const gameManager = new GameManager();
 setInterval(() => {
     gameManager.rooms.forEach((room) => {
         if (room.gameState.status === 'playing') {
+            // Decrement timer
+            room.gameState.timeLeft--;
+            
             // Send timer update
             io.to(room.roomCode).emit('timer-update', {
                 timeLeft: room.gameState.timeLeft
@@ -147,23 +150,23 @@ io.on('connection', (socket) => {
     });
 
     // End game manually
-    socket.on('end-game', () => {
-        const room = gameManager.getRoomBySocket(socket.id);
-        if (!room) return;
-
-        const player = room.getPlayer(socket.id);
-        if (!player || !player.isHost) {
-            socket.emit('error', { message: 'Only the host can end the game' });
-            return;
-        }
-
-        const result = gameManager.endGame(room.roomCode);
-        if (result.success) {
-            io.to(room.roomCode).emit('game-ended', {
-                results: result.room.getGameResults()
-            });
+    socket.on('end-game', (data) => {
+        const room = gameManager.getRoom(data.roomCode);
+        if (room) {
+            const gameEnded = room.finishPlayer(socket.id);
             
-            console.log(`Game ended in room ${room.roomCode}`);
+            if (gameEnded) {
+                // Game ended - all players finished or timer ran out
+                io.to(data.roomCode).emit('game-ended', {
+                    results: room.getGameResults()
+                });
+            } else {
+                // Player finished but game continues - notify other players
+                io.to(data.roomCode).emit('player-finished', {
+                    playerName: room.getPlayer(socket.id)?.name,
+                    gameState: room.getPublicState()
+                });
+            }
         }
     });
 

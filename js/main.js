@@ -571,6 +571,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updateMultiplayerScores(data.gameState);
         });
         
+        multiplayerClient.on('player-finished', (data) => {
+            announce(`${data.playerName} finished the game!`);
+        });
+        
         multiplayerClient.on('game-ended', (data) => {
             // Disable DONE button only when game actually ends
             elements.doneBtn.disabled = true;
@@ -690,76 +694,257 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function showMultiplayerResults(results) {
-        // Hide multiplayer UI
-        elements.opponentScoreContainer.classList.add('hidden');
+    // Multiplayer event handlers
+    multiplayerClient.on('room-joined', (data) => {
+        elements.roomCodeDisplay.textContent = data.roomCode;
+        updatePlayersList(data.gameState.players);
+        showOverlay(elements.waitingRoom);
+        updateWaitingRoomState(data.gameState);
+    });
+    
+    multiplayerClient.on('join-error', (data) => {
+        alert(`Failed to join room: ${data.error}`);
+    });
+    
+    multiplayerClient.on('player-joined', (data) => {
+        updatePlayersList(data.gameState.players);
+        updateWaitingRoomState(data.gameState);
+    });
+    
+    multiplayerClient.on('player-disconnected', (data) => {
+        updatePlayersList(data.gameState.players);
+        if (data.gameState.status === 'playing') {
+            announce('Opponent disconnected');
+        }
+    });
+    
+    // Game events
+    multiplayerClient.on('game-starting', (data) => {
+        showOverlay(elements.gameStarting);
+        startCountdown();
+    });
+    
+    multiplayerClient.on('game-started', (data) => {
+        showOverlay(null);
+        startMultiplayerGame(data.gameState);
+    });
+    
+    multiplayerClient.on('timer-update', (data) => {
+        updateTimerDisplay(data.timeLeft);
+        // Don't disable DONE button here - let server handle game ending
+    });
+    
+    multiplayerClient.on('score-update', (data) => {
+        updateMultiplayerScores(data.gameState);
+    });
+    
+    multiplayerClient.on('player-finished', (data) => {
+        announce(`${data.playerName} finished the game!`);
+    });
+    
+    multiplayerClient.on('game-ended', (data) => {
+        // Disable DONE button only when game actually ends
+        elements.doneBtn.disabled = true;
+        showMultiplayerResults(data.results);
+    });
+    
+    multiplayerClient.on('error', (data) => {
+        alert(`Error: ${data.message}`);
+    });
+    
+    function updateConnectionStatus(status) {
+    // Remove existing status indicator
+    const existing = document.querySelector('.connection-status');
+    if (existing) existing.remove();
+    
+    // Create new status indicator
+    const statusDiv = document.createElement('div');
+    statusDiv.className = `connection-status ${status}`;
+    statusDiv.textContent = status === 'connected' ? 'Connected' : 'Disconnected';
+    document.body.appendChild(statusDiv);
+    
+    // Auto-hide after 3 seconds if connected
+    if (status === 'connected') {
+        setTimeout(() => {
+            if (statusDiv.parentNode) {
+                statusDiv.remove();
+            }
+        }, 3000);
+    }
+    }
+    
+    function updatePlayersList(players) {
+    elements.playersUl.innerHTML = '';
+    players.forEach(player => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span>${player.name}</span>
+            <div>
+                ${player.isHost ? '<span class="player-host-badge">Host</span>' : ''}
+                ${!player.connected ? '<span class="player-disconnected">Disconnected</span>' : ''}
+            </div>
+        `;
+        elements.playersUl.appendChild(li);
+    });
+    }
+    
+    function updateWaitingRoomState(gameState) {
+    const canStart = gameState.players.length === 2 && gameState.status === 'waiting';
+    const isHost = multiplayerClient.isHost;
+    
+    if (canStart && isHost) {
+        elements.waitingMessage.classList.add('hidden');
+        elements.gameReady.classList.remove('hidden');
+    } else {
+        elements.waitingMessage.classList.remove('hidden');
+        elements.gameReady.classList.add('hidden');
         
-        // Create custom multiplayer results overlay
-        const resultsOverlay = document.createElement('div');
-        resultsOverlay.className = 'overlay active';
-        resultsOverlay.innerHTML = `
-            <div class="overlay-content">
-                <h2>Game Over!</h2>
-                <div class="results-comparison">
-                    ${results.players.map(player => `
-                        <div class="player-result ${results.winner && results.winner.name === player.name ? 'winner' : ''}">
-                            <h3>${player.name}</h3>
-                            <div class="final-score">${player.score}</div>
-                            ${results.winner && results.winner.name === player.name ? '<div class="winner-badge">Winner!</div>' : ''}
-                        </div>
-                    `).join('')}
-                </div>
+        if (gameState.players.length === 2) {
+            elements.waitingMessage.innerHTML = '<p>Waiting for host to start the game...</p>';
+        } else {
+            elements.waitingMessage.innerHTML = '<p>Waiting for opponent to join...</p>';
+        }
+    }
+    }
+    
+    function startCountdown() {
+    let count = 3;
+    elements.countdownNumber.textContent = count;
+    
+    const countdownInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            elements.countdownNumber.textContent = count;
+        } else {
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+    }
+    
+    function startMultiplayerGame(gameState) {
+    // Show game UI elements
+    elements.headerFinalScore.classList.add('hidden');
+    elements.opponentScoreContainer.classList.remove('hidden');
+    elements.timerDisplay.classList.remove('hidden');
+    elements.doneBtn.classList.remove('hidden');
+    elements.extraTimeBtn.classList.add('hidden'); // Disable extra time in multiplayer
+    
+    // Enable DONE button for multiplayer
+    elements.doneBtn.disabled = false;
+    
+    // Render game board
+    renderGameBoard(gameState.alphagrams);
+    
+    // Enable inputs
+    elements.gameBoard.querySelectorAll('.answer-input').forEach(input => {
+        input.disabled = false;
+        input.value = '';
+    });
+    
+    // Update scores
+    updateMultiplayerScores(gameState);
+    
+    announce('Multiplayer game started! Good luck!');
+    }
+    
+    function updateMultiplayerScores(gameState) {
+    const currentPlayer = multiplayerClient.getCurrentPlayer();
+    const opponent = multiplayerClient.getOpponent();
+    
+    if (currentPlayer) {
+        elements.scoreDisplay.textContent = currentPlayer.score;
+    }
+    
+    if (opponent) {
+        elements.opponentScoreDisplay.textContent = opponent.score;
+    }
+    }
+    
+    function showMultiplayerResults(results) {
+    // Hide all overlays and show game board with results
+    showOverlay(null);
+    
+    // Hide game UI elements
+    elements.timerDisplay.classList.add('hidden');
+    elements.doneBtn.classList.add('hidden');
+    elements.opponentScoreContainer.classList.add('hidden');
+    
+    // Show winner announcement and actions in header
+    elements.headerFinalScore.classList.remove('hidden');
+    elements.headerFinalScore.innerHTML = `
+        <div class="multiplayer-final-results">
+            <h2>Game Over! ${results.winner ? results.winner.name + ' Wins!' : 'Tie Game!'}</h2>
+            <div class="final-scores">
+                ${results.players.map(player => `
+                    <div class="player-final-score ${results.winner && results.winner.name === player.name ? 'winner' : ''}">
+                        <span class="player-name">${player.name}</span>
+                        <span class="score">${player.score}</span>
+                        ${results.winner && results.winner.name === player.name ? '<span class="winner-badge">Winner!</span>' : ''}
+                    </div>
+                `).join('')}
+            </div>
+            <div class="game-end-actions">
                 <button id="play-again-multiplayer-btn" class="btn primary-btn">Play Again</button>
                 <button id="leave-game-btn" class="btn secondary-btn">Leave Game</button>
             </div>
-        `;
-        
-        document.body.appendChild(resultsOverlay);
-        
-        // Add event listeners
-        resultsOverlay.querySelector('#play-again-multiplayer-btn').addEventListener('click', () => {
-            if (multiplayerClient.isHost) {
-                multiplayerClient.startGame();
-            }
-            resultsOverlay.remove();
-        });
-        
-        resultsOverlay.querySelector('#leave-game-btn').addEventListener('click', () => {
-            multiplayerClient.disconnect();
-            resultsOverlay.remove();
-            showOverlay(elements.startScreen);
-            isMultiplayer = false;
-        });
-        
-        // Show detailed results on the board
-        showMultiplayerBoardResults(results);
+        </div>
+    `;
+    
+    // Add event listeners
+    document.getElementById('play-again-multiplayer-btn').addEventListener('click', () => {
+        if (multiplayerClient.isHost) {
+            multiplayerClient.startGame();
+        } else {
+            announce('Waiting for host to start new game...');
+        }
+    });
+    
+    document.getElementById('leave-game-btn').addEventListener('click', () => {
+        multiplayerClient.disconnect();
+        showOverlay(elements.startScreen);
+        isMultiplayer = false;
+    });
+    
+    // Show detailed results on the board
+    showMultiplayerBoardResults(results);
     }
     
     function showMultiplayerBoardResults(results) {
-        results.alphagrams.forEach(result => {
+    results.alphagrams.forEach(result => {
             const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
             if (!card) return;
             
             const input = card.querySelector('.answer-input');
             input.disabled = true;
             
-            // Show correct answers
+            // Show correct answers and player responses
             card.classList.remove('correct', 'incorrect', 'partial');
             
-            // Add tooltip with all player answers
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.innerHTML = `
-                <strong>Correct: ${result.validWords.join(', ') || 'None'}</strong><br>
-                ${result.playerAnswers.map(pa => 
-                    `${pa.name}: ${pa.answer.userInput || '(no answer)'}`
-                ).join('<br>')}
+            // Create results display
+            const resultsDiv = document.createElement('div');
+            resultsDiv.className = 'multiplayer-results';
+            resultsDiv.innerHTML = `
+                <div class="correct-answers">
+                    <strong>Correct:</strong> ${result.validWords.join(', ') || 'None'}
+                </div>
+                <div class="player-answers">
+                    ${result.playerAnswers.map(pa => {
+                        const answer = pa.answer;
+                        const isCorrect = answer && answer.isCorrect;
+                        return `
+                            <div class="player-answer ${isCorrect ? 'correct' : 'incorrect'}">
+                                <span class="player-name">${pa.name}:</span>
+                                <span class="answer">${answer?.userInput || '(no answer)'}</span>
+                                ${answer?.score ? `<span class="score">+${answer.score}</span>` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
             `;
-            card.appendChild(tooltip);
             
-            // Add hover events
-            card.addEventListener('mouseover', () => tooltip.classList.add('show'));
-            card.addEventListener('mouseout', () => tooltip.classList.remove('show'));
+        // Replace input with results
+        input.style.display = 'none';
+        card.appendChild(resultsDiv);
         });
     }
 });
