@@ -882,8 +882,9 @@ function generateGame(selectedLengths = [4]) {
     
     // Generate alphagrams for each length
     for (const { length, count } of distribution) {
-        // 15-25% should be fake (aim for ~20%)
-        const fakeCount = Math.max(1, Math.floor(count * 0.2));
+        // 20-30% should be fake (randomized per length)
+        const fakePercentage = 0.2 + Math.random() * 0.1; // Random between 0.2 and 0.3
+        const fakeCount = Math.max(1, Math.floor(count * fakePercentage + 0.5));
         const realCount = count - fakeCount;
         
         console.log(`Length ${length}: ${realCount} real, ${fakeCount} fake`);
