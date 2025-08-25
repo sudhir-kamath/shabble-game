@@ -44,6 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
         gameOverMessage: document.getElementById('game-over-message'),
         liveAnnouncer: document.getElementById('live-announcer'),
         headerFinalScore: document.getElementById('header-final-score'),
+        headerPlayerInfo: document.getElementById('header-player-info'),
+        headerCountryFlag: document.getElementById('header-country-flag'),
+        headerNickname: document.getElementById('header-nickname'),
         // Profile setup elements
         profileSetupModal: document.getElementById('profile-setup-modal'),
         profileSetupForm: document.getElementById('profile-setup-form'),
@@ -52,6 +55,33 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- UI Update Functions ---
+
+    // Function to get country flag emoji from country code
+    function getCountryFlag(countryCode) {
+        // Convert country code to flag emoji using Unicode regional indicator symbols
+        if (!countryCode || countryCode === 'OTHER') return '🏳️';
+        
+        // Convert each letter to its regional indicator symbol
+        const codePoints = countryCode
+            .toUpperCase()
+            .split('')
+            .map(char => 127397 + char.charCodeAt(0));
+        
+        return String.fromCodePoint(...codePoints);
+    }
+
+    // Function to update header player info
+    function updateHeaderPlayerInfo(user) {
+        const profile = authManager.getCurrentUserProfile();
+        if (user && profile && profile.nickname && profile.country) {
+            // Use a simple approach - just show country code for now
+            elements.headerCountryFlag.textContent = profile.country;
+            elements.headerNickname.textContent = profile.nickname;
+            elements.headerPlayerInfo.classList.remove('hidden');
+        } else {
+            elements.headerPlayerInfo.classList.add('hidden');
+        }
+    }
 
     // Collection of pithy one-liners involving the number 4
     const fourOneliners = [
@@ -663,6 +693,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (result.success) {
             hideProfileSetupModal();
             updateAuthUI(authManager.getCurrentUser());
+            // Update header player info after profile setup
+            updateHeaderPlayerInfo(authManager.getCurrentUser());
             console.log('Profile setup completed:', result.profile);
         } else {
             // Show error message
@@ -736,10 +768,16 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 elements.userAvatar.style.display = 'none';
             }
+            
+            // Update header player info
+            updateHeaderPlayerInfo(user);
         } else {
             // User is signed out
             elements.signedOutView.classList.remove('hidden');
             elements.signedInView.classList.add('hidden');
+            
+            // Hide header player info
+            elements.headerPlayerInfo.classList.add('hidden');
             
             // Disable start game button
             elements.startBtn.disabled = true;

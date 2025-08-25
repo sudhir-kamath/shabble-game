@@ -16,12 +16,20 @@
         <div id="live-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
         <header>
             <div class="header-content">
-                <div id="header-final-score" class="score-container hidden">
-                    <span class="score-label">Score:</span>
-                    <span class="score-value"><span id="score">0</span>/200</span>
+                <div class="header-left">
+                    <div id="header-player-info" class="header-player-info hidden">
+                        <span id="header-country-flag" class="country-flag"></span>
+                        <span id="header-nickname" class="player-nickname"></span>
+                    </div>
                 </div>
-                <div class="timer-container">
-                    <span id="timer" role="status">2:00</span>
+                <div class="header-center">
+                    <div id="header-final-score" class="score-container hidden">
+                        <span class="score-label">Score:</span>
+                        <span class="score-value"><span id="score">0</span>/200</span>
+                    </div>
+                    <div class="timer-container">
+                        <span id="timer" role="status">2:00</span>
+                    </div>
                 </div>
                 <div class="game-controls-header">
                     <button id="done-btn" class="btn primary-btn" disabled>
@@ -130,49 +138,49 @@
                             <div class="country-selector">
                                 <select id="country-select" required>
                                     <option value="">Select your country</option>
-                                    <option value="US">🇺🇸 United States</option>
-                                    <option value="GB">🇬🇧 United Kingdom</option>
-                                    <option value="CA">🇨🇦 Canada</option>
-                                    <option value="AU">🇦🇺 Australia</option>
-                                    <option value="DE">🇩🇪 Germany</option>
-                                    <option value="FR">🇫🇷 France</option>
-                                    <option value="ES">🇪🇸 Spain</option>
-                                    <option value="IT">🇮🇹 Italy</option>
-                                    <option value="NL">🇳🇱 Netherlands</option>
-                                    <option value="SE">🇸🇪 Sweden</option>
-                                    <option value="NO">🇳🇴 Norway</option>
-                                    <option value="DK">🇩🇰 Denmark</option>
-                                    <option value="FI">🇫🇮 Finland</option>
-                                    <option value="JP">🇯🇵 Japan</option>
-                                    <option value="KR">🇰🇷 South Korea</option>
-                                    <option value="CN">🇨🇳 China</option>
-                                    <option value="IN">🇮🇳 India</option>
-                                    <option value="BR">🇧🇷 Brazil</option>
-                                    <option value="MX">🇲🇽 Mexico</option>
                                     <option value="AR">🇦🇷 Argentina</option>
-                                    <option value="ZA">🇿🇦 South Africa</option>
-                                    <option value="NG">🇳🇬 Nigeria</option>
-                                    <option value="EG">🇪🇬 Egypt</option>
-                                    <option value="RU">🇷🇺 Russia</option>
-                                    <option value="TR">🇹🇷 Turkey</option>
-                                    <option value="PL">🇵🇱 Poland</option>
-                                    <option value="CZ">🇨🇿 Czech Republic</option>
-                                    <option value="HU">🇭🇺 Hungary</option>
-                                    <option value="GR">🇬🇷 Greece</option>
-                                    <option value="PT">🇵🇹 Portugal</option>
-                                    <option value="IE">🇮🇪 Ireland</option>
+                                    <option value="AU">🇦🇺 Australia</option>
                                     <option value="AT">🇦🇹 Austria</option>
-                                    <option value="CH">🇨🇭 Switzerland</option>
                                     <option value="BE">🇧🇪 Belgium</option>
-                                    <option value="LU">🇱🇺 Luxembourg</option>
+                                    <option value="BR">🇧🇷 Brazil</option>
+                                    <option value="CA">🇨🇦 Canada</option>
+                                    <option value="CN">🇨🇳 China</option>
+                                    <option value="CZ">🇨🇿 Czech Republic</option>
+                                    <option value="DK">🇩🇰 Denmark</option>
+                                    <option value="EG">🇪🇬 Egypt</option>
+                                    <option value="FI">🇫🇮 Finland</option>
+                                    <option value="FR">🇫🇷 France</option>
+                                    <option value="DE">🇩🇪 Germany</option>
+                                    <option value="GR">🇬🇷 Greece</option>
+                                    <option value="HU">🇭🇺 Hungary</option>
                                     <option value="IS">🇮🇸 Iceland</option>
-                                    <option value="NZ">🇳🇿 New Zealand</option>
-                                    <option value="SG">🇸🇬 Singapore</option>
-                                    <option value="MY">🇲🇾 Malaysia</option>
-                                    <option value="TH">🇹🇭 Thailand</option>
-                                    <option value="VN">🇻🇳 Vietnam</option>
-                                    <option value="PH">🇵🇭 Philippines</option>
+                                    <option value="IN">🇮🇳 India</option>
                                     <option value="ID">🇮🇩 Indonesia</option>
+                                    <option value="IE">🇮🇪 Ireland</option>
+                                    <option value="IT">🇮🇹 Italy</option>
+                                    <option value="JP">🇯🇵 Japan</option>
+                                    <option value="LU">🇱🇺 Luxembourg</option>
+                                    <option value="MY">🇲🇾 Malaysia</option>
+                                    <option value="MX">🇲🇽 Mexico</option>
+                                    <option value="NL">🇳🇱 Netherlands</option>
+                                    <option value="NZ">🇳🇿 New Zealand</option>
+                                    <option value="NG">🇳🇬 Nigeria</option>
+                                    <option value="NO">🇳🇴 Norway</option>
+                                    <option value="PH">🇵🇭 Philippines</option>
+                                    <option value="PL">🇵🇱 Poland</option>
+                                    <option value="PT">🇵🇹 Portugal</option>
+                                    <option value="RU">🇷🇺 Russia</option>
+                                    <option value="SG">🇸🇬 Singapore</option>
+                                    <option value="ZA">🇿🇦 South Africa</option>
+                                    <option value="KR">🇰🇷 South Korea</option>
+                                    <option value="ES">🇪🇸 Spain</option>
+                                    <option value="SE">🇸🇪 Sweden</option>
+                                    <option value="CH">🇨🇭 Switzerland</option>
+                                    <option value="TH">🇹🇭 Thailand</option>
+                                    <option value="TR">🇹🇷 Turkey</option>
+                                    <option value="GB">🇬🇧 United Kingdom</option>
+                                    <option value="US">🇺🇸 United States</option>
+                                    <option value="VN">🇻🇳 Vietnam</option>
                                     <option value="OTHER">🏳️ Other</option>
                                 </select>
                             </div>
