@@ -98,13 +98,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // Collection of pithy one-liners involving the number 4
     const fourOneliners = [
         "May the 4s be with you!",
+        "A Shabble is an old rusty sword in Scottish- but it's still sharp!"
         "Seen 4 weddings and a Funeral? Don't let the 4s kill your scrabble game",
         "Got 4 aces? That's a hand worth fighting for - but not in scrabble shabble!",
         "Spelling success, one S at a time!",
         "4 seasons in a year, but only one chance to shine",
         "Shabble is a valid word in scrabble!!",
         "4 wheels move the body, but 4 coffees move the soul!",
-        "4 wheels good, 2 wheels better.. the cycle of life!"
+        "4 wheels good, 2 wheels better.. the cycle of life!",
+        // Add this to your fourOneliners array in main.js
+        "4 walls don't make a home, but 4 letters can make a word worth playing!",
+        "4 seasons in a year, but only one chance to make every word count!",
+        "4-leaf clovers are rare, but great words are all around you!",
+        "4 wheels move the car, but 4 letters can move the game!",
+        "4 corners of the world, but only one board to conquer!",
+        "4 suits in a deck, but only one word wins the round!",
+        "4 quarters make a dollar, but one great word is priceless!",
+        "4 limbs of a chair, but only one seat at the top of the leaderboard!",
+        "4 seasons to play, but every word is in season!",
+        "4 chambers in the heart, but only one passion for words!",
+        "4 directions on a compass, but your word skills take you everywhere!",
+        "4 bases in baseball, but only one way to score big - play smart!",
+        "4 seasons of the year, but wordplay is always in fashion!",
+        "4 wheels on a car, but your vocabulary is the real engine!",
+        "4 suits in cards, but words are the real trump!",
+        "4 corners of the earth, but the best words come from you!",
+        "4 chambers of the heart, but only one love for word games!",
+        "4 seasons to shine, but your word skills are always in season!",
+        "4 walls can't contain a great vocabulary!",
+        "4 quarters make a whole, but one great word makes the game!"
     ];
 
     const announce = (message) => {

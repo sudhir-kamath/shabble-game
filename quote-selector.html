@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Quotes to Add</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .quote-item {
+            background: white;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: flex-start;
+        }
+        .quote-item input[type="checkbox"] {
+            margin-right: 1rem;
+            margin-top: 0.3rem;
+        }
+        .quote-text {
+            flex-grow: 1;
+        }
+        button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        button:hover {
+            background: #4338ca;
+        }
+        h1 {
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <h1>Select Quotes to Add</h1>
+    <div id="quotes-container">
+        <div class="quote-item">
+            <input type="checkbox" id="quote1" checked>
+            <label for="quote1" class="quote-text">4 walls don't make a home, but 4 letters can make a word worth playing!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote2" checked>
+            <label for="quote2" class="quote-text">4 seasons in a year, but only one chance to make every word count!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote3" checked>
+            <label for="quote3" class="quote-text">4-leaf clovers are rare, but great words are all around you!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote4" checked>
+            <label for="quote4" class="quote-text">4 wheels move the car, but 4 letters can move the game!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote5" checked>
+            <label for="quote5" class="quote-text">4 corners of the world, but only one board to conquer!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote6" checked>
+            <label for="quote6" class="quote-text">4 suits in a deck, but only one word wins the round!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote7" checked>
+            <label for="quote7" class="quote-text">4 quarters make a dollar, but one great word is priceless!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote8" checked>
+            <label for="quote8" class="quote-text">4 limbs of a chair, but only one seat at the top of the leaderboard!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote9" checked>
+            <label for="quote9" class="quote-text">4 seasons to play, but every word is in season!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote10" checked>
+            <label for="quote10" class="quote-text">4 chambers in the heart, but only one passion for words!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote11" checked>
+            <label for="quote11" class="quote-text">4 directions on a compass, but your word skills take you everywhere!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote12" checked>
+            <label for="quote12" class="quote-text">4 bases in baseball, but only one way to score big - play smart!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote13" checked>
+            <label for="quote13" class="quote-text">4 seasons of the year, but wordplay is always in fashion!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote14" checked>
+            <label for="quote14" class="quote-text">4 wheels on a car, but your vocabulary is the real engine!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote15" checked>
+            <label for="quote15" class="quote-text">4 suits in cards, but words are the real trump!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote16" checked>
+            <label for="quote16" class="quote-text">4 corners of the earth, but the best words come from you!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote17" checked>
+            <label for="quote17" class="quote-text">4 chambers of the heart, but only one love for word games!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote18" checked>
+            <label for="quote18" class="quote-text">4 seasons to shine, but your word skills are always in season!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote19" checked>
+            <label for="quote19" class="quote-text">4 walls can't contain a great vocabulary!</label>
+        </div>
+        <div class="quote-item">
+            <input type="checkbox" id="quote20" checked>
+            <label for="quote20" class="quote-text">4 quarters make a whole, but one great word makes the game!</label>
+        </div>
+    </div>
+    <div>
+        <button id="copy-selected">Copy Selected Quotes</button>
+        <button id="select-all">Select All</button>
+        <button id="deselect-all">Deselect All</button>
+    </div>
+
+    <script>
+        document.getElementById('copy-selected').addEventListener('click', () => {
+            const selectedQuotes = [];
+            document.querySelectorAll('.quote-item input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedQuotes.push(checkbox.nextElementSibling.textContent);
+            });
+            
+            const formattedQuotes = selectedQuotes.map(quote => `        "${quote}"`).join(',\n');
+            const codeSnippet = `// Add this to your fourOneliners array in main.js
+${formattedQuotes}`;
+            
+            navigator.clipboard.writeText(codeSnippet).then(() => {
+                alert('Selected quotes copied to clipboard!');
+            });
+        });
+
+        document.getElementById('select-all').addEventListener('click', () => {
+            document.querySelectorAll('.quote-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        });
+
+        document.getElementById('deselect-all').addEventListener('click', () => {
+            document.querySelectorAll('.quote-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+    </script>
+</body>
+</html>
