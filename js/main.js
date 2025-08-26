@@ -145,12 +145,46 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Add visual warnings based on time remaining
+        if (timeLeft <= 10) {
+            // Turn timer red in final 10 seconds
+            elements.timerDisplay.classList.add('timer-critical');
+        } else {
+            elements.timerDisplay.classList.remove('timer-critical');
+        }
+
+        if (timeLeft <= 30) {
+            // Highlight unanswered cards when 30 seconds or less remain
+            highlightUnansweredCards();
+        } else {
+            // Remove highlighting when more than 30 seconds remain
+            removeUnansweredHighlighting();
+        }
+
         // Announce time at key intervals
         if (timeLeft === 60) announce('One minute remaining.');
         if (timeLeft === 30) announce('30 seconds remaining.');
         if (timeLeft === 10) announce('10 seconds remaining.');
     };
 
+    // Helper functions for highlighting unanswered cards
+    const highlightUnansweredCards = () => {
+        const cards = document.querySelectorAll('.alphagram-card');
+        cards.forEach(card => {
+            const input = card.querySelector('.answer-input');
+            // Only add warning if input is empty AND card doesn't already have warning
+            if (input && input.value.trim() === '' && !card.classList.contains('unanswered-warning')) {
+                card.classList.add('unanswered-warning');
+            }
+        });
+    };
+
+    const removeUnansweredHighlighting = () => {
+        const cards = document.querySelectorAll('.alphagram-card');
+        cards.forEach(card => {
+            card.classList.remove('unanswered-warning');
+        });
+    };
 
     const renderGameBoard = (alphagrams) => {
         elements.gameBoard.innerHTML = '';
@@ -741,6 +775,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const alphagram = card.dataset.alphagram;
             const answer = e.target.value;
             game.submitAnswer(alphagram, answer);
+            
+            // Remove amber glow when player fills in an answer
+            if (answer.trim() !== '') {
+                card.classList.remove('unanswered-warning');
+            }
+        }
+    });
+
+    // Also handle real-time input to remove glow immediately
+    elements.gameBoard.addEventListener('input', (e) => {
+        if (e.target.classList.contains('answer-input')) {
+            const card = e.target.closest('.alphagram-card');
+            const answer = e.target.value;
+            
+            // Remove amber glow as soon as user starts typing
+            if (answer.trim() !== '') {
+                card.classList.remove('unanswered-warning');
+            } else {
+                // Re-add glow if they clear the input and time <= 30s
+                const gameState = game.getGameState();
+                if (gameState.timeLeft <= 30) {
+                    card.classList.add('unanswered-warning');
+                }
+            }
         }
     });
 

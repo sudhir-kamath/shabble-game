@@ -798,6 +798,28 @@ header {
     animation: successPulse 0.6s ease-out;
 }
 
+/* Warning states for time pressure */
+.unanswered-warning {
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.4), var(--card-shadow) !important;
+    border-color: rgba(255, 193, 7, 0.6) !important;
+    animation: subtleGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes subtleGlow {
+    0% { box-shadow: 0 0 15px rgba(255, 193, 7, 0.4), var(--card-shadow); }
+    100% { box-shadow: 0 0 25px rgba(255, 193, 7, 0.6), var(--card-shadow); }
+}
+
+.timer-critical {
+    color: #e74c3c !important;
+    animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 @keyframes successPulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -1468,6 +1490,24 @@ header {
     .answer-input {
         font-size: 0.75rem;
         padding: 0.25rem 0.5rem;
+    }
+    
+    /* Shrink score box on mobile to make more room for answers */
+    .answer-card-overlay .final-score {
+        font-size: 0.8rem;
+        padding: 3px 6px;
+        margin-top: 0; /* Remove gap between answers and score */
+    }
+    
+    .answer-card-overlay {
+        padding: 8px; /* Reduce overall padding */
+    }
+    
+    .answer-card-overlay .correct-words {
+        font-size: 0.9rem;
+        max-height: 160px; /* Maximize available space for answers */
+        margin-bottom: 0; /* Remove gap between answers and score */
+        margin-top: 0; /* Remove gap between top of card and answers */
     }
     
     /* Adjust header for mobile */
