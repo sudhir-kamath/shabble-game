@@ -342,57 +342,8 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (result.isCorrect === false) card.classList.add('incorrect');
             else if (result.isCorrect === 'partial') card.classList.add('partial');
 
-            // Prevent adding duplicate tooltips
-            if (card.querySelector('.tooltip')) {
-                card.querySelector('.tooltip').remove();
-            }
-
-            // Add tooltip with correct answers
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = `Correct: ${result.validWords.join(', ') || 'None'}`;
-            card.appendChild(tooltip);
-
-            // Add score display
-            const scoreEl = document.createElement('div');
-            scoreEl.className = 'alphagram-score';
-            scoreEl.textContent = `Score: ${Math.round(result.score)}`;
-            card.appendChild(scoreEl);
-
-            // Add event listeners for dynamic tooltip positioning
-            card.addEventListener('mouseover', (e) => {
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (!tooltip) return;
-
-                // First, make it visible to measure it
-                tooltip.classList.add('show');
-
-                const cardRect = e.currentTarget.getBoundingClientRect();
-                const tooltipRect = tooltip.getBoundingClientRect();
-                const boardRect = elements.gameBoard.getBoundingClientRect();
-
-                // Check if there's enough space below
-                const spaceBelow = boardRect.bottom - cardRect.bottom;
-                const spaceAbove = cardRect.top - boardRect.top;
-
-                tooltip.classList.remove('pos-above', 'pos-below');
-
-                if (spaceBelow >= tooltipRect.height + 10) {
-                    tooltip.classList.add('pos-below');
-                } else if (spaceAbove >= tooltipRect.height + 10) {
-                    tooltip.classList.add('pos-above');
-                } else {
-                    // Default to below if neither has enough space (should be rare)
-                    tooltip.classList.add('pos-below');
-                }
-            });
-
-            card.addEventListener('mouseout', (e) => {
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (tooltip) {
-                    tooltip.classList.remove('show');
-                }
-            });
+            // Setup the answer card overlay for this card
+            setupAnswerCardListeners(card, result);
         });
     };
 
@@ -438,57 +389,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.classList.add('partial');
             }
 
-            // Prevent adding duplicate tooltips
-            if (card.querySelector('.tooltip')) {
-                card.querySelector('.tooltip').remove();
-            }
-
-            // Add tooltip with correct answers
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = `Correct: ${result.validWords.join(', ') || 'None'}`;
-            card.appendChild(tooltip);
-
-            // Add score display
-            const scoreEl = document.createElement('div');
-            scoreEl.className = 'score-display';
-            scoreEl.textContent = `Score: ${Math.round(result.score)}`;
-            card.appendChild(scoreEl);
-
-            // Add event listeners for dynamic tooltip positioning
-            card.addEventListener('mouseover', (e) => {
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (!tooltip) return;
-
-                // First, make it visible to measure it
-                tooltip.classList.add('show');
-
-                const cardRect = e.currentTarget.getBoundingClientRect();
-                const tooltipRect = tooltip.getBoundingClientRect();
-                const boardRect = elements.gameBoard.getBoundingClientRect();
-
-                // Check if there's enough space below
-                const spaceBelow = boardRect.bottom - cardRect.bottom;
-                const spaceAbove = cardRect.top - boardRect.top;
-
-                tooltip.classList.remove('pos-above', 'pos-below');
-
-                if (spaceBelow >= tooltipRect.height + 10) {
-                    tooltip.classList.add('pos-below');
-                } else if (spaceAbove >= tooltipRect.height + 10) {
-                    tooltip.classList.add('pos-above');
-                } else {
-                    // Default to below if neither has enough space (should be rare)
-                    tooltip.classList.add('pos-below');
-                }
-            });
-
-            card.addEventListener('mouseout', (e) => {
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (tooltip) {
-                    tooltip.classList.remove('show');
-                }
-            });
+            // Setup the answer card overlay for this card
+            setupAnswerCardListeners(card, result);
         });
     };
 
@@ -610,64 +512,66 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Review Answers button clicked');
             elements.gameOverModal.classList.remove('active');
             
-            // Setup tooltips for the review answers page
-            setTimeout(() => {
-                setupTooltips();
-            }, 100);
         });
     }
 
-    // Function to setup tooltips for cards
-    function setupTooltips() {
-        const cards = elements.gameBoard.querySelectorAll('.alphagram-card');
-        
-        cards.forEach((card) => {
-            const tooltip = card.querySelector('.tooltip');
-            if (!tooltip) return;
+    // --- Answer Card Overlay Logic ---
 
-            card.addEventListener('mouseover', (e) => {
-                // Create a new tooltip element and append to body for absolute positioning
-                const newTooltip = document.createElement('div');
-                newTooltip.textContent = tooltip.textContent;
-                
-                const cardRect = card.getBoundingClientRect();
-                
-                newTooltip.style.cssText = `
-                    position: fixed;
-                    background: rgba(45, 55, 72, 0.95);
-                    color: #e2e8f0;
-                    padding: 8px 12px;
-                    border: 1px solid rgba(160, 174, 192, 0.3);
-                    z-index: 999999;
-                    font-size: 12px;
-                    border-radius: 6px;
-                    pointer-events: none;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                    max-width: ${cardRect.width}px;
-                    word-wrap: break-word;
-                    white-space: normal;
-                    line-height: 1.4;
-                `;
-                
-                newTooltip.style.left = cardRect.left + 'px';
-                newTooltip.style.top = cardRect.top + 'px';
-                
-                document.body.appendChild(newTooltip);
-                card.tempTooltip = newTooltip;
-            });
+    function setupAnswerCardListeners(card, result) {
+        card.dataset.correctWords = result.validWords.join(', ') || 'None';
+        card.dataset.score = Math.round(result.score);
 
-            card.addEventListener('mouseout', (e) => {
-                // Remove temporary tooltip
-                if (card.tempTooltip) {
-                    document.body.removeChild(card.tempTooltip);
-                    card.tempTooltip = null;
+        let hideTimeout;
+
+        const showOverlay = (e) => {
+            clearTimeout(hideTimeout);
+            if (document.getElementById(`overlay-${card.dataset.alphagram}`)) return;
+
+            const cardRect = card.getBoundingClientRect();
+            const overlay = document.createElement('div');
+            overlay.id = `overlay-${card.dataset.alphagram}`;
+            overlay.className = 'answer-card-overlay';
+
+            overlay.innerHTML = `
+                <div class="correct-words">${card.dataset.correctWords}</div>
+                <div class="final-score">Score: ${card.dataset.score}</div>
+            `;
+
+            overlay.style.left = `${cardRect.left}px`;
+            overlay.style.top = `${cardRect.top}px`;
+            overlay.style.width = `${cardRect.width}px`;
+            overlay.style.height = `${cardRect.height}px`;
+
+            overlay.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+            overlay.addEventListener('mouseleave', () => hideOverlay(e));
+
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.classList.add('visible'), 10);
+        };
+
+        const hideOverlay = (e) => {
+            const overlay = document.getElementById(`overlay-${card.dataset.alphagram}`);
+            if (overlay) {
+                hideTimeout = setTimeout(() => {
+                    overlay.classList.remove('visible');
+                    setTimeout(() => overlay.remove(), 200);
+                }, 50);
+            }
+        };
+
+        card.addEventListener('mouseenter', showOverlay);
+        card.addEventListener('mouseleave', hideOverlay);
+        card.addEventListener('click', (e) => {
+            const overlay = document.getElementById(`overlay-${card.dataset.alphagram}`);
+            if (overlay && overlay.classList.contains('visible')) {
+                const a_overlay = document.getElementById(`overlay-${card.dataset.alphagram}`);
+                if (a_overlay) {
+                    a_overlay.classList.remove('visible');
+                    setTimeout(() => a_overlay.remove(), 200);
                 }
-                
-                const tooltip = e.currentTarget.querySelector('.tooltip');
-                if (tooltip) {
-                    tooltip.classList.remove('show');
-                }
-            });
+            } else {
+                showOverlay(e);
+            }
         });
     }
 

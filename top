@@ -1,0 +1,220 @@
+[33mcommit b4cfddf936b117d7438bf0c3fa67b87a8231700b[m[33m ([m[1;36mHEAD[m[33m)[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 13:21:07 2025 +0530
+
+    v44 disabled autocomplete and autocorrect
+
+[33mcommit e85ee55181bd85b77fbf7eb48c65d527292c0f42[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 13:17:37 2025 +0530
+
+    v43 fixed logo and card column width for mobile
+
+[33mcommit 3bd63a5c2126355c2ee7f71ba461dd71a11a7711[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 10:56:28 2025 +0530
+
+    v42 fixed ONE COMMA!
+
+[33mcommit 8ad31c44e471938671466bea2f17514df5e9df8f[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 10:02:18 2025 +0530
+
+    v41 added more quotes
+
+[33mcommit 52d61b0d24c35d5ccc67f47ae0611ab784f00abd[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 09:24:01 2025 +0530
+
+    v40 fixed auth manager property mismatch - getCurrentUser now returns this.user
+
+[33mcommit 57506c05e3b64b792f4fd09f3a7cccda93d2e656[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 09:04:41 2025 +0530
+
+    v39 debugging: sign in fixed, display still incorrect
+
+[33mcommit eeb193ef02d354fac2e4017ea412f2d822bcc342[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 08:56:43 2025 +0530
+
+    v38 more debugging
+
+[33mcommit d168a37f9abdbaf71a77083ba50e33dcfcad6fac[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 08:46:23 2025 +0530
+
+    v37 more debugging, plus fixed play again button
+
+[33mcommit 262a1f573137cf5e90b47a86397c14d6c6b69bdf[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 08:33:23 2025 +0530
+
+    v36 more detailed debug logs for user profile
+
+[33mcommit 91a7fc22039983e4f9f7cda1e0b067dfb1e6d21f[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 08:29:07 2025 +0530
+
+    v35 more debugging support
+
+[33mcommit e2b66bb758ea35a115f0f02469196fd3d661abbc[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 08:23:31 2025 +0530
+
+    v34 debugging support for profile setup
+
+[33mcommit e61df4b2d3360a271b48931725ee240a0ec5f1c0[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 02:15:41 2025 +0530
+
+    v33 showprofilesetupmodal not defined
+
+[33mcommit 5153a7062a31527846a4aea137d5e60afffcb65e[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 02:12:23 2025 +0530
+
+    v32 still trying to fix login
+
+[33mcommit 9a60757ccc8b536e1cad383725efeb705ff3450b[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 01:44:37 2025 +0530
+
+    v31 trying to fix issue with firebase auth on live website
+
+[33mcommit 7a4ace93f58057ae0753cf8358eef13e6a1f6e0d[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 01:34:43 2025 +0530
+
+    v30 fixed logic for fake alphagram generation
+
+[33mcommit f25b2ec483c9c12cf5b5676978e58793a1fe710a[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 01:25:25 2025 +0530
+
+    v29 country and nickname are editable now
+
+[33mcommit af43e776c7d950af8b05b1b44ba8da85a9856430[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 01:12:07 2025 +0530
+
+    v28 player name and country on header
+
+[33mcommit 47646e4338ebb1e10c8c29afd016d2e475b1d029[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 00:50:37 2025 +0530
+
+    v27 login is compulsory; home page cleaned up
+
+[33mcommit 12b9b4d5c76aa150783abe6349eb15c2b6fd8b2e[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 00:38:03 2025 +0530
+
+    v26 asked for nickname and flag
+
+[33mcommit 916ab0ae7f84b903686984303eca64ec05300745[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 00:27:56 2025 +0530
+
+    v25n improved the home page design and added a logo
+
+[33mcommit fafc58f1bd8677292d848301dbf9cfb05371f77f[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Tue Aug 26 00:03:06 2025 +0530
+
+    v24n Firebase and Google auth added
+
+[33mcommit 7004bb67f239101051e9e9f8bcb8fe8a87562468[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Mon Aug 25 22:47:05 2025 +0530
+
+    v23 fixed flow of play again process
+
+[33mcommit db8b8b460bf387c536ba69c8263d84591d3bd43c[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Mon Aug 25 22:35:39 2025 +0530
+
+    v22 fixed modal on game end due to time up
+
+[33mcommit e30b3809bbea4d44474a20db5beba5a45724232a[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Mon Aug 25 22:07:32 2025 +0530
+
+    v21 fixed randomization of number of fake alphagrams
+
+[33mcommit ec2bb93ab9ddaaf391871e9ae78ad13c0c34afee[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Mon Aug 25 21:57:11 2025 +0530
+
+    v20 removed some temp files
+
+[33mcommit 1695d85768c6e02b31b7df2247f0fa956e473fe4[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Mon Aug 25 21:56:16 2025 +0530
+
+    v19 updated 2 and 3 letter words to be exactly in sync with CSW24
+
+[33mcommit 1488f69ee56dd5965760b8554a468f79ac584d16[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Mon Aug 25 21:33:38 2025 +0530
+
+    v18 fixed duplicate entries in array of answers in valid alphagrams
+    fixed tooltip answer display
+
+[33mcommit aa40d09af2b88d7e417e2cc0c840c23e89fb2263[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Mon Aug 25 20:01:20 2025 +0530
+
+    v17 added support for multiple word lengths, but many bugs still
+
+[33mcommit a5fdf7be3c747c475542cc355a815699e0abe2a8[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Mon Aug 25 00:13:48 2025 +0530
+
+    v16 sync issue on timer 120 sec vs 10 sec - no significant changes
+
+[33mcommit 0f49533ed2882d1ddd6eaa9dce879b6c3298e507[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Sun Aug 24 23:55:48 2025 +0530
+
+    v15 added a "4" oriented welcome message and handles the case where players run out of time
+
+[33mcommit db392c350fb21db3faf57b065d494d10d0c238f7[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Sun Aug 24 23:17:20 2025 +0530
+
+    v14 fixed the "play again" button in the header
+
+[33mcommit 04275ccea75d30542fddcc106b74c56c5b9198dc[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Sun Aug 24 23:10:20 2025 +0530
+
+    v13 changed favicon to a scrabble S tile
+
+[33mcommit cc817966fa065ef9c3292c1ab340de003fc2d944[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Sun Aug 24 22:56:01 2025 +0530
+
+    v12 improved aesthetics - accents, 3d bevels, shimmer
+
+[33mcommit b763f6b319537c92dceabab80c6c0a6e253f8fb8[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Sun Aug 24 22:38:58 2025 +0530
+
+    v11 improved plausibility of invalid alphagrams
+
+[33mcommit 60c27150532abe9998e983add1ceb75b78d0e873[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Sun Aug 24 22:14:18 2025 +0530
+
+    v10 randomized the number of invalid alphas to between 3 to 5
+
+[33mcommit 6d9ffe5849a800f9d554795a53862e6f516b14d0[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Sat Aug 23 01:44:45 2025 +0530
+
+    v9 for deployment
+
+[33mcommit 742df2ee0bdbedd0ce1a0c5eaa758912537f2b2d[m
+Author: sudhir-kamath <99182947+sudhir-kamath@users.noreply.github.com>
+Date:   Sat Aug 23

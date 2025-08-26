@@ -685,56 +685,54 @@ header {
 }
 
 
-/* Tooltip for showing correct answers */
-.tooltip {
-    width: auto; /* Allow width to adjust to content */
-    min-width: 120px; /* Set a minimum width */
-    max-width: 200px;
-    background-color: rgba(0, 0, 0, 0.9);
-    color: white;
+/* Answer Card Overlay - Replaces old tooltip */
+.answer-card-overlay {
+    position: fixed;
+    z-index: 1001; /* Above header */
+    background: var(--card-bg);
+    border: 2px solid var(--primary);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: var(--glow), var(--card-shadow);
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    position: absolute;
-    z-index: 9999;
-    left: 50%;
-    top: 100%;
-    transform: translateX(-50%);
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
     opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
     pointer-events: none;
-    white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transform: scale(0.95);
 }
 
-.tooltip.show {
-    visibility: visible;
+.answer-card-overlay.visible {
     opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
 }
 
-.tooltip.pos-above {
-    bottom: 100%;
-    top: auto;
-    transform: translate(-50%, -10px); /* Adjust vertical position */
+.answer-card-overlay .correct-words {
+    font-size: 1rem; /* Increased font size */
+    line-height: 1.5;
+    margin-bottom: 15px;
+    font-family: 'JetBrains Mono', monospace;
+    word-break: break-word;
+    max-height: 100px;
+    overflow-y: auto;
+    padding-right: 5px; /* For scrollbar */
+    width: 100%;
+    color: var(--secondary); /* Applied from h4 */
+    font-weight: 600; /* Adjusted font weight */
 }
 
-.tooltip.pos-below {
-    top: 105%;
-    bottom: auto;
-}
-
-.alphagram-score {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 0.8em;
-    font-weight: bold;
-    color: var(--primary-color);
-    background-color: var(--background-color);
-    padding: 2px 5px;
-    border-radius: 3px;
+.answer-card-overlay .final-score {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    background: var(--input-bg);
+    padding: 5px 10px;
+    border-radius: 8px;
 }
 
 
