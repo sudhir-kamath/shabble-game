@@ -711,27 +711,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Profile setup form submission
     elements.profileSetupForm.addEventListener('submit', async (e) => {
+        console.log('DEBUG: Profile setup form submitted');
         e.preventDefault();
         
         const nickname = elements.nicknameInput.value.trim();
         const country = elements.countrySelect.value;
+        console.log('DEBUG: Form values - nickname:', nickname, 'country:', country);
         
-        const result = await authManager.completeProfileSetup(nickname, country);
-        
-        if (result.success) {
-            hideProfileSetupModal();
-            updateAuthUI(authManager.getCurrentUser());
-            // Update header player info after profile setup
-            updateHeaderPlayerInfo(authManager.getCurrentUser());
-            console.log('Profile setup completed:', result.profile);
-        } else {
-            // Show error message
-            showProfileError(result.error);
+        try {
+            const result = await authManager.completeProfileSetup(nickname, country);
+            console.log('DEBUG: Profile setup result:', result);
+            
+            if (result.success) {
+                console.log('DEBUG: Profile setup successful, hiding modal');
+                hideProfileSetupModal();
+                updateAuthUI(authManager.getCurrentUser());
+                updateHeaderPlayerInfo(authManager.getCurrentUser());
+                console.log('DEBUG: Profile setup completed:', result.profile);
+            } else {
+                console.log('DEBUG: Profile setup failed:', result.error);
+                showProfileSetupError(result.error);
+            }
+        } catch (error) {
+            console.error('DEBUG: Exception during profile setup:', error);
+            showProfileSetupError('An unexpected error occurred: ' + error.message);
         }
     });
 
-    function showProfileError(message) {
-        // Clear any existing error
+    function showProfileSetupError(message) {
         clearProfileError();
         
         const errorDiv = document.createElement('div');

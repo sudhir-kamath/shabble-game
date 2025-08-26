@@ -86,9 +86,19 @@ class AuthManager {
     }
 
     isFirstTimeUser(user) {
-        if (!user) return false;
+        if (!user) {
+            console.log('DEBUG: isFirstTimeUser - no user provided');
+            return false;
+        }
+        
+        console.log('DEBUG: Checking if first time user for:', user.uid);
         const userProfile = this.getUserProfile(user.uid);
-        return !userProfile || !userProfile.nickname || !userProfile.country;
+        console.log('DEBUG: Retrieved user profile:', userProfile);
+        
+        const isFirstTime = !userProfile || !userProfile.nickname || !userProfile.country;
+        console.log('DEBUG: Is first time user?', isFirstTime);
+        
+        return isFirstTime;
     }
 
     async signOutUser() {
@@ -121,19 +131,45 @@ class AuthManager {
     }
 
     // Profile management methods
-    getUserProfile(userId) {
-        const profiles = JSON.parse(localStorage.getItem('shabble_user_profiles') || '{}');
-        return profiles[userId] || null;
+    getUserProfile(uid) {
+        const key = `shabble_user_${uid}`;
+        console.log('DEBUG: Getting user profile with key:', key);
+        
+        try {
+            const stored = localStorage.getItem(key);
+            console.log('DEBUG: Raw localStorage value:', stored);
+            
+            if (!stored) {
+                console.log('DEBUG: No profile found in localStorage');
+                return null;
+            }
+            
+            const parsed = JSON.parse(stored);
+            console.log('DEBUG: Parsed profile:', parsed);
+            return parsed;
+        } catch (error) {
+            console.error('DEBUG: Error reading profile from localStorage:', error);
+            return null;
+        }
     }
 
     saveUserProfile(userId, profile) {
-        const profiles = JSON.parse(localStorage.getItem('shabble_user_profiles') || '{}');
-        profiles[userId] = {
-            ...profile,
-            createdAt: profile.createdAt || new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-        localStorage.setItem('shabble_user_profiles', JSON.stringify(profiles));
+        const key = `shabble_user_${userId}`;
+        console.log('DEBUG: Saving user profile with key:', key);
+        console.log('DEBUG: Profile data to save:', profile);
+        
+        try {
+            const stored = JSON.stringify(profile);
+            localStorage.setItem(key, stored);
+            console.log('DEBUG: Profile saved to localStorage successfully');
+            
+            // Verify it was saved
+            const verification = localStorage.getItem(key);
+            console.log('DEBUG: Verification read back:', verification);
+        } catch (error) {
+            console.error('DEBUG: Error saving profile to localStorage:', error);
+            throw error;
+        }
     }
 
     validateNickname(nickname) {
@@ -147,16 +183,23 @@ class AuthManager {
     }
 
     async completeProfileSetup(nickname, country) {
+        console.log('DEBUG: completeProfileSetup called with:', { nickname, country });
+        
         if (!this.currentUser) {
+            console.log('DEBUG: No current user found');
             return { success: false, error: 'No user signed in' };
         }
+        
+        console.log('DEBUG: Current user:', this.currentUser.uid);
 
         const nicknameValidation = this.validateNickname(nickname);
+        console.log('DEBUG: Nickname validation result:', nicknameValidation);
         if (!nicknameValidation.valid) {
             return { success: false, error: nicknameValidation.error };
         }
 
         if (!country) {
+            console.log('DEBUG: No country provided');
             return { success: false, error: 'Please select a country' };
         }
 
@@ -166,15 +209,19 @@ class AuthManager {
                 country,
                 email: this.currentUser.email,
                 displayName: this.currentUser.displayName,
-                photoURL: this.currentUser.photoURL
+                photoURL: this.currentUser.photoURL,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             };
 
+            console.log('DEBUG: About to save profile:', profile);
             this.saveUserProfile(this.currentUser.uid, profile);
+            console.log('DEBUG: Profile saved successfully');
             
             return { success: true, profile };
         } catch (error) {
-            console.error('Profile setup error:', error);
-            return { success: false, error: 'Failed to save profile' };
+            console.error('DEBUG: Profile setup error:', error);
+            return { success: false, error: 'Failed to save profile: ' + error.message };
         }
     }
 
