@@ -534,18 +534,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Return to start screen instead of immediately starting a new game
         if (game.getGameState().isPlaying) {
-            game.endGame(); // End current game if playing
+            game.endGame();
         }
         
-        // Hide game elements
+        // Hide game elements and return to home screen
         elements.gameBoard.style.display = 'none';
+        elements.timerDisplay.classList.add('hidden');
         elements.extraTimeBtn.classList.add('hidden');
-        elements.headerFinalScore.classList.add('hidden');
         
-        // Show start screen with active class
+        // Show start screen for word length selection
         elements.startScreen.classList.add('active');
-        showOverlay(null); // Clear any other overlays first
-        elements.startScreen.classList.add('active'); // Then show start screen
+        
         setRandomQuote();
     });
 

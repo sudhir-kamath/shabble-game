@@ -7,10 +7,18 @@ class AuthManager {
         this.onUserStateChange = null;
         this.onProfileSetupNeeded = null;
         
+        // Reset signing flag on page load to prevent stuck state
+        this.signingIn = false;
+        
         // Listen for authentication state changes
         onAuthStateChanged(auth, (user) => {
             this.user = user;
             console.log('Auth state changed:', user ? user.email : 'No user');
+            
+            // Reset signing flag when auth state changes
+            if (user) {
+                this.signingIn = false;
+            }
             
             if (this.onUserStateChange) {
                 this.onUserStateChange(user);
@@ -27,6 +35,8 @@ class AuthManager {
 
     async signInWithGoogle() {
         try {
+            console.log('DEBUG: signInWithGoogle called, signingIn flag:', this.signingIn);
+            
             // Check if there's already a sign-in in progress
             if (this.signingIn) {
                 console.log('Sign-in already in progress, ignoring request');
@@ -46,9 +56,12 @@ class AuthManager {
                 };
             }
             
+            console.log('DEBUG: Setting signingIn to true');
             this.signingIn = true;
             console.log('Starting Google sign-in...');
+            
             const result = await signInWithPopup(auth, provider);
+            console.log('DEBUG: Sign-in successful, resetting signingIn flag');
             this.signingIn = false;
             
             return {
@@ -57,6 +70,7 @@ class AuthManager {
                 isFirstTime: this.isFirstTimeUser(result.user)
             };
         } catch (error) {
+            console.log('DEBUG: Sign-in error, resetting signingIn flag');
             this.signingIn = false;
             console.error('Sign-in error:', error);
             
