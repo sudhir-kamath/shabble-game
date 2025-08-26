@@ -2,7 +2,6 @@ import { game } from './game.js';
 import { initializeAlphagramMaps } from './dictionary.js';
 import { authManager } from './auth.js';
 
-console.log('main.js loaded successfully');
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize alphagram maps for all word lengths
@@ -78,19 +77,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to update header player info
     function updateHeaderPlayerInfo(user) {
-        console.log('DEBUG: updateHeaderPlayerInfo called with user:', user ? user.email : 'null');
         const profile = authManager.getCurrentUserProfile();
-        console.log('DEBUG: Profile for header update:', profile);
         
-        if (user && profile && profile.nickname && profile.country) {
-            console.log('DEBUG: Setting header info - nickname:', profile.nickname, 'country:', profile.country);
-            // Use a simple approach - just show country code for now
-            elements.headerCountryFlag.textContent = profile.country;
+        if (profile && profile.nickname && profile.country) {
+            // Show user info with nickname and country flag
+            elements.headerCountryFlag.textContent = getCountryFlag(profile.country);
             elements.headerNickname.textContent = profile.nickname;
             elements.headerPlayerInfo.classList.remove('hidden');
-            console.log('DEBUG: Header player info shown');
         } else {
-            console.log('DEBUG: Hiding header player info - missing data. User:', !!user, 'Profile:', !!profile, 'Nickname:', profile?.nickname, 'Country:', profile?.country);
             elements.headerPlayerInfo.classList.add('hidden');
         }
     }
@@ -274,27 +268,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
 
-    // --- Layout Debugging --- 
-
-    const logLayoutDimensions = () => {
-        const gameBoard = elements.gameBoard;
-        if (!gameBoard) return;
-
-        const firstCard = gameBoard.querySelector('.alphagram-card');
-        console.log('--- Layout Dimensions ---');
-        console.log(`Window Width: ${window.innerWidth}px`);
-        console.log(`Game Board Width: ${gameBoard.offsetWidth}px`);
-        if (firstCard) {
-            console.log(`First Card Width: ${firstCard.offsetWidth}px`);
-        }
-    };
-
-    window.addEventListener('resize', logLayoutDimensions);
 
     // --- Game Logic Integration ---
 
     const startGame = () => {
-        console.log('Starting game...');
         
         // Hide start screen
         elements.startScreen.classList.remove('active');
@@ -307,7 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Get selected word lengths
         const selectedLengths = getSelectedWordLengths();
-        console.log('Selected word lengths:', selectedLengths);
         
         // Set random motivational quote
         setRandomQuote();
@@ -441,19 +417,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Helper Functions ---
     
     const showInstructions = () => {
-        console.log('Instructions button clicked');
         elements.instructions.classList.add('active');
     };
 
     // --- Event Listeners ---
     
-    // Debug: Check if elements exist
-    console.log('Start button element:', elements.startBtn);
-    console.log('Instructions button element:', elements.instructionsBtn);
 
     if (elements.startBtn) {
         elements.startBtn.addEventListener('click', () => {
-            console.log('Start button clicked');
             // Check if user is signed in before starting game
             if (!authManager.isSignedIn()) {
                 alert('Please sign in with Google to play the game.');
@@ -463,16 +434,13 @@ document.addEventListener('DOMContentLoaded', function() {
             startGame();
         });
     } else {
-        console.error('Start button not found!');
     }
 
     if (elements.instructionsBtn) {
         elements.instructionsBtn.addEventListener('click', showInstructions);
     } else {
-        console.error('Instructions button not found!');
     }
     elements.playAgainBtn.addEventListener('click', (e) => {
-        console.log('Play Again button clicked');
         e.preventDefault();
         e.stopPropagation();
 
@@ -491,7 +459,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setRandomQuote();
     });
     elements.playAgainHeaderBtn.addEventListener('click', (e) => {
-        console.log('Header Play Again button clicked');
         e.preventDefault();
         e.stopPropagation();
         
@@ -522,7 +489,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (elements.backBtn) {
         elements.backBtn.addEventListener('click', () => {
-            console.log('Back to Game button clicked');
             elements.instructions.classList.remove('active');
             if (game.getGameState().isPlaying) {
                 game.resumeGame();
@@ -534,7 +500,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Game over modal close button (Review Answers)
     if (elements.closeModalBtn) {
         elements.closeModalBtn.addEventListener('click', () => {
-            console.log('Review Answers button clicked');
             elements.gameOverModal.classList.remove('active');
             
         });
@@ -647,11 +612,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function hideProfileSetupModal() {
-        console.log('DEBUG: hideProfileSetupModal called');
-        console.log('DEBUG: profileSetupModal element:', elements.profileSetupModal);
         elements.profileSetupModal.classList.add('hidden');
         elements.profileSetupModal.classList.remove('active');
-        console.log('DEBUG: Modal classes after hiding:', elements.profileSetupModal.className);
     }
 
     // Set up profile setup handler
@@ -678,40 +640,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Profile setup form submission
     elements.profileSetupForm.addEventListener('submit', async (e) => {
-        console.log('DEBUG: Profile setup form submitted');
         e.preventDefault();
         
         const nickname = elements.nicknameInput.value.trim();
         const country = elements.countrySelect.value;
-        console.log('DEBUG: Form values - nickname:', nickname, 'country:', country);
         
         try {
             const result = await authManager.completeProfileSetup(nickname, country);
-            console.log('DEBUG: Profile setup result:', result);
             
             if (result.success) {
-                console.log('DEBUG: Profile setup successful, hiding modal');
                 hideProfileSetupModal();
-                console.log('DEBUG: Getting current user for UI update');
                 const currentUser = authManager.getCurrentUser();
-                console.log('DEBUG: Current user after profile setup:', currentUser ? currentUser.email : 'null');
-                console.log('DEBUG: Updating auth UI');
                 updateAuthUI(currentUser);
-                console.log('DEBUG: Updating header player info');
                 updateHeaderPlayerInfo(currentUser);
-                console.log('DEBUG: Checking if start screen should be hidden');
                 
                 // After profile setup, show the start screen so user can select word lengths
-                console.log('DEBUG: Showing start screen after profile setup');
                 elements.startScreen.classList.add('active');
-                
-                console.log('DEBUG: Profile setup completed:', result.profile);
             } else {
-                console.log('DEBUG: Profile setup failed:', result.error);
                 showProfileSetupError(result.error);
             }
         } catch (error) {
-            console.error('DEBUG: Exception during profile setup:', error);
             showProfileSetupError('An unexpected error occurred: ' + error.message);
         }
     });
@@ -740,13 +688,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateAuthUI(user) {
-        console.log('DEBUG: updateAuthUI called with user:', user ? user.email : 'null');
-        console.log('DEBUG: elements.userName:', elements.userName);
-        console.log('DEBUG: elements.userAvatar:', elements.userAvatar);
-        
         if (user) {
             // User is signed in
-            console.log('DEBUG: User signed in, updating UI elements');
             elements.signedOutView.classList.add('hidden');
             elements.signedInView.classList.remove('hidden');
             
@@ -756,36 +699,24 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.startBtn.style.cursor = 'pointer';
             
             // Update user info
-            console.log('DEBUG: Getting user profile for UI update');
             const profile = authManager.getCurrentUserProfile();
-            console.log('DEBUG: Profile retrieved:', profile);
             
             if (profile && profile.nickname) {
-                console.log('DEBUG: Setting userName to profile nickname:', profile.nickname);
-                console.log('DEBUG: userName element before update:', elements.userName.textContent);
                 elements.userName.textContent = profile.nickname;
-                console.log('DEBUG: userName element after update:', elements.userName.textContent);
             } else {
                 const displayName = authManager.getUserDisplayName();
-                console.log('DEBUG: Setting userName to display name:', displayName);
-                console.log('DEBUG: userName element before update:', elements.userName.textContent);
                 elements.userName.textContent = displayName;
-                console.log('DEBUG: userName element after update:', elements.userName.textContent);
             }
             
             const photoURL = authManager.getUserPhotoURL();
-            console.log('DEBUG: Photo URL:', photoURL);
             if (photoURL) {
                 elements.userAvatar.src = photoURL;
                 elements.userAvatar.style.display = 'block';
-                console.log('DEBUG: User avatar set and displayed');
             } else {
                 elements.userAvatar.style.display = 'none';
-                console.log('DEBUG: User avatar hidden (no photo URL)');
             }
             
             // Update header player info
-            console.log('DEBUG: Updating header player info');
             updateHeaderPlayerInfo(user);
         } else {
             // User is signed out
@@ -862,7 +793,6 @@ document.addEventListener('DOMContentLoaded', function() {
             hideEditProfileModal();
             updateAuthUI(authManager.getCurrentUser());
             updateHeaderPlayerInfo(authManager.getCurrentUser());
-            console.log('Profile updated:', result.profile);
         } else {
             // Show error message in edit modal
             showEditProfileError(result.error);

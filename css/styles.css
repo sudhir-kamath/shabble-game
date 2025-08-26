@@ -661,6 +661,18 @@ header {
     z-index: 1;
 }
 
+.speech-bubble p::before {
+    content: '"';
+    font-size: 1.4em;
+    opacity: 0.8;
+}
+
+.speech-bubble p::after {
+    content: '"';
+    font-size: 1.4em;
+    opacity: 0.8;
+}
+
 @keyframes bubbleFloat {
     0%, 100% { transform: scale(0.95) translateY(0px); }
     50% { transform: scale(0.95) translateY(-8px); }

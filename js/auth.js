@@ -13,7 +13,6 @@ class AuthManager {
         // Listen for authentication state changes
         onAuthStateChanged(auth, (user) => {
             this.user = user;
-            console.log('Auth state changed:', user ? user.email : 'No user');
             
             // Reset signing flag when auth state changes
             if (user) {
@@ -35,11 +34,8 @@ class AuthManager {
 
     async signInWithGoogle() {
         try {
-            console.log('DEBUG: signInWithGoogle called, signingIn flag:', this.signingIn);
-            
             // Check if there's already a sign-in in progress
             if (this.signingIn) {
-                console.log('Sign-in already in progress, ignoring request');
                 return {
                     success: false,
                     error: 'Sign-in already in progress'
@@ -48,7 +44,6 @@ class AuthManager {
             
             // Check if user is already signed in
             if (this.user) {
-                console.log('User already signed in');
                 return {
                     success: true,
                     user: this.user,
@@ -56,12 +51,9 @@ class AuthManager {
                 };
             }
             
-            console.log('DEBUG: Setting signingIn to true');
             this.signingIn = true;
-            console.log('Starting Google sign-in...');
             
             const result = await signInWithPopup(auth, provider);
-            console.log('DEBUG: Sign-in successful, resetting signingIn flag');
             this.signingIn = false;
             
             return {
@@ -70,9 +62,7 @@ class AuthManager {
                 isFirstTime: this.isFirstTimeUser(result.user)
             };
         } catch (error) {
-            console.log('DEBUG: Sign-in error, resetting signingIn flag');
             this.signingIn = false;
-            console.error('Sign-in error:', error);
             
             // Handle specific Firebase auth errors
             if (error.code === 'auth/cancelled-popup-request') {
@@ -101,16 +91,12 @@ class AuthManager {
 
     isFirstTimeUser(user) {
         if (!user) {
-            console.log('DEBUG: isFirstTimeUser - no user provided');
             return false;
         }
         
-        console.log('DEBUG: Checking if first time user for:', user.uid);
         const userProfile = this.getUserProfile(user.uid);
-        console.log('DEBUG: Retrieved user profile:', userProfile);
         
         const isFirstTime = !userProfile || !userProfile.nickname || !userProfile.country;
-        console.log('DEBUG: Is first time user?', isFirstTime);
         
         return isFirstTime;
     }
@@ -120,7 +106,6 @@ class AuthManager {
             await signOut(auth);
             return { success: true };
         } catch (error) {
-            console.error('Sign-out error:', error);
             return {
                 success: false,
                 error: error.message
@@ -129,7 +114,6 @@ class AuthManager {
     }
 
     getCurrentUser() {
-        console.log('DEBUG: getCurrentUser called, this.user:', this.user ? this.user.email : 'null');
         return this.user;
     }
 
@@ -148,41 +132,28 @@ class AuthManager {
     // Profile management methods
     getUserProfile(uid) {
         const key = `shabble_user_${uid}`;
-        console.log('DEBUG: Getting user profile with key:', key);
         
         try {
             const stored = localStorage.getItem(key);
-            console.log('DEBUG: Raw localStorage value:', stored);
             
             if (!stored) {
-                console.log('DEBUG: No profile found in localStorage');
                 return null;
             }
             
             const parsed = JSON.parse(stored);
-            console.log('DEBUG: Parsed profile:', parsed);
             return parsed;
         } catch (error) {
-            console.error('DEBUG: Error reading profile from localStorage:', error);
             return null;
         }
     }
 
     saveUserProfile(userId, profile) {
         const key = `shabble_user_${userId}`;
-        console.log('DEBUG: Saving user profile with key:', key);
-        console.log('DEBUG: Profile data to save:', profile);
         
         try {
             const stored = JSON.stringify(profile);
             localStorage.setItem(key, stored);
-            console.log('DEBUG: Profile saved to localStorage successfully');
-            
-            // Verify it was saved
-            const verification = localStorage.getItem(key);
-            console.log('DEBUG: Verification read back:', verification);
         } catch (error) {
-            console.error('DEBUG: Error saving profile to localStorage:', error);
             throw error;
         }
     }
@@ -198,29 +169,19 @@ class AuthManager {
     }
 
     async completeProfileSetup(nickname, country) {
-        console.log('DEBUG v35: completeProfileSetup called with:', { nickname, country });
-        console.log('DEBUG v35: this.currentUser:', this.currentUser);
-        console.log('DEBUG v35: this.user:', this.user);
-        console.log('DEBUG v35: auth.currentUser:', auth.currentUser);
-        
         // Use this.user instead of this.currentUser, or fallback to auth.currentUser
         const user = this.user || auth.currentUser;
         
         if (!user) {
-            console.log('DEBUG: No current user found in any location');
             return { success: false, error: 'No user signed in' };
         }
-        
-        console.log('DEBUG: Using user:', user.uid);
 
         const nicknameValidation = this.validateNickname(nickname);
-        console.log('DEBUG: Nickname validation result:', nicknameValidation);
         if (!nicknameValidation.valid) {
             return { success: false, error: nicknameValidation.error };
         }
 
         if (!country) {
-            console.log('DEBUG: No country provided');
             return { success: false, error: 'Please select a country' };
         }
 
@@ -235,26 +196,19 @@ class AuthManager {
                 updatedAt: new Date().toISOString()
             };
 
-            console.log('DEBUG: About to save profile:', profile);
             this.saveUserProfile(user.uid, profile);
-            console.log('DEBUG: Profile saved successfully');
             
             return { success: true, profile };
         } catch (error) {
-            console.error('DEBUG: Profile setup error:', error);
             return { success: false, error: 'Failed to save profile: ' + error.message };
         }
     }
 
     getCurrentUserProfile() {
-        console.log('DEBUG: getCurrentUserProfile called, this.user:', this.user ? this.user.email : 'null');
         if (!this.user) {
-            console.log('DEBUG: No user found, returning null');
             return null;
         }
-        console.log('DEBUG: Getting profile for uid:', this.user.uid);
         const profile = this.getUserProfile(this.user.uid);
-        console.log('DEBUG: Profile retrieved in getCurrentUserProfile:', profile);
         return profile;
     }
 }
