@@ -168,7 +168,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             card.innerHTML = `
                 <label for="${inputId}" class="alphagram">${alphagram}</label>
-                <input type="text" id="${inputId}" class="answer-input" placeholder="Your answer..." autocomplete="off">
+                <input type="text" 
+                       id="${inputId}" 
+                       class="answer-input" 
+                       placeholder="Your answer..." 
+                       autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       spellcheck="false"
+                       name="answer-${index}">
             `;
             elements.gameBoard.appendChild(card);
         });
