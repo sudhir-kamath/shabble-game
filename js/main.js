@@ -682,8 +682,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function hideProfileSetupModal() {
+        console.log('DEBUG: hideProfileSetupModal called');
+        console.log('DEBUG: profileSetupModal element:', elements.profileSetupModal);
         elements.profileSetupModal.classList.add('hidden');
         elements.profileSetupModal.classList.remove('active');
+        console.log('DEBUG: Modal classes after hiding:', elements.profileSetupModal.className);
     }
 
     // Set up profile setup handler
@@ -724,8 +727,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 console.log('DEBUG: Profile setup successful, hiding modal');
                 hideProfileSetupModal();
+                console.log('DEBUG: Updating auth UI');
                 updateAuthUI(authManager.getCurrentUser());
+                console.log('DEBUG: Updating header player info');
                 updateHeaderPlayerInfo(authManager.getCurrentUser());
+                console.log('DEBUG: Checking if start screen should be hidden');
+                
+                // After profile setup, show the start screen so user can select word lengths
+                console.log('DEBUG: Showing start screen after profile setup');
+                elements.startScreen.classList.add('active');
+                
                 console.log('DEBUG: Profile setup completed:', result.profile);
             } else {
                 console.log('DEBUG: Profile setup failed:', result.error);
