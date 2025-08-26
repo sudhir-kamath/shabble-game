@@ -733,10 +733,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 console.log('DEBUG: Profile setup successful, hiding modal');
                 hideProfileSetupModal();
+                console.log('DEBUG: Getting current user for UI update');
+                const currentUser = authManager.getCurrentUser();
+                console.log('DEBUG: Current user after profile setup:', currentUser ? currentUser.email : 'null');
                 console.log('DEBUG: Updating auth UI');
-                updateAuthUI(authManager.getCurrentUser());
+                updateAuthUI(currentUser);
                 console.log('DEBUG: Updating header player info');
-                updateHeaderPlayerInfo(authManager.getCurrentUser());
+                updateHeaderPlayerInfo(currentUser);
                 console.log('DEBUG: Checking if start screen should be hidden');
                 
                 // After profile setup, show the start screen so user can select word lengths
@@ -778,8 +781,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateAuthUI(user) {
+        console.log('DEBUG: updateAuthUI called with user:', user ? user.email : 'null');
+        console.log('DEBUG: elements.userName:', elements.userName);
+        console.log('DEBUG: elements.userAvatar:', elements.userAvatar);
+        
         if (user) {
             // User is signed in
+            console.log('DEBUG: User signed in, updating UI elements');
             elements.signedOutView.classList.add('hidden');
             elements.signedInView.classList.remove('hidden');
             
@@ -795,11 +803,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (profile && profile.nickname) {
                 console.log('DEBUG: Setting userName to profile nickname:', profile.nickname);
+                console.log('DEBUG: userName element before update:', elements.userName.textContent);
                 elements.userName.textContent = profile.nickname;
+                console.log('DEBUG: userName element after update:', elements.userName.textContent);
             } else {
                 const displayName = authManager.getUserDisplayName();
                 console.log('DEBUG: Setting userName to display name:', displayName);
+                console.log('DEBUG: userName element before update:', elements.userName.textContent);
                 elements.userName.textContent = displayName;
+                console.log('DEBUG: userName element after update:', elements.userName.textContent);
             }
             
             const photoURL = authManager.getUserPhotoURL();

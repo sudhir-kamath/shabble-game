@@ -129,19 +129,20 @@ class AuthManager {
     }
 
     getCurrentUser() {
-        return this.currentUser;
+        console.log('DEBUG: getCurrentUser called, this.user:', this.user ? this.user.email : 'null');
+        return this.user;
     }
 
     isSignedIn() {
-        return this.currentUser !== null;
+        return this.user !== null;
     }
 
     getUserDisplayName() {
-        return this.currentUser?.displayName || 'User';
+        return this.user?.displayName || 'User';
     }
 
     getUserPhotoURL() {
-        return this.currentUser?.photoURL || null;
+        return this.user?.photoURL || null;
     }
 
     // Profile management methods
@@ -246,8 +247,15 @@ class AuthManager {
     }
 
     getCurrentUserProfile() {
-        if (!this.currentUser) return null;
-        return this.getUserProfile(this.currentUser.uid);
+        console.log('DEBUG: getCurrentUserProfile called, this.user:', this.user ? this.user.email : 'null');
+        if (!this.user) {
+            console.log('DEBUG: No user found, returning null');
+            return null;
+        }
+        console.log('DEBUG: Getting profile for uid:', this.user.uid);
+        const profile = this.getUserProfile(this.user.uid);
+        console.log('DEBUG: Profile retrieved in getCurrentUserProfile:', profile);
+        return profile;
     }
 }
 
