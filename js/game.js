@@ -58,7 +58,8 @@ class ShabbleGame {
             alphagrams: this.gameState.alphagrams.map(a => ({
                 alphagram: a.alphagram,
                 isFake: a.isFake,
-                validWords: a.validWords
+                validWords: a.validWords,
+                length: a.alphagram.length // Add the length property
             })),
             timeLeft: this.gameState.timeLeft,
             score: this.gameState.score

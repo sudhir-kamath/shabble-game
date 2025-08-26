@@ -159,6 +159,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const renderGameBoard = (alphagrams) => {
         elements.gameBoard.innerHTML = '';
+        if (!alphagrams || alphagrams.length === 0) {
+            console.error('No alphagrams to render.');
+            return;
+        }
         alphagrams.forEach(({ alphagram, length }, index) => {
             const card = document.createElement('div');
             card.className = 'alphagram-card';
@@ -270,6 +274,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
 
+    // --- Layout Debugging --- 
+
+    const logLayoutDimensions = () => {
+        const gameBoard = elements.gameBoard;
+        if (!gameBoard) return;
+
+        const firstCard = gameBoard.querySelector('.alphagram-card');
+        console.log('--- Layout Dimensions ---');
+        console.log(`Window Width: ${window.innerWidth}px`);
+        console.log(`Game Board Width: ${gameBoard.offsetWidth}px`);
+        if (firstCard) {
+            console.log(`First Card Width: ${firstCard.offsetWidth}px`);
+        }
+    };
+
+    window.addEventListener('resize', logLayoutDimensions);
+
     // --- Game Logic Integration ---
 
     const startGame = () => {
@@ -277,6 +298,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Hide start screen
         elements.startScreen.classList.remove('active');
+        elements.startScreen.classList.add('hidden');
+        
+        // Show game screen
+        const gameScreen = document.getElementById('game-screen');
+        gameScreen.classList.remove('hidden');
+        gameScreen.classList.add('active');
         
         // Get selected word lengths
         const selectedLengths = getSelectedWordLengths();
@@ -286,9 +313,9 @@ document.addEventListener('DOMContentLoaded', function() {
         setRandomQuote();
         
         const initialState = game.startNewGame(selectedLengths);
-        elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
         renderGameBoard(initialState.alphagrams);
-        updateTimerDisplay(initialState.timeLeft);
+        elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
+        updateTimerDisplay(); // Initial timer display
 
         // Show header elements for game
         elements.timerDisplay.classList.remove('hidden');
@@ -321,9 +348,9 @@ document.addEventListener('DOMContentLoaded', function() {
             congratsMessage = "Well tried! Better luck next time";
         }
         
-        elements.gameOverMessage.innerHTML = congratsMessage;
+        elements.gameOverMessage.innerHTML = `${congratsMessage}<br><br>Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
         // Show game over modal
-        elements.gameOverModal.classList.add('active');
+        showOverlay(elements.gameOverModal);
         announce(`Game over. Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons
@@ -448,21 +475,19 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Play Again button clicked');
         e.preventDefault();
         e.stopPropagation();
-        // Check if user is signed in before starting game
-        if (!authManager.isSignedIn()) {
-            alert('Please sign in with Google to play the game.');
-            return;
-        }
-        
-        // Hide game over modal first
-        elements.gameOverModal.classList.remove('active');
-        
-        // Reset to start screen
+
+        // Hide game over modal
+        showOverlay(null);
+
+        // Hide game screen and show start screen
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('active');
+        elements.startScreen.classList.remove('hidden');
         elements.startScreen.classList.add('active');
-        elements.gameBoard.style.display = 'none';
-        elements.timerDisplay.classList.add('hidden');
-        elements.extraTimeBtn.classList.add('hidden');
         
+        // Clear the board for the next game
+        elements.gameBoard.innerHTML = '';
+
         setRandomQuote();
     });
     elements.playAgainHeaderBtn.addEventListener('click', (e) => {
@@ -470,18 +495,18 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         e.stopPropagation();
         
-        // Return to start screen instead of immediately starting a new game
-        if (game.getGameState().isPlaying) {
-            game.endGame();
-        }
-        
-        // Hide game elements and return to home screen
-        elements.gameBoard.style.display = 'none';
-        elements.timerDisplay.classList.add('hidden');
-        elements.extraTimeBtn.classList.add('hidden');
-        
-        // Show start screen for word length selection
+        // Hide game screen and show start screen
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('active');
+        elements.startScreen.classList.remove('hidden');
         elements.startScreen.classList.add('active');
+
+        // If game is running, end it.
+        if (game.getGameState().isPlaying) {
+            game.endGame(); // This will also clear the board via its own logic.
+        } else {
+            elements.gameBoard.innerHTML = ''; // Clear the board if game wasn't running
+        }
         
         setRandomQuote();
     });
