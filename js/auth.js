@@ -184,13 +184,19 @@ class AuthManager {
 
     async completeProfileSetup(nickname, country) {
         console.log('DEBUG: completeProfileSetup called with:', { nickname, country });
+        console.log('DEBUG: this.currentUser:', this.currentUser);
+        console.log('DEBUG: this.user:', this.user);
+        console.log('DEBUG: auth.currentUser:', auth.currentUser);
         
-        if (!this.currentUser) {
-            console.log('DEBUG: No current user found');
+        // Use this.user instead of this.currentUser, or fallback to auth.currentUser
+        const user = this.user || auth.currentUser;
+        
+        if (!user) {
+            console.log('DEBUG: No current user found in any location');
             return { success: false, error: 'No user signed in' };
         }
         
-        console.log('DEBUG: Current user:', this.currentUser.uid);
+        console.log('DEBUG: Using user:', user.uid);
 
         const nicknameValidation = this.validateNickname(nickname);
         console.log('DEBUG: Nickname validation result:', nicknameValidation);
@@ -207,15 +213,15 @@ class AuthManager {
             const profile = {
                 nickname,
                 country,
-                email: this.currentUser.email,
-                displayName: this.currentUser.displayName,
-                photoURL: this.currentUser.photoURL,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
             console.log('DEBUG: About to save profile:', profile);
-            this.saveUserProfile(this.currentUser.uid, profile);
+            this.saveUserProfile(user.uid, profile);
             console.log('DEBUG: Profile saved successfully');
             
             return { success: true, profile };
