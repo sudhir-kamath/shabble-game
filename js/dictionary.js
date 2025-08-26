@@ -2006,17 +2006,18 @@ const ALPHAGRAM_MAPS = {
 
 // Initialize the alphagram maps for all word lengths
 function initializeAlphagramMaps() {
-    for (const [length, dictionary] of Object.entries(DICTIONARIES)) {
-        const lengthNum = parseInt(length);
-        for (const word of dictionary) {
-            const alphagram = createAlphagram(word);
-            if (!ALPHAGRAM_MAPS[lengthNum].has(alphagram)) {
-                ALPHAGRAM_MAPS[lengthNum].set(alphagram, []);
-            }
-            // Only add if not already present to avoid duplicates
-            const existingWords = ALPHAGRAM_MAPS[lengthNum].get(alphagram);
-            if (!existingWords.includes(word)) {
-                existingWords.push(word);
+    // Initialize for each length
+    for (let length = 2; length <= 5; length++) {
+        ALPHAGRAM_MAPS[length] = new Map();
+        const dictionary = DICTIONARIES[length];
+        
+        if (dictionary) {
+            for (const word of dictionary) {
+                const alphagram = createAlphagram(word);
+                if (!ALPHAGRAM_MAPS[length].has(alphagram)) {
+                    ALPHAGRAM_MAPS[length].set(alphagram, []);
+                }
+                ALPHAGRAM_MAPS[length].get(alphagram).push(word);
             }
         }
     }
@@ -2192,14 +2193,12 @@ function generateGame(selectedLengths = [4]) {
         count: baseCount + (index < remainder ? 1 : 0)
     }));
     
-    
     // Generate alphagrams for each length
     for (const { length, count } of distribution) {
         // 20-30% should be fake (randomized per length)
         const fakePercentage = 0.2 + Math.random() * 0.1; // Random between 0.2 and 0.3
         const fakeCount = Math.max(1, Math.floor(count * fakePercentage + 0.5));
         const realCount = count - fakeCount;
-        
         
         // Get real alphagrams for this length
         const availableAlphagrams = Array.from(ALPHAGRAM_MAPS[length].entries())

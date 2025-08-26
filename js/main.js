@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
         lengthCheckboxes: {
             2: document.getElementById('length-2'),
             3: document.getElementById('length-3'),
-            4: document.getElementById('length-4')
+            4: document.getElementById('length-4'),
+            5: document.getElementById('length-5')
         },
         // Auth elements
         googleSigninBtn: document.getElementById('google-signin-btn'),
