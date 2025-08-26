@@ -62,18 +62,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- UI Update Functions ---
 
-    // Function to get country flag emoji from country code
-    function getCountryFlag(countryCode) {
-        // Convert country code to flag emoji using Unicode regional indicator symbols
-        if (!countryCode || countryCode === 'OTHER') return '🏳️';
+    // Function to set country flag CSS class from country code
+    function setCountryFlag(element, countryCode) {
+        // Clear existing flag classes
+        element.className = element.className.replace(/flag-\w+/g, '');
         
-        // Convert each letter to its regional indicator symbol
-        const codePoints = countryCode
-            .toUpperCase()
-            .split('')
-            .map(char => 127397 + char.charCodeAt(0));
+        // Add appropriate flag class
+        if (!countryCode || countryCode === 'OTHER') {
+            element.classList.add('flag-default');
+        } else {
+            element.classList.add(`flag-${countryCode.toUpperCase()}`);
+        }
         
-        return String.fromCodePoint(...codePoints);
+        // Clear text content since we're using CSS for the flag
+        element.textContent = '';
     }
 
     // Function to update header player info
@@ -82,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (profile && profile.nickname && profile.country) {
             // Show user info with nickname and country flag
-            elements.headerCountryFlag.textContent = getCountryFlag(profile.country);
+            setCountryFlag(elements.headerCountryFlag, profile.country);
             elements.headerNickname.textContent = profile.nickname;
             elements.headerPlayerInfo.classList.remove('hidden');
         } else {
@@ -326,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const initialState = game.startNewGame(selectedLengths);
         renderGameBoard(initialState.alphagrams);
         elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
-        updateTimerDisplay(); // Initial timer display
+        updateTimerDisplay(initialState.timeLeft); // Initial timer display with correct time
 
         // Show header elements for game
         elements.timerDisplay.classList.remove('hidden');
