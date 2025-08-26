@@ -183,10 +183,10 @@ class AuthManager {
     }
 
     async completeProfileSetup(nickname, country) {
-        console.log('DEBUG: completeProfileSetup called with:', { nickname, country });
-        console.log('DEBUG: this.currentUser:', this.currentUser);
-        console.log('DEBUG: this.user:', this.user);
-        console.log('DEBUG: auth.currentUser:', auth.currentUser);
+        console.log('DEBUG v35: completeProfileSetup called with:', { nickname, country });
+        console.log('DEBUG v35: this.currentUser:', this.currentUser);
+        console.log('DEBUG v35: this.user:', this.user);
+        console.log('DEBUG v35: auth.currentUser:', auth.currentUser);
         
         // Use this.user instead of this.currentUser, or fallback to auth.currentUser
         const user = this.user || auth.currentUser;
