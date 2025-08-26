@@ -78,13 +78,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to update header player info
     function updateHeaderPlayerInfo(user) {
+        console.log('DEBUG: updateHeaderPlayerInfo called with user:', user ? user.email : 'null');
         const profile = authManager.getCurrentUserProfile();
+        console.log('DEBUG: Profile for header update:', profile);
+        
         if (user && profile && profile.nickname && profile.country) {
+            console.log('DEBUG: Setting header info - nickname:', profile.nickname, 'country:', profile.country);
             // Use a simple approach - just show country code for now
             elements.headerCountryFlag.textContent = profile.country;
             elements.headerNickname.textContent = profile.nickname;
             elements.headerPlayerInfo.classList.remove('hidden');
+            console.log('DEBUG: Header player info shown');
         } else {
+            console.log('DEBUG: Hiding header player info - missing data. User:', !!user, 'Profile:', !!profile, 'Nickname:', profile?.nickname, 'Country:', profile?.country);
             elements.headerPlayerInfo.classList.add('hidden');
         }
     }
@@ -783,22 +789,32 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.startBtn.style.cursor = 'pointer';
             
             // Update user info
+            console.log('DEBUG: Getting user profile for UI update');
             const profile = authManager.getCurrentUserProfile();
+            console.log('DEBUG: Profile retrieved:', profile);
+            
             if (profile && profile.nickname) {
+                console.log('DEBUG: Setting userName to profile nickname:', profile.nickname);
                 elements.userName.textContent = profile.nickname;
             } else {
-                elements.userName.textContent = authManager.getUserDisplayName();
+                const displayName = authManager.getUserDisplayName();
+                console.log('DEBUG: Setting userName to display name:', displayName);
+                elements.userName.textContent = displayName;
             }
             
             const photoURL = authManager.getUserPhotoURL();
+            console.log('DEBUG: Photo URL:', photoURL);
             if (photoURL) {
                 elements.userAvatar.src = photoURL;
                 elements.userAvatar.style.display = 'block';
+                console.log('DEBUG: User avatar set and displayed');
             } else {
                 elements.userAvatar.style.display = 'none';
+                console.log('DEBUG: User avatar hidden (no photo URL)');
             }
             
             // Update header player info
+            console.log('DEBUG: Updating header player info');
             updateHeaderPlayerInfo(user);
         } else {
             // User is signed out
