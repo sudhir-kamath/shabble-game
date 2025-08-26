@@ -583,60 +583,82 @@ header {
 
 .speech-bubble {
     position: relative;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 50px;
-    padding: 20px 30px;
-    margin-top: 20px;
-    color: white;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5), 
-                0 0 0 3px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(139, 117, 87, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(101, 85, 63, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(160, 140, 115, 0.15) 0%, transparent 60%),
+        linear-gradient(135deg, #f4f1e8 0%, #e8dcc0 25%, #d4c4a0 50%, #c9b896 75%, #b8a082 100%);
+    border-radius: 0;
+    padding: 25px 35px;
+    margin: 30px auto;
+    color: #3d2914;
+    box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    max-width: 450px;
+    clip-path: polygon(
+        3% 0%, 97% 0%, 100% 8%, 98% 15%, 100% 25%, 97% 35%, 100% 45%, 
+        98% 55%, 100% 65%, 97% 75%, 100% 85%, 98% 92%, 97% 100%, 
+        3% 100%, 0% 92%, 2% 85%, 0% 75%, 3% 65%, 0% 55%, 2% 45%, 
+        0% 35%, 3% 25%, 0% 15%, 2% 8%
+    );
+    transform: rotate(-0.5deg);
+    border: 2px solid rgba(139, 117, 87, 0.4);
 }
 
 .speech-bubble:hover {
-    transform: scale(1);
+    transform: rotate(-0.5deg) scale(1.02);
+    transition: transform 0.3s ease;
 }
 
 .speech-bubble::before {
     content: '';
     position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 20px solid #667eea;
-    filter: drop-shadow(0 -3px 6px rgba(102, 126, 234, 0.3));
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 1px,
+            rgba(139, 117, 87, 0.1) 1px,
+            rgba(139, 117, 87, 0.1) 2px
+        );
+    z-index: -1;
+    clip-path: inherit;
 }
 
 .speech-bubble::after {
     content: '';
     position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 17px solid transparent;
-    border-right: 17px solid transparent;
-    border-bottom: 17px solid #764ba2;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 15% 25%, rgba(101, 85, 63, 0.4) 2px, transparent 3px),
+        radial-gradient(circle at 85% 75%, rgba(101, 85, 63, 0.3) 1px, transparent 2px),
+        radial-gradient(circle at 60% 40%, rgba(139, 117, 87, 0.2) 1.5px, transparent 2.5px),
+        radial-gradient(circle at 30% 80%, rgba(101, 85, 63, 0.25) 1px, transparent 2px);
+    pointer-events: none;
 }
 
 .speech-bubble p {
     margin: 0;
-    color: white;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 16px;
-    font-weight: 500;
+    color: #3d2914;
+    font-family: 'Georgia', 'Libre Baskerville', 'Times New Roman', serif;
+    font-size: 17px;
+    font-weight: 700;
     font-style: italic;
     text-align: center;
-    line-height: 1.4;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    letter-spacing: 0.5px;
+    line-height: 1.5;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    letter-spacing: 0.2px;
+    position: relative;
+    z-index: 1;
 }
 
 @keyframes bubbleFloat {
@@ -646,24 +668,38 @@ header {
 
 /* Light mode speech bubble */
 .light-mode .speech-bubble {
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-    box-shadow: 0 8px 25px rgba(168, 237, 234, 0.5), 
-                0 0 0 3px rgba(0, 0, 0, 0.05);
+    background: 
+        radial-gradient(circle at 25% 35%, rgba(139, 117, 87, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 75% 65%, rgba(101, 85, 63, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 45% 75%, rgba(160, 140, 115, 0.1) 0%, transparent 60%),
+        linear-gradient(135deg, #faf8f3 0%, #f0ead6 25%, #e6dcc8 50%, #ddd3bb 75%, #d4c9a8 100%);
+    color: #2d1810;
+    border: 2px solid rgba(139, 117, 87, 0.3);
 }
 
 .light-mode .speech-bubble::before {
-    border-bottom-color: #a8edea;
-    filter: drop-shadow(0 -3px 6px rgba(168, 237, 234, 0.4));
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 1px,
+            rgba(139, 117, 87, 0.08) 1px,
+            rgba(139, 117, 87, 0.08) 2px
+        );
 }
 
 .light-mode .speech-bubble::after {
-    border-bottom-color: #fed6e3;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(101, 85, 63, 0.3) 2px, transparent 3px),
+        radial-gradient(circle at 80% 70%, rgba(101, 85, 63, 0.2) 1px, transparent 2px),
+        radial-gradient(circle at 55% 45%, rgba(139, 117, 87, 0.15) 1.5px, transparent 2.5px),
+        radial-gradient(circle at 35% 75%, rgba(101, 85, 63, 0.2) 1px, transparent 2px);
 }
 
 .light-mode .speech-bubble p {
-    color: #2d3748;
-    font-style: italic;
-    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9);
+    color: #2d1810;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+    font-weight: 700;
 }
 
 .overlay-content h1, .overlay-content h2 {
@@ -890,6 +926,39 @@ header {
         font-size: 1.2rem;
         padding: 0.5rem;
         letter-spacing: 1px;
+    }
+
+    /* Fix checkbox layout for mobile - 2 rows total */
+    .checkbox-container.inline {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .checkbox-title {
+        flex: 1 0 100%;
+        text-align: center;
+        margin-bottom: 0.25rem;
+        order: 1;
+    }
+
+    .checkbox-group.horizontal {
+        flex: 1 0 100%;
+        flex-wrap: nowrap;
+        justify-content: space-evenly;
+        gap: 0.25rem;
+        order: 2;
+    }
+
+    .checkbox-label.compact {
+        flex: 1;
+        justify-content: center;
+        min-width: 70px;
+        padding: 6px 8px;
+        font-size: 0.85rem;
     }
 
     .overlay-content {
