@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Collection of pithy one-liners involving the number 4
     const fourOneliners = [
         "May the 4s be with you!",
-        "A Shabble is an old rusty sword in Scottish- but it's still sharp!"
+        "A Shabble is an old rusty sword in Scottish- but it's still sharp!",
         "Seen 4 weddings and a Funeral? Don't let the 4s kill your scrabble game",
         "Got 4 aces? That's a hand worth fighting for - but not in scrabble shabble!",
         "Spelling success, one S at a time!",
