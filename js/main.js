@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
         closeModalBtn: document.getElementById('close-modal'),
         playAgainBtn: document.getElementById('play-again'),
         playAgainHeaderBtn: document.getElementById('play-again-header-btn'),
-        finalScore: document.getElementById('final-score'),
         timerDisplay: document.getElementById('timer'),
         scoreDisplay: document.getElementById('score'),
         quoteText: document.getElementById('quote-text'),
@@ -346,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const endGame = () => {
         const results = game.endGame();
-        elements.finalScore.textContent = Math.round(results.score);
         
         // Calculate score percentage and set dynamic message
         const maxPossibleScore = 200; // 20 alphagrams × 10 points each
@@ -389,7 +387,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const endGameDueToTimeout = () => {
         const results = game.endGame();
-        elements.finalScore.textContent = Math.round(results.score);
         
         // Calculate score percentage and set dynamic message
         const maxPossibleScore = 200; // 20 alphagrams × 10 points each
