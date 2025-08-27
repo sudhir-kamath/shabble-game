@@ -23,9 +23,9 @@
 
 /* Light theme */
 .light-mode {
-    --bg-color: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 30%, #e9d5ff 70%, #ddd6fe 100%);
+    --bg-color: linear-gradient(135deg, #f0f8ff 0%, #e6f0ff 100%);
     --text-color: #1e1b4b;
-    --card-bg: linear-gradient(145deg, #fefbff 0%, #f8f4ff 50%, #f3ecff 100%);
+    --card-bg: linear-gradient(145deg, #e0e7ff 0%, #c7d2fe 100%);
     --card-border: #c4b5fd;
     --primary: linear-gradient(135deg, #7c3aed, #5b21b6);
     --primary-hover: linear-gradient(135deg, #5b21b6, #4c1d95);
@@ -85,14 +85,10 @@ body::before {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem; /* Add horizontal padding */
 }
 
-main {
-    /* Padding is now handled by the .container */
-}
 
 /* Header Styles */
 header {
@@ -108,28 +104,31 @@ header {
 
 .header-content {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: nowrap;
     align-items: center;
-    width: 100%;
-    max-width: 1200px;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-shrink: 1; 
     margin: 0 auto;
     padding: 0 1rem;
 }
 
 .header-logo {
-    flex-shrink: 0;
+    flex-shrink: 1;
 }
 
 .header-tile {
-    width: 60px;
-    height: 60px;
+    width: auto;
+    height: auto;
     margin-right: 1rem;
+    flex-shrink: 1;
 }
 
 .header-left {
     flex: 1;
     display: flex;
     justify-content: flex-start;
+    flex-shrink: 1;
 }
 
 .header-center {
@@ -138,19 +137,24 @@ header {
     justify-content: center;
     align-items: center;
     gap: 2rem;
+    flex-shrink: 1;
 }
 
-.header-player-info {
+.player-info-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center; /* Center the content */
+    flex-shrink: 1; /* Allow shrinking */
+    gap: 0.75rem;
     background: rgba(124, 58, 237, 0.1);
     border: 1px solid rgba(124, 58, 237, 0.3);
-    border-radius: 20px;
     padding: 0.5rem 1rem;
+    border-radius: 20px;
+    max-width: 200px;
+
 }
 
-.light-mode .header-player-info {
+.light-mode .player-info-header {
     background: rgba(124, 58, 237, 0.05);
     border: 1px solid rgba(124, 58, 237, 0.2);
 }
@@ -166,6 +170,7 @@ header {
     border-radius: 2px;
     overflow: hidden;
     vertical-align: middle;
+    flex-shrink: 1;
 }
 
 .country-flag:hover {
@@ -502,10 +507,19 @@ header {
     background: #CCCCCC;
 }
 
+.player-info-header > * {
+    flex-shrink: 1; /* Allow children to shrink */
+}
+
 .player-nickname {
     font-weight: 600;
     color: var(--text-color);
     font-size: 0.9rem;
+    min-width: 0; /* Allow shrinking below content size */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 1;
 }
 
 .clickable {
@@ -520,14 +534,70 @@ header {
 .timer-container, .game-controls-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    font-size: 1.2rem;
     font-weight: bold;
+    flex-shrink: 1;
 }
 
+
 .game-controls-header {
+    display: flex;
+    align-items: center;
     justify-content: flex-end;
-    flex: 1;
+    flex-shrink: 1; /* Allow shrinking */
+    flex-wrap: nowrap; /* Prevent buttons from wrapping */
+    gap: 0.5rem;
+}
+
+
+@media (max-width: 768px) {
+    .header-content {
+        /* flex-direction: column; */ /* Disabled to keep header on one row */
+        align-items: center; /* Re-center items */
+        gap: 0.5rem; /* Reduce gap for smaller screens */
+        width: auto; /* Allow the container to fit its content */
+    }
+
+    .player-info-header {
+        justify-content: center;
+    }
+
+    .game-controls-header {
+        justify-content: center;
+    }
+
+    .header-logo {
+        align-self: center; /* Center the logo */
+    }
+
+    .player-info-header {
+        padding: 0.4rem 0.8rem; /* Reduce padding */
+        gap: 0.5rem; /* Reduce gap */
+    }
+
+    .player-nickname,
+    #timer {
+        font-size: 0.85rem; /* Reduce font size */
+    }
+
+    .game-controls-header .btn {
+        padding: 0.5rem 0.75rem; /* Reduce button padding */
+        font-size: 0.8rem; /* Reduce font size */
+        flex-shrink: 1; /* Allow buttons to shrink */
+    }
+}
+
+@media (max-width: 420px) {
+    .header-content {
+        gap: 0.25rem; /* Further reduce gap */
+    }
+
+    .game-controls-header .btn span {
+        display: none; /* Hide text on buttons */
+    }
+
+    .game-controls-header .btn {
+        padding: 0.5rem; /* Adjust padding for icon-only buttons */
+    }
 }
 
 /* Game Board */
@@ -759,6 +829,7 @@ header {
     visibility: hidden;
     transition: all 0.3s ease;
     overflow-y: auto;
+    overflow-x:scroll;
     padding: 2rem 0;
 }
 
@@ -782,6 +853,7 @@ header {
     margin: auto;
     max-height: calc(100vh - 4rem);
     overflow-y: auto;
+    overflow-x:scroll;
 }
 
 .light-mode .overlay-content {
