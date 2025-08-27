@@ -12,303 +12,306 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="dark-mode">
-    <div class="container">
-        <div id="live-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-        <header>
-            <div class="header-content">
-                <div class="header-logo">
-                    <div class="scrabble-tile header-tile">
-                        <span class="tile-letter">S</span>
-                        <span class="tile-exclamation">!</span>
-                    </div>
-                </div>
-                <div class="player-info-header" id="header-player-info">
-                    <div class="country-flag" id="header-country-flag" title="Click to edit country">🇮🇳</div>
-                    <div class="player-nickname" id="header-nickname" title="Click to edit nickname">Player</div>
-                    <div class="timer-container">
-                        <span id="timer" role="status">2:00</span>
-                    </div>
-                </div>
-                <div class="game-controls-header">
-                    <button id="done-btn" class="btn primary-btn" disabled>
-                        <i class="fas fa-check-circle"></i> Done
-                    </button>
-                    <button id="extra-time" class="btn" title="Get 30 extra seconds (-25 points)" aria-label="Get 30 extra seconds for a cost of 25 points" disabled>
-                        <i class="fas fa-hourglass-half"></i> +30s
-                    </button>
-                    <button id="header-instructions-btn" class="btn" aria-label="How to Play">
-                        <i class="fas fa-question-circle"></i>
-                    </button>
-                    <button id="theme-toggle" class="btn" aria-label="Toggle dark/light mode">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button id="play-again-header-btn" class="btn" title="Play Again">
-                        <i class="fas fa-redo"></i>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <main>
-            <div id="game-screen" class="hidden">
-                <div id="game-board" class="game-board">
-                    <!-- Alphagram cards will be generated here by JavaScript -->
-                </div>
-            </div>
-
-            <div id="start-screen" class="overlay active">
-                <div class="overlay-content">
-                    <div class="title-section">
-                        <div class="logo-title">
-                            <div class="scrabble-tile">
+    <div id="live-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+    <header>
+                <div class="header-content">
+                    <div class="header-top-row">
+                        <div class="header-logo">
+                            <div class="scrabble-tile header-tile">
                                 <span class="tile-letter">S</span>
                                 <span class="tile-exclamation">!</span>
-                                <span class="tile-score">1</span>
                             </div>
-                            <h1 class="game-title">Shabble!</h1>
                         </div>
-                        <p class="game-subtitle">Unscramble the letters to form valid words. Mark fakes with 'x'.</p>
-                    </div>
-                    
-                    <!-- Authentication Section -->
-                    <div id="auth-section" class="auth-section">
-                        <div id="signed-out-view" class="auth-view">
-                            <button id="google-signin-btn" class="btn auth-btn">
-                                <i class="fab fa-google"></i>
-                                Sign in with Google
-                            </button>
-                        </div>
-                        
-                        <div id="signed-in-view" class="auth-view hidden">
-                            <div class="user-info horizontal">
-                                <img id="user-avatar" src="" alt="User Avatar" class="user-avatar">
-                                <span id="user-name">User Name</span>
-                                <button id="signout-btn" class="btn secondary-btn small">Sign Out</button>
+                        <div class="player-info-header" id="header-player-info">
+                            <div class="country-flag" id="header-country-flag" title="Click to edit country">🇮🇳</div>
+                            <div class="player-nickname" id="header-nickname" title="Click to edit nickname">Player</div>
+                            <div class="timer-container">
+                                <span id="timer" role="status">2:00</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Word length selection -->
-                    <div class="word-length-selection">
-                        <div class="checkbox-container inline">
-                            <span class="checkbox-title">Word Lengths:</span>
-                            <div class="checkbox-group horizontal">
-                                <label class="checkbox-label compact">
-                                    <input type="checkbox" id="length-2" value="2" checked>
-                                    <span class="checkmark small"></span>
-                                    2L
-                                </label>
-                                <label class="checkbox-label compact">
-                                    <input type="checkbox" id="length-3" value="3" checked>
-                                    <span class="checkmark small"></span>
-                                    3L
-                                </label>
-                                <label class="checkbox-label compact">
-                                    <input type="checkbox" id="length-4" value="4" checked>
-                                    <span class="checkmark small"></span>
-                                    4L
-                                </label>
-                                <label class="checkbox-label compact">
-                                    <input type="checkbox" id="length-5" value="5" checked>
-                                    <span class="checkmark small"></span>
-                                    5L
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button id="start-btn" class="btn primary-btn">Start Game</button>
-                    <button id="instructions-btn" class="btn secondary-btn">How to Play</button>
-                    <div id="motivational-quote" class="speech-bubble">
-                        <p id="quote-text">Success starts with the letter S!</p>
+                    <div class="game-controls-header">
+                        <button id="done-btn" class="btn primary-btn" disabled>
+                            <i class="fas fa-check-circle"></i> <span class="btn-text">Done</span>
+                        </button>
+                        <button id="extra-time" class="btn" title="Get 30 extra seconds (-25 points)" aria-label="Get 30 extra seconds for a cost of 25 points" disabled>
+                            <i class="fas fa-hourglass-half"></i> <span class="btn-text">+30s</span>
+                        </button>
+                        <button id="header-instructions-btn" class="btn" aria-label="How to Play">
+                            <i class="fas fa-question-circle"></i>
+                        </button>
+                        <button id="theme-toggle" class="btn" aria-label="Toggle dark/light mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button id="play-again-header-btn" class="btn" title="Play Again">
+                            <i class="fas fa-redo"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
+    </header>
 
-            <!-- Profile Setup Modal -->
-            <div id="profile-setup-modal" class="overlay hidden">
-                <div class="overlay-content profile-setup">
-                    <h2>Complete Your Profile</h2>
-                    <p class="profile-setup-subtitle">Set up your nickname and country for leaderboards and public spaces</p>
-                    
-                    <form id="profile-setup-form" class="profile-form">
-                        <div class="form-group">
-                            <label for="nickname-input">Nickname</label>
-                            <input type="text" id="nickname-input" placeholder="Enter your nickname" maxlength="20" required>
-                            <span class="form-hint">3-20 characters, letters and numbers only</span>
+    <div class="main-content">
+        <div class="container">
+            <main>
+                <div id="game-screen" class="hidden">
+                    <div id="game-board" class="game-board">
+                        <!-- Alphagram cards will be generated here by JavaScript -->
+                    </div>
+                </div>
+
+                <div id="start-screen" class="overlay active">
+                    <div class="overlay-content">
+                        <div class="title-section">
+                            <div class="logo-title">
+                                <div class="scrabble-tile">
+                                    <span class="tile-letter">S</span>
+                                    <span class="tile-exclamation">!</span>
+                                    <span class="tile-score">1</span>
+                                </div>
+                                <h1 class="game-title">Shabble!</h1>
+                            </div>
+                            <p class="game-subtitle">Unscramble the letters to form valid words. Mark fakes with 'x'.</p>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="country-select">Country</label>
-                            <div class="country-selector">
-                                <select id="country-select" required>
-                                    <option value="">Select your country</option>
-                                    <option value="AR">🇦🇷 Argentina</option>
-                                    <option value="AU">🇦🇺 Australia</option>
-                                    <option value="AT">🇦🇹 Austria</option>
-                                    <option value="BE">🇧🇪 Belgium</option>
-                                    <option value="BR">🇧🇷 Brazil</option>
-                                    <option value="CA">🇨🇦 Canada</option>
-                                    <option value="CN">🇨🇳 China</option>
-                                    <option value="CZ">🇨🇿 Czech Republic</option>
-                                    <option value="DK">🇩🇰 Denmark</option>
-                                    <option value="EG">🇪🇬 Egypt</option>
-                                    <option value="FI">🇫🇮 Finland</option>
-                                    <option value="FR">🇫🇷 France</option>
-                                    <option value="DE">🇩🇪 Germany</option>
-                                    <option value="GR">🇬🇷 Greece</option>
-                                    <option value="HU">🇭🇺 Hungary</option>
-                                    <option value="IS">🇮🇸 Iceland</option>
-                                    <option value="IN">🇮🇳 India</option>
-                                    <option value="ID">🇮🇩 Indonesia</option>
-                                    <option value="IE">🇮🇪 Ireland</option>
-                                    <option value="IT">🇮🇹 Italy</option>
-                                    <option value="JP">🇯🇵 Japan</option>
-                                    <option value="LU">🇱🇺 Luxembourg</option>
-                                    <option value="MY">🇲🇾 Malaysia</option>
-                                    <option value="MX">🇲🇽 Mexico</option>
-                                    <option value="NL">🇳🇱 Netherlands</option>
-                                    <option value="NZ">🇳🇿 New Zealand</option>
-                                    <option value="NG">🇳🇬 Nigeria</option>
-                                    <option value="NO">🇳🇴 Norway</option>
-                                    <option value="PK">🇵🇰 Pakistan</option>
-                                    <option value="PH">🇵🇭 Philippines</option>
-                                    <option value="PL">🇵🇱 Poland</option>
-                                    <option value="PT">🇵🇹 Portugal</option>
-                                    <option value="RU">🇷🇺 Russia</option>
-                                    <option value="SG">🇸🇬 Singapore</option>
-                                    <option value="ZA">🇿🇦 South Africa</option>
-                                    <option value="KR">🇰🇷 South Korea</option>
-                                    <option value="ES">🇪🇸 Spain</option>
-                                    <option value="SE">🇸🇪 Sweden</option>
-                                    <option value="CH">🇨🇭 Switzerland</option>
-                                    <option value="TH">🇹🇭 Thailand</option>
-                                    <option value="TR">🇹🇷 Turkey</option>
-                                    <option value="GB">🇬🇧 United Kingdom</option>
-                                    <option value="US">🇺🇸 United States</option>
-                                    <option value="VN">🇻🇳 Vietnam</option>
-                                    <option value="OTHER">🏳️ Other</option>
-                                </select>
+                        <!-- Authentication Section -->
+                        <div id="auth-section" class="auth-section">
+                            <div id="signed-out-view" class="auth-view">
+                                <button id="google-signin-btn" class="btn auth-btn">
+                                    <i class="fab fa-google"></i>
+                                    Sign in with Google
+                                </button>
+                            </div>
+                            
+                            <div id="signed-in-view" class="auth-view hidden">
+                                <div class="user-info horizontal">
+                                    <img id="user-avatar" src="" alt="User Avatar" class="user-avatar">
+                                    <span id="user-name">User Name</span>
+                                    <button id="signout-btn" class="btn secondary-btn small">Sign Out</button>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="form-actions">
-                            <button type="submit" class="btn primary-btn">Complete Setup</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Edit Profile Modal -->
-            <div id="edit-profile-modal" class="overlay hidden">
-                <div class="overlay-content profile-setup">
-                    <h2>Edit Profile</h2>
-                    <p class="profile-setup-subtitle">Update your nickname and country</p>
-                    
-                    <form id="edit-profile-form" class="profile-form">
-                        <div class="form-group">
-                            <label for="edit-nickname-input">Nickname</label>
-                            <input type="text" id="edit-nickname-input" placeholder="Enter your nickname" maxlength="20" required>
-                            <span class="form-hint">3-20 characters, letters and numbers only</span>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="edit-country-select">Country</label>
-                            <div class="country-selector">
-                                <select id="edit-country-select" required>
-                                    <option value="">Select your country</option>
-                                    <option value="AR">🇦🇷 Argentina</option>
-                                    <option value="AU">🇦🇺 Australia</option>
-                                    <option value="AT">🇦🇹 Austria</option>
-                                    <option value="BE">🇧🇪 Belgium</option>
-                                    <option value="BR">🇧🇷 Brazil</option>
-                                    <option value="CA">🇨🇦 Canada</option>
-                                    <option value="CN">🇨🇳 China</option>
-                                    <option value="CZ">🇨🇿 Czech Republic</option>
-                                    <option value="DK">🇩🇰 Denmark</option>
-                                    <option value="EG">🇪🇬 Egypt</option>
-                                    <option value="FI">🇫🇮 Finland</option>
-                                    <option value="FR">🇫🇷 France</option>
-                                    <option value="DE">🇩🇪 Germany</option>
-                                    <option value="GR">🇬🇷 Greece</option>
-                                    <option value="HU">🇭🇺 Hungary</option>
-                                    <option value="IS">🇮🇸 Iceland</option>
-                                    <option value="IN">🇮🇳 India</option>
-                                    <option value="ID">🇮🇩 Indonesia</option>
-                                    <option value="IE">🇮🇪 Ireland</option>
-                                    <option value="IT">🇮🇹 Italy</option>
-                                    <option value="JP">🇯🇵 Japan</option>
-                                    <option value="LU">🇱🇺 Luxembourg</option>
-                                    <option value="MY">🇲🇾 Malaysia</option>
-                                    <option value="MX">🇲🇽 Mexico</option>
-                                    <option value="NL">🇳🇱 Netherlands</option>
-                                    <option value="NZ">🇳🇿 New Zealand</option>
-                                    <option value="NG">🇳🇬 Nigeria</option>
-                                    <option value="NO">🇳🇴 Norway</option>
-                                    <option value="PK">🇵🇰 Pakistan</option>
-                                    <option value="PH">🇵🇭 Philippines</option>
-                                    <option value="PL">🇵🇱 Poland</option>
-                                    <option value="PT">🇵🇹 Portugal</option>
-                                    <option value="RU">🇷🇺 Russia</option>
-                                    <option value="SG">🇸🇬 Singapore</option>
-                                    <option value="ZA">🇿🇦 South Africa</option>
-                                    <option value="KR">🇰🇷 South Korea</option>
-                                    <option value="ES">🇪🇸 Spain</option>
-                                    <option value="SE">🇸🇪 Sweden</option>
-                                    <option value="CH">🇨🇭 Switzerland</option>
-                                    <option value="TH">🇹🇭 Thailand</option>
-                                    <option value="TR">🇹🇷 Turkey</option>
-                                    <option value="GB">🇬🇧 United Kingdom</option>
-                                    <option value="US">🇺🇸 United States</option>
-                                    <option value="VN">🇻🇳 Vietnam</option>
-                                    <option value="OTHER">🏳️ Other</option>
-                                </select>
+                        <!-- Word length selection -->
+                        <div class="word-length-selection">
+                            <div class="checkbox-container inline">
+                                <span class="checkbox-title">Word Lengths:</span>
+                                <div class="checkbox-group horizontal">
+                                    <label class="checkbox-label compact">
+                                        <input type="checkbox" id="length-2" value="2" checked>
+                                        <span class="checkmark small"></span>
+                                        2L
+                                    </label>
+                                    <label class="checkbox-label compact">
+                                        <input type="checkbox" id="length-3" value="3" checked>
+                                        <span class="checkmark small"></span>
+                                        3L
+                                    </label>
+                                    <label class="checkbox-label compact">
+                                        <input type="checkbox" id="length-4" value="4" checked>
+                                        <span class="checkmark small"></span>
+                                        4L
+                                    </label>
+                                    <label class="checkbox-label compact">
+                                        <input type="checkbox" id="length-5" value="5" checked>
+                                        <span class="checkmark small"></span>
+                                        5L
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="form-actions">
-                            <button type="button" id="cancel-edit-btn" class="btn secondary-btn">Cancel</button>
-                            <button type="submit" class="btn primary-btn">Save Changes</button>
+                        <button id="start-btn" class="btn primary-btn">Start Game</button>
+                        <button id="instructions-btn" class="btn secondary-btn">How to Play</button>
+                        <div id="motivational-quote" class="speech-bubble">
+                            <p id="quote-text">Success starts with the letter S!</p>
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
 
-            <div id="instructions" class="overlay">
-                <div class="overlay-content">
-                    <h2>How to Play</h2>
-                    <ul>
-                        <li>Unscramble each set of letters to form valid words.</li>
-                        <li>Type 'x' if you think the letter set cannot form a valid word.</li>
-                        <li>For multiple valid words, separate them with spaces or commas.</li>
-                        <li>You have 2 minutes to solve as many as you can.</li>
-                    </ul>
-                    <h2>Scoring</h2>
-                    <ul>
-                        <li><strong>+10 points</strong> for a fully correct answer or correctly identifying a fake with 'x'.</li>
-                        <li><strong>Partial points</strong> are awarded for partially correct answers.</li>
-                        <li><strong>-5 points</strong> for submitting any incorrect words.</li>
-                        <li><strong>-5 points</strong> for incorrectly marking a real word set as 'x'.</li>
-                        <li><strong>-25 points</strong> for using the extra time button.</li>
-                    </ul>
-                    <button id="back-btn" class="btn primary-btn">Back to Game</button>
+                <!-- Profile Setup Modal -->
+                <div id="profile-setup-modal" class="overlay hidden">
+                    <div class="overlay-content profile-setup">
+                        <h2>Complete Your Profile</h2>
+                        <p class="profile-setup-subtitle">Set up your nickname and country for leaderboards and public spaces</p>
+                        
+                        <form id="profile-setup-form" class="profile-form">
+                            <div class="form-group">
+                                <label for="nickname-input">Nickname</label>
+                                <input type="text" id="nickname-input" placeholder="Enter your nickname" maxlength="20" required>
+                                <span class="form-hint">3-20 characters, letters and numbers only</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="country-select">Country</label>
+                                <div class="country-selector">
+                                    <select id="country-select" required>
+                                        <option value="">Select your country</option>
+                                        <option value="AR">🇦🇷 Argentina</option>
+                                        <option value="AU">🇦🇺 Australia</option>
+                                        <option value="AT">🇦🇹 Austria</option>
+                                        <option value="BE">🇧🇪 Belgium</option>
+                                        <option value="BR">🇧🇷 Brazil</option>
+                                        <option value="CA">🇨🇦 Canada</option>
+                                        <option value="CN">🇨🇳 China</option>
+                                        <option value="CZ">🇨🇿 Czech Republic</option>
+                                        <option value="DK">🇩🇰 Denmark</option>
+                                        <option value="EG">🇪🇬 Egypt</option>
+                                        <option value="FI">🇫🇮 Finland</option>
+                                        <option value="FR">🇫🇷 France</option>
+                                        <option value="DE">🇩🇪 Germany</option>
+                                        <option value="GR">🇬🇷 Greece</option>
+                                        <option value="HU">🇭🇺 Hungary</option>
+                                        <option value="IS">🇮🇸 Iceland</option>
+                                        <option value="IN">🇮🇳 India</option>
+                                        <option value="ID">🇮🇩 Indonesia</option>
+                                        <option value="IE">🇮🇪 Ireland</option>
+                                        <option value="IT">🇮🇹 Italy</option>
+                                        <option value="JP">🇯🇵 Japan</option>
+                                        <option value="LU">🇱🇺 Luxembourg</option>
+                                        <option value="MY">🇲🇾 Malaysia</option>
+                                        <option value="MX">🇲🇽 Mexico</option>
+                                        <option value="NL">🇳🇱 Netherlands</option>
+                                        <option value="NZ">🇳🇿 New Zealand</option>
+                                        <option value="NG">🇳🇬 Nigeria</option>
+                                        <option value="NO">🇳🇴 Norway</option>
+                                        <option value="PK">🇵🇰 Pakistan</option>
+                                        <option value="PH">🇵🇭 Philippines</option>
+                                        <option value="PL">🇵🇱 Poland</option>
+                                        <option value="PT">🇵🇹 Portugal</option>
+                                        <option value="RU">🇷🇺 Russia</option>
+                                        <option value="SG">🇸🇬 Singapore</option>
+                                        <option value="ZA">🇿🇦 South Africa</option>
+                                        <option value="KR">🇰🇷 South Korea</option>
+                                        <option value="ES">🇪🇸 Spain</option>
+                                        <option value="SE">🇸🇪 Sweden</option>
+                                        <option value="CH">🇨🇭 Switzerland</option>
+                                        <option value="TH">🇹🇭 Thailand</option>
+                                        <option value="TR">🇹🇷 Turkey</option>
+                                        <option value="GB">🇬🇧 United Kingdom</option>
+                                        <option value="US">🇺🇸 United States</option>
+                                        <option value="VN">🇻🇳 Vietnam</option>
+                                        <option value="OTHER">🏳️ Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn primary-btn">Complete Setup</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
 
-            <div id="game-over-modal" class="overlay">
-                <div class="overlay-content">
-                    <h2>Game Over!</h2>
-                    <p id="game-over-message">Time's up!</p>
-                    <p>Your final score: <span id="final-score">0</span></p>
-                    <button id="play-again" class="btn secondary-btn">Play Again</button>
-                    <button id="close-modal" class="btn primary-btn">Review Answers</button>
+                <!-- Edit Profile Modal -->
+                <div id="edit-profile-modal" class="overlay hidden">
+                    <div class="overlay-content profile-setup">
+                        <h2>Edit Profile</h2>
+                        <p class="profile-setup-subtitle">Update your nickname and country</p>
+                        
+                        <form id="edit-profile-form" class="profile-form">
+                            <div class="form-group">
+                                <label for="edit-nickname-input">Nickname</label>
+                                <input type="text" id="edit-nickname-input" placeholder="Enter your nickname" maxlength="20" required>
+                                <span class="form-hint">3-20 characters, letters and numbers only</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="edit-country-select">Country</label>
+                                <div class="country-selector">
+                                    <select id="edit-country-select" required>
+                                        <option value="">Select your country</option>
+                                        <option value="AR">🇦🇷 Argentina</option>
+                                        <option value="AU">🇦🇺 Australia</option>
+                                        <option value="AT">🇦🇹 Austria</option>
+                                        <option value="BE">🇧🇪 Belgium</option>
+                                        <option value="BR">🇧🇷 Brazil</option>
+                                        <option value="CA">🇨🇦 Canada</option>
+                                        <option value="CN">🇨🇳 China</option>
+                                        <option value="CZ">🇨🇿 Czech Republic</option>
+                                        <option value="DK">🇩🇰 Denmark</option>
+                                        <option value="EG">🇪🇬 Egypt</option>
+                                        <option value="FI">🇫🇮 Finland</option>
+                                        <option value="FR">🇫🇷 France</option>
+                                        <option value="DE">🇩🇪 Germany</option>
+                                        <option value="GR">🇬🇷 Greece</option>
+                                        <option value="HU">🇭🇺 Hungary</option>
+                                        <option value="IS">🇮🇸 Iceland</option>
+                                        <option value="IN">🇮🇳 India</option>
+                                        <option value="ID">🇮🇩 Indonesia</option>
+                                        <option value="IE">🇮🇪 Ireland</option>
+                                        <option value="IT">🇮🇹 Italy</option>
+                                        <option value="JP">🇯🇵 Japan</option>
+                                        <option value="LU">🇱🇺 Luxembourg</option>
+                                        <option value="MY">🇲🇾 Malaysia</option>
+                                        <option value="MX">🇲🇽 Mexico</option>
+                                        <option value="NL">🇳🇱 Netherlands</option>
+                                        <option value="NZ">🇳🇿 New Zealand</option>
+                                        <option value="NG">🇳🇬 Nigeria</option>
+                                        <option value="NO">🇳🇴 Norway</option>
+                                        <option value="PK">🇵🇰 Pakistan</option>
+                                        <option value="PH">🇵🇭 Philippines</option>
+                                        <option value="PL">🇵🇱 Poland</option>
+                                        <option value="PT">🇵🇹 Portugal</option>
+                                        <option value="RU">🇷🇺 Russia</option>
+                                        <option value="SG">🇸🇬 Singapore</option>
+                                        <option value="ZA">🇿🇦 South Africa</option>
+                                        <option value="KR">🇰🇷 South Korea</option>
+                                        <option value="ES">🇪🇸 Spain</option>
+                                        <option value="SE">🇸🇪 Sweden</option>
+                                        <option value="CH">🇨🇭 Switzerland</option>
+                                        <option value="TH">🇹🇭 Thailand</option>
+                                        <option value="TR">🇹🇷 Turkey</option>
+                                        <option value="GB">🇬🇧 United Kingdom</option>
+                                        <option value="US">🇺🇸 United States</option>
+                                        <option value="VN">🇻🇳 Vietnam</option>
+                                        <option value="OTHER">🏳️ Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" id="cancel-edit-btn" class="btn secondary-btn">Cancel</button>
+                                <button type="submit" class="btn primary-btn">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
 
-        </main>
+                <div id="instructions" class="overlay">
+                    <div class="overlay-content">
+                        <h2>How to Play</h2>
+                        <ul>
+                            <li>Unscramble each set of letters to form valid words.</li>
+                            <li>Type 'x' if you think the letter set cannot form a valid word.</li>
+                            <li>For multiple valid words, separate them with spaces or commas.</li>
+                            <li>You have 2 minutes to solve as many as you can.</li>
+                        </ul>
+                        <h2>Scoring</h2>
+                        <ul>
+                            <li><strong>+10 points</strong> for a fully correct answer or correctly identifying a fake with 'x'.</li>
+                            <li><strong>Partial points</strong> are awarded for partially correct answers.</li>
+                            <li><strong>-5 points</strong> for submitting any incorrect words.</li>
+                            <li><strong>-5 points</strong> for incorrectly marking a real word set as 'x'.</li>
+                            <li><strong>-25 points</strong> for using the extra time button.</li>
+                        </ul>
+                        <button id="back-btn" class="btn primary-btn">Back to Game</button>
+                    </div>
+                </div>
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <script type="module" src="js/main.js"></script>
+                <div id="game-over-modal" class="overlay">
+                    <div class="overlay-content">
+                        <h2>Game Over!</h2>
+                        <p id="game-over-message">Time's up!</p>
+                        <p>Your final score: <span id="final-score">0</span></p>
+                        <button id="play-again" class="btn secondary-btn">Play Again</button>
+                        <button id="close-modal" class="btn primary-btn">Review Answers</button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
     </div>
+
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
