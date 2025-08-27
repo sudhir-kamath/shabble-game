@@ -56,10 +56,17 @@ body {
     background: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     position: relative;
+}
+
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 body::before {
@@ -84,9 +91,11 @@ body::before {
 .container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    flex: 1; /* Allow container to grow */
     margin: 0 auto;
     padding: 0 1rem; /* Add horizontal padding */
+    width: 100%;
+    max-width: 1200px; /* Restore max-width for content */
 }
 
 
@@ -100,58 +109,37 @@ header {
     top: 0;
     z-index: 100;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0; /* Prevent header from shrinking */
 }
 
+/* A more robust, modern, and fluid header layout */
 .header-content {
     display: flex;
-    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    flex-shrink: 1; 
+    gap: clamp(0.5rem, 2vw, 1.5rem); /* Fluid gap */
+    width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
 }
 
-.header-logo {
-    flex-shrink: 1;
-}
-
-.header-tile {
-    width: auto;
-    height: auto;
-    margin-right: 1rem;
-    flex-shrink: 1;
-}
-
-.header-left {
-    flex: 1;
-    display: flex;
-    justify-content: flex-start;
-    flex-shrink: 1;
-}
-
-.header-center {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    flex-shrink: 1;
+.header-logo,
+.game-controls-header {
+    flex-shrink: 0; /* Prevent logo and controls from shrinking */
 }
 
 .player-info-header {
+    flex-grow: 1; /* Allow player info to fill available space */
+    min-width: 0; /* Critical for allowing flex items to shrink below their content size */
     display: flex;
     align-items: center;
-    justify-content: center; /* Center the content */
-    flex-shrink: 1; /* Allow shrinking */
-    gap: 0.75rem;
+    justify-content: center;
+    gap: clamp(0.5rem, 1.5vw, 1rem);
     background: rgba(124, 58, 237, 0.1);
     border: 1px solid rgba(124, 58, 237, 0.3);
-    padding: 0.5rem 1rem;
+    padding: 0.5rem clamp(0.5rem, 2vw, 1rem);
     border-radius: 20px;
-    max-width: 200px;
-
 }
 
 .light-mode .player-info-header {
@@ -514,12 +502,12 @@ header {
 .player-nickname {
     font-weight: 600;
     color: var(--text-color);
-    font-size: 0.9rem;
-    min-width: 0; /* Allow shrinking below content size */
+    /* Fluid font size with min and max */
+    font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    flex-shrink: 1;
 }
 
 .clickable {
@@ -538,65 +526,45 @@ header {
     flex-shrink: 1;
 }
 
-
 .game-controls-header {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    flex-shrink: 1; /* Allow shrinking */
-    flex-wrap: nowrap; /* Prevent buttons from wrapping */
     gap: 0.5rem;
 }
 
+.header-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
 
-@media (max-width: 768px) {
+/* Responsive Design */
+@media (max-width: 780px) {
     .header-content {
-        /* flex-direction: column; */ /* Disabled to keep header on one row */
-        align-items: center; /* Re-center items */
-        gap: 0.5rem; /* Reduce gap for smaller screens */
-        width: auto; /* Allow the container to fit its content */
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
     }
 
-    .player-info-header {
-        justify-content: center;
+    .header-top-row {
+        padding: 0 0.5rem;
     }
 
     .game-controls-header {
         justify-content: center;
-    }
-
-    .header-logo {
-        align-self: center; /* Center the logo */
-    }
-
-    .player-info-header {
-        padding: 0.4rem 0.8rem; /* Reduce padding */
-        gap: 0.5rem; /* Reduce gap */
-    }
-
-    .player-nickname,
-    #timer {
-        font-size: 0.85rem; /* Reduce font size */
-    }
-
-    .game-controls-header .btn {
-        padding: 0.5rem 0.75rem; /* Reduce button padding */
-        font-size: 0.8rem; /* Reduce font size */
-        flex-shrink: 1; /* Allow buttons to shrink */
+        width: 100%;
     }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 600px) {
+    .header-content .btn .btn-text {
+        display: none;
+    }
+
     .header-content {
-        gap: 0.25rem; /* Further reduce gap */
-    }
-
-    .game-controls-header .btn span {
-        display: none; /* Hide text on buttons */
-    }
-
-    .game-controls-header .btn {
-        padding: 0.5rem; /* Adjust padding for icon-only buttons */
+        gap: 0.5rem;
     }
 }
 
@@ -1198,6 +1166,20 @@ header {
     border-radius: 8px;
 }
 
+
+/* Utility Classes */
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
 
 /* Status Classes */
 .correct {
