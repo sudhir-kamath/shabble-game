@@ -38,12 +38,17 @@
                         <button id="extra-time" class="btn" title="Get 30 extra seconds (-25 points)" aria-label="Get 30 extra seconds for a cost of 25 points" disabled>
                             <i class="fas fa-hourglass-half"></i> <span class="btn-text">+30s</span>
                         </button>
-                        <button id="header-instructions-btn" class="btn" aria-label="How to Play">
-                            <i class="fas fa-question-circle"></i>
-                        </button>
-                        <button id="theme-toggle" class="btn" aria-label="Toggle dark/light mode">
-                            <i class="fas fa-moon"></i>
-                        </button>
+                        <div class="header-controls">
+                            <button id="stats-btn" class="icon-btn" title="View Statistics">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-btn" title="Toggle theme">
+                                <i class="fas fa-sun"></i>
+                            </button>
+                            <button id="header-instructions-btn" class="icon-btn" title="Instructions">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
                         <button id="play-again-header-btn" class="btn" title="Play Again">
                             <i class="fas fa-redo"></i>
                         </button>
@@ -309,10 +314,113 @@
                     </div>
                 </div>
 
+                <!-- Statistics Modal -->
+                <div id="stats-modal" class="overlay">
+                    <div class="overlay-content stats-modal">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-chart-bar"></i> Your Statistics</h2>
+                            <button id="close-stats-modal" class="close-btn" title="Close">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="stats-content">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-gamepad"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="total-games">0</div>
+                                        <div class="stat-label">Games Played</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-eye"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="total-alphagrams">0</div>
+                                        <div class="stat-label">Alphagrams Seen</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="best-score">0</div>
+                                        <div class="stat-label">Best Score</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="average-score">0</div>
+                                        <div class="stat-label">Average Score</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="first-attempt-correct">0</div>
+                                        <div class="stat-label">First Attempt Correct</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="perfect-games">0</div>
+                                        <div class="stat-label">Perfect Games</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="stats-section">
+                                <h3><i class="fas fa-fire"></i> Streaks & Performance</h3>
+                                <div class="performance-stats">
+                                    <div class="perf-item">
+                                        <span class="perf-label">Current Streak:</span>
+                                        <span class="perf-value" id="current-streak">0</span>
+                                    </div>
+                                    <div class="perf-item">
+                                        <span class="perf-label">Best Streak:</span>
+                                        <span class="perf-value" id="best-streak">0</span>
+                                    </div>
+                                    <div class="perf-item">
+                                        <span class="perf-label">Total Play Time:</span>
+                                        <span class="perf-value" id="total-play-time">0m</span>
+                                    </div>
+                                    <div class="perf-item">
+                                        <span class="perf-label">Average Game Time:</span>
+                                        <span class="perf-value" id="average-game-time">0m</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="stats-section">
+                                <h3><i class="fas fa-history"></i> Recent Games</h3>
+                                <div class="recent-games" id="recent-games-list">
+                                    <p class="no-data">No games played yet. Start playing to see your history!</p>
+                                </div>
+                            </div>
+                            
+                            <div class="stats-actions">
+                                <button id="export-stats" class="btn secondary-btn">
+                                    <i class="fas fa-download"></i> Export Data
+                                </button>
+                                <button id="clear-stats" class="btn danger-btn">
+                                    <i class="fas fa-trash"></i> Clear All Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
 
+    <script src="js/analytics.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
