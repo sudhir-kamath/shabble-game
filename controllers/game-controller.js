@@ -27,6 +27,8 @@ const submitAnswer = (req, res) => {
             
             // Parse user input into array of words
             let userWords = [];
+            let isBlankSubmission = false;
+            
             if (userInput.trim()) {
                 if (userInput.toLowerCase().trim() === 'x') {
                     // User marked as fake - empty array means no words guessed
@@ -35,9 +37,12 @@ const submitAnswer = (req, res) => {
                     // Split by spaces, commas, or semicolons and filter out empty strings
                     userWords = userInput.split(/[,;\s]+/).filter(word => word.trim().length > 0);
                 }
+            } else {
+                // Completely blank input - no penalty, just 0 points
+                isBlankSubmission = true;
             }
             
-            const scoreResult = dictionary.calculateScore(alphagramData, userWords);
+            const scoreResult = dictionary.calculateScore(alphagramData, userWords, isBlankSubmission);
             
             totalScore += scoreResult.score;
             

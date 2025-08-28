@@ -1,16 +1,9 @@
-console.log('🔍 DEBUG: Script loading started');
-
 import { game } from './game.js';
 import { authManager } from './auth.js';
-
-console.log('🔍 DEBUG: Imports completed');
 
 
 document.addEventListener('DOMContentLoaded', function() {
     
-    console.log('🔍 DEBUG: DOMContentLoaded fired');
-    
-    // Get DOM elements
     const elements = {
         startScreen: document.getElementById('start-screen'),
         gameBoard: document.getElementById('game-board'),
@@ -63,12 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
         cancelEditBtn: document.getElementById('cancel-edit-btn')
     };
 
-    // DEBUG: Log element discovery
-    console.log('🔍 DEBUG: Element discovery results:');
-    console.log('  startBtn:', elements.startBtn);
-    console.log('  instructionsBtn:', elements.instructionsBtn);
-    console.log('  googleSigninBtn:', elements.googleSigninBtn);
-    console.log('  signoutBtn:', elements.signoutBtn);
     console.log('  themeToggleBtn:', elements.themeToggleBtn);
 
     // --- UI Update Functions ---
@@ -555,15 +542,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (elements.startBtn) {
         elements.startBtn.addEventListener('click', () => {
             console.log('🔍 DEBUG: Start button clicked');
-            // Check if user is signed in before starting game
+            startGame();    // Check if user is signed in before starting game
             if (!authManager.isSignedIn()) {
                 console.log('🔍 DEBUG: User not signed in, showing alert');
                 alert('Please sign in with Google to play the game.');
                 return;
             }
             console.log('🔍 DEBUG: User signed in, starting game');
-            setRandomQuote();
-            startGame();
         });
         console.log('🔍 DEBUG: Start button event listener added successfully');
     } else {
@@ -783,11 +768,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (elements.googleSigninBtn) {
         elements.googleSigninBtn.addEventListener('click', async () => {
             console.log('🔍 DEBUG: Google sign-in button clicked');
-            const result = await authManager.signInWithGoogle();
-            if (!result.success) {
-                console.error('Sign-in failed:', result.error);
-                // Could show error message to user here
-            }
+            authManager.signIn();
         });
         console.log('🔍 DEBUG: Google sign-in event listener added successfully');
     } else {

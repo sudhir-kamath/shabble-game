@@ -140,42 +140,54 @@ class ShabbleGame {
     }
 
     // End the game and get final scores from the server
-    async endGame(userAnswers) {
-        if (this.gameState.timerInterval) {
-            clearInterval(this.gameState.timerInterval);
-            this.gameState.timerInterval = null;
-        }
-        this.gameState.isPlaying = false;
-        this.gameState.endTime = new Date();
-
+    async endGame() {
+        
+        // Convert answers from object format to flat string format expected by server
+        const flatAnswers = {};
+        Object.keys(this.gameState.answers).forEach(alphagram => {
+            flatAnswers[alphagram] = this.gameState.answers[alphagram].userInput || '';
+        });
+        
+        const submitData = {
+            alphagrams: this.gameState.alphagrams,
+            answers: flatAnswers,
+            usedExtraTime: this.gameState.usedExtraTime
+        };
+        
+        
         try {
             const response = await fetch('/api/game/submit', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                    alphagrams: this.gameState.alphagrams,
-                    answers: userAnswers,
-                    usedExtraTime: this.gameState.usedExtraTime
-                }),
+                body: JSON.stringify(submitData)
             });
 
+            
             if (!response.ok) {
-                throw new Error('Failed to submit answers.');
+                const errorText = await response.text();
+                throw new Error(`Failed to submit answers. Status: ${response.status}`);
             }
 
-            const results = await response.json();
-
+            const result = await response.json();
+            
+            // Stop the game and timer
+            this.gameState.isPlaying = false;
+            this.gameState.endTime = new Date();
+            if (this.gameState.timerInterval) {
+                clearInterval(this.gameState.timerInterval);
+            }
+            
             // Update local game state with results from server
-            this.gameState.score = results.score;
+            this.gameState.score = result.score;
             if (!this.gameState.isSecondAttempt) {
-                this.gameState.initialScore = results.score;
+                this.gameState.initialScore = result.score;
             }
 
             // Merge server results with local state for UI display
             const finalResults = {
-                ...results,
+                ...result,
                 isSecondAttempt: this.gameState.isSecondAttempt,
                 initialScore: this.gameState.initialScore,
                 timeTaken: Math.floor((this.gameState.endTime - this.gameState.startTime) / 1000),
@@ -185,7 +197,8 @@ class ShabbleGame {
 
         } catch (error) {
             console.error('Error submitting answers:', error);
-            return null;
+            // Show error message to user
+            alert(`Failed to submit answers: ${error.message}`);
         }
     }
     
