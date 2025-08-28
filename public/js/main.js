@@ -436,10 +436,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 else if (result.isCorrect === false) card.classList.add('incorrect');
                 else if (result.isCorrect === 'partial') card.classList.add('partial');
                 else if (result.isCorrect === 'blank') card.classList.add('blank');
-
-                // Setup the answer card overlay for this card
-                setupAnswerCardListeners(card, result);
             });
+            reviewAnswers();
         }
     };
 
@@ -497,10 +495,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (result.isCorrect === 'partial') {
                     card.classList.add('partial');
                 }
-
-                // Setup the answer card overlay for this card
-                setupAnswerCardListeners(card, result);
             });
+            reviewAnswers();
         }
     };
 
@@ -543,6 +539,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (result.isCorrect === 'blank') {
                     card.classList.add('blank');
                 }
+
+                // Setup the answer card overlay for this card
+                setupAnswerCardListeners(card, result);
             });
         }
     };
