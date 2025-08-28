@@ -186,6 +186,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
+    // Function to shuffle letters in a string
+    const shuffleLetters = (str) => {
+        const letters = str.split('');
+        for (let i = letters.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [letters[i], letters[j]] = [letters[j], letters[i]];
+        }
+        return letters.join('');
+    };
+
     const renderGameBoard = (alphagrams) => {
         elements.gameBoard.innerHTML = '';
         if (!alphagrams || alphagrams.length === 0) {
@@ -196,6 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = document.createElement('div');
             card.className = 'alphagram-card';
             card.dataset.alphagram = alphagram;
+            card.dataset.originalAlphagram = alphagram; // Store original for reference
             card.dataset.length = length || alphagram.length; // Use provided length or calculate from alphagram
             const inputId = `alphagram-input-${index}`;
 
@@ -211,6 +222,26 @@ document.addEventListener('DOMContentLoaded', function() {
                        spellcheck="false"
                        name="answer-${index}">
             `;
+            
+            // Add click event listener for shuffling
+            const alphagramLabel = card.querySelector('.alphagram');
+            alphagramLabel.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Only allow shuffling during active gameplay (not during review)
+                const input = card.querySelector('.answer-input');
+                if (input.disabled) return;
+                
+                const currentText = alphagramLabel.textContent;
+                const shuffledText = shuffleLetters(currentText);
+                alphagramLabel.textContent = shuffledText;
+                
+                // Add a brief animation to indicate the shuffle
+                card.classList.add('shuffling');
+                setTimeout(() => card.classList.remove('shuffling'), 300);
+            });
+            
             elements.gameBoard.appendChild(card);
         });
     };

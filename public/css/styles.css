@@ -698,6 +698,44 @@ header {
     left: 100%;
 }
 
+/* Shuffle animation */
+.alphagram-card.shuffling {
+    animation: shuffleShake 0.3s ease-in-out;
+}
+
+.alphagram-card.shuffling .alphagram {
+    animation: shuffleGlow 0.3s ease-in-out;
+}
+
+@keyframes shuffleShake {
+    0%, 100% { transform: translateX(0) scale(1); }
+    25% { transform: translateX(-3px) scale(1.02); }
+    75% { transform: translateX(3px) scale(1.02); }
+}
+
+@keyframes shuffleGlow {
+    0%, 100% { 
+        color: var(--text-color);
+        text-shadow: none;
+    }
+    50% { 
+        color: var(--secondary);
+        text-shadow: 0 0 10px var(--secondary);
+    }
+}
+
+/* Make alphagram labels clickable */
+.alphagram {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.alphagram:hover {
+    color: var(--secondary);
+    transform: scale(1.05);
+}
+
 .answer-input {
     width: 100%;
     padding: 0.75rem;
