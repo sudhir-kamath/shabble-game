@@ -11,8 +11,13 @@ class AuthManager {
         this.signingIn = false;
         
         // Listen for authentication state changes
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             this.user = user;
+
+            if (user) {
+                // Verify the token with the backend as soon as the user is authenticated.
+                await this.verifyTokenWithBackend();
+            }
             
             // Reset signing flag when auth state changes
             if (user) {
@@ -110,6 +115,34 @@ class AuthManager {
                 success: false,
                 error: error.message
             };
+        }
+    }
+
+    async verifyTokenWithBackend() {
+        if (!this.user) {
+            console.log('verifyTokenWithBackend: No user, skipping verification.');
+            return;
+        }
+
+        try {
+            const token = await this.user.getIdToken();
+            const response = await fetch('/api/auth/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                console.log('Backend token verification successful:', result.message);
+            } else {
+                console.error('Backend token verification failed:', result.error || 'Unknown error');
+            }
+        } catch (error) {
+            console.error('Error sending token to backend:', error);
         }
     }
 

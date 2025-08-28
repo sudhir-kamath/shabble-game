@@ -1,11 +1,8 @@
 import { game } from './game.js';
-import { initializeAlphagramMaps } from './dictionary.js';
 import { authManager } from './auth.js';
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize alphagram maps for all word lengths
-    initializeAlphagramMaps();
     
     // Get DOM elements
     const elements = {
@@ -308,27 +305,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Game Logic Integration ---
 
-    const startGame = () => {
-        
-        // Hide start screen
+    const startGame = async () => {
+        // Hide start screen and show game screen
         elements.startScreen.classList.remove('active');
         elements.startScreen.classList.add('hidden');
-        
-        // Show game screen
         const gameScreen = document.getElementById('game-screen');
         gameScreen.classList.remove('hidden');
         gameScreen.classList.add('active');
-        
-        // Get selected word lengths
+
+        // Get selected word lengths and set a quote
         const selectedLengths = getSelectedWordLengths();
-        
-        // Set random motivational quote
         setRandomQuote();
-        
-        const initialState = game.startNewGame(selectedLengths);
+
+        // Start a new game (async)
+        const initialState = await game.startNewGame(selectedLengths);
+        if (!initialState) {
+            alert('Could not start the game. Please try again.');
+            // Optionally, revert UI to start screen
+            gameScreen.classList.add('hidden');
+            elements.startScreen.classList.remove('hidden');
+            elements.startScreen.classList.add('active');
+            return;
+        }
+
         renderGameBoard(initialState.alphagrams);
-        elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
-        updateTimerDisplay(initialState.timeLeft); // Initial timer display with correct time
+        elements.gameBoard.style.display = 'grid';
+        updateTimerDisplay(initialState.timeLeft);
 
         // Show header elements for game
         elements.timerDisplay.classList.remove('hidden');
@@ -379,8 +381,13 @@ document.addEventListener('DOMContentLoaded', function() {
         announce('Second attempt started. You have 60 seconds.');
     };
 
-    const endGame = () => {
-        const results = game.endGame();
+    const endGame = async () => {
+        const userAnswers = getUserAnswers();
+        const results = await game.endGame(userAnswers);
+        if (!results) {
+            alert('Failed to submit results. Please check your connection.');
+            return;
+        }
         
         // Calculate score percentage and set dynamic message
         const maxPossibleScore = 200; // 20 alphagrams × 10 points each
@@ -431,8 +438,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    const endGameDueToTimeout = () => {
-        const results = game.endGame();
+    const endGameDueToTimeout = async () => {
+        const userAnswers = getUserAnswers();
+        const results = await game.endGame(userAnswers);
+        if (!results) {
+            alert('Failed to submit results. Please check your connection.');
+            return;
+        }
         
         // Calculate score percentage and set dynamic message
         const maxPossibleScore = 200; // 20 alphagrams × 10 points each
@@ -504,6 +516,19 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- Helper Functions ---
+
+    const getUserAnswers = () => {
+        const answers = {};
+        const cards = document.querySelectorAll('.alphagram-card');
+        cards.forEach(card => {
+            const alphagram = card.dataset.alphagram;
+            const input = card.querySelector('.answer-input');
+            if (alphagram && input) {
+                answers[alphagram] = input.value.trim();
+            }
+        });
+        return answers;
+    };
     
     const showInstructions = () => {
         elements.instructions.classList.add('active');

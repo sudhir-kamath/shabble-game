@@ -1,4 +1,3 @@
-import { generateGame, isValidWord } from './dictionary.js';
 
 class ShabbleGame {
     constructor() {
@@ -28,47 +27,62 @@ class ShabbleGame {
         this.useExtraTime = this.useExtraTime.bind(this);
     }
     
-    // Start a new game
-    startNewGame(selectedLengths = [4]) {
-        const generatedAlphagrams = generateGame(selectedLengths);
-        
-        // Reset game state
-        this.gameState = {
-            isPlaying: true,
-            isPaused: false,
-            timeLeft: 120,
-            score: 0,
-            usedExtraTime: false,
-            isSecondAttempt: false,
-            initialScore: 0,
-            alphagrams: generatedAlphagrams, // Randomized: 15-17 real, 3-5 fake (total 20)
-            answers: {},
-            startTime: new Date(),
-            timerInterval: null
-        };
-        
-        // Initialize answers object
-        this.gameState.alphagrams.forEach(alphagram => {
-            this.gameState.answers[alphagram.alphagram] = {
-                userInput: '',
-                isCorrect: null,
-                score: 0
+    // Start a new game by fetching from the server
+    async startNewGame(selectedLengths = [4]) {
+        try {
+            const response = await fetch('/api/game/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ lengths: selectedLengths }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to start a new game.');
+            }
+
+            const gameData = await response.json();
+
+            // Reset game state
+            this.gameState = {
+                isPlaying: true,
+                isPaused: false,
+                timeLeft: 120,
+                score: 0,
+                usedExtraTime: false,
+                isSecondAttempt: false,
+                initialScore: 0,
+                alphagrams: gameData, // Alphagrams from server
+                answers: {},
+                startTime: new Date(),
+                timerInterval: null
             };
-        });
-        
-        // Start the timer
-        this.startTimer();
-        
-        return {
-            alphagrams: this.gameState.alphagrams.map(a => ({
-                alphagram: a.alphagram,
-                isFake: a.isFake,
-                validWords: a.validWords,
-                length: a.alphagram.length // Add the length property
-            })),
-            timeLeft: this.gameState.timeLeft,
-            score: this.gameState.score
-        };
+
+            // Initialize answers object
+            this.gameState.alphagrams.forEach(alphagram => {
+                this.gameState.answers[alphagram.alphagram] = {
+                    userInput: '',
+                    isCorrect: null,
+                    score: 0
+                };
+            });
+
+            this.startTimer();
+
+            return {
+                alphagrams: this.gameState.alphagrams.map(a => ({
+                    alphagram: a.alphagram,
+                    length: a.alphagram.length
+                })),
+                timeLeft: this.gameState.timeLeft,
+                score: this.gameState.score
+            };
+        } catch (error) {
+            console.error('Error starting new game:', error);
+            // Handle the error appropriately in the UI
+            return null;
+        }
     }
     
     // Start the game timer
@@ -126,64 +140,54 @@ class ShabbleGame {
         };
     }
 
-    // End the game and calculate final scores
-    endGame() {
+    // End the game and get final scores from the server
+    async endGame(userAnswers) {
         if (this.gameState.timerInterval) {
             clearInterval(this.gameState.timerInterval);
             this.gameState.timerInterval = null;
         }
-        
         this.gameState.isPlaying = false;
         this.gameState.endTime = new Date();
-        
-        // Calculate final scores for all answers
-        let totalScore = 0;
-        
-        this.gameState.alphagrams.forEach(alphagram => {
-            const answer = this.gameState.answers[alphagram.alphagram];
-            if (answer && answer.userInput !== '') {
-                const result = this.calculateScore(alphagram, answer.userInput);
-                answer.isCorrect = result.isCorrect;
-                answer.score = result.score;
-                answer.expectedAnswers = alphagram.validWords;
-                totalScore += answer.score;
-            } else {
-                // No answer provided
-                answer.score = 0;
-                answer.isCorrect = false;
-                answer.expectedAnswers = alphagram.validWords;
+
+        try {
+            const response = await fetch('/api/game/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    alphagrams: this.gameState.alphagrams,
+                    answers: userAnswers,
+                    usedExtraTime: this.gameState.usedExtraTime
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit answers.');
             }
-        });
-        
-        // Apply penalty for extra time if used
-        if (this.gameState.usedExtraTime) {
-            totalScore -= 25;
-        }
 
-        this.gameState.score = totalScore;
+            const results = await response.json();
 
-        if (!this.gameState.isSecondAttempt) {
-            this.gameState.initialScore = totalScore;
+            // Update local game state with results from server
+            this.gameState.score = results.score;
+            if (!this.gameState.isSecondAttempt) {
+                this.gameState.initialScore = results.score;
+            }
+
+            // Merge server results with local state for UI display
+            const finalResults = {
+                ...results,
+                isSecondAttempt: this.gameState.isSecondAttempt,
+                initialScore: this.gameState.initialScore,
+                timeTaken: Math.floor((this.gameState.endTime - this.gameState.startTime) / 1000),
+            };
+
+            return finalResults;
+
+        } catch (error) {
+            console.error('Error submitting answers:', error);
+            return null;
         }
-        
-        // Calculate time taken
-        const timeTaken = Math.floor((this.gameState.endTime - this.gameState.startTime) / 1000);
-        
-        // Return game results
-        return {
-            score: this.gameState.score,
-            initialScore: this.gameState.initialScore,
-            isSecondAttempt: this.gameState.isSecondAttempt,
-            timeTaken,
-            alphagrams: this.gameState.alphagrams.map(alphagram => ({
-                alphagram: alphagram.alphagram,
-                isFake: alphagram.isFake,
-                userInput: this.gameState.answers[alphagram.alphagram].userInput,
-                isCorrect: this.gameState.answers[alphagram.alphagram].isCorrect,
-                score: this.gameState.answers[alphagram.alphagram].score,
-                validWords: alphagram.validWords
-            }))
-        };
     }
     
 
@@ -238,67 +242,6 @@ class ShabbleGame {
         };
     }
     
-    // Calculate the score for a given answer
-    calculateScore(alphagram, userInput) {
-        // Handle fake alphagrams
-        if (alphagram.isFake) {
-            if (userInput.toLowerCase() === 'x') {
-                return { isCorrect: true, score: 10 };
-            } else if (userInput.trim() === '') {
-                return { isCorrect: false, score: 0 };
-            } else {
-                return { isCorrect: false, score: -5 };
-            }
-        }
-        
-        // Handle real alphagrams
-
-        // If user incorrectly marks a real alphagram as fake, penalize them.
-        if (userInput.toLowerCase().trim() === 'x') {
-            return { isCorrect: false, score: -5 };
-        }
-
-        const userAnswers = userInput
-            .toLowerCase()
-            .split(/[ ,]+/)
-            .filter(answer => answer.trim() !== '');
-        
-        // If no answer provided
-        if (userAnswers.length === 0) {
-            return { isCorrect: false, score: 0 };
-        }
-        
-        // Check for invalid words
-        const validAnswers = alphagram.validWords || [];
-        const uniqueUserAnswers = [...new Set(userAnswers)]; // Remove duplicates
-        const expectedLength = alphagram.length || alphagram.alphagram.length;
-        
-        // Check for any incorrect answers (wrong words or wrong length)
-        const hasIncorrectAnswer = uniqueUserAnswers.some(answer => {
-            if (answer === 'x') return false;
-            // Check if word has correct length and is valid for that length
-            return answer.length !== expectedLength || !isValidWord(answer, expectedLength);
-        });
-        
-        if (hasIncorrectAnswer) {
-            return { isCorrect: false, score: -5 };
-        }
-        
-        // Calculate score based on correct answers
-        const correctAnswers = uniqueUserAnswers.filter(answer => 
-            validAnswers.includes(answer)
-        );
-        
-        if (correctAnswers.length === validAnswers.length) {
-            return { isCorrect: true, score: 10 };
-        } else if (correctAnswers.length > 0) {
-            // Partial credit for some correct answers
-            const partialScore = Math.round(10 * (correctAnswers.length / validAnswers.length));
-            return { isCorrect: 'partial', score: partialScore };
-        } else {
-            return { isCorrect: false, score: 0 };
-        }
-    }
     
     // Use extra time (30 seconds)
     useExtraTime() {
