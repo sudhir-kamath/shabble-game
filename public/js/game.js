@@ -23,7 +23,6 @@ class ShabbleGame {
         this.startSecondAttempt = this.startSecondAttempt.bind(this);
         this.updateTimer = this.updateTimer.bind(this);
         this.submitAnswer = this.submitAnswer.bind(this);
-        this.calculateScore = this.calculateScore.bind(this);
         this.useExtraTime = this.useExtraTime.bind(this);
     }
     
@@ -220,12 +219,10 @@ class ShabbleGame {
             score: 0
         };
         
-        // Calculate the score for this answer
-        const result = this.calculateScore(alphagramData, userInput);
-        
-        // Update the answer with the result
-        this.gameState.answers[alphagram].isCorrect = result.isCorrect;
-        this.gameState.answers[alphagram].score = result.score;
+        // Store the answer temporarily - scoring will be done by server on endGame
+        // For now, just store the input without calculating score
+        this.gameState.answers[alphagram].isCorrect = null;
+        this.gameState.answers[alphagram].score = 0;
         this.gameState.answers[alphagram].expectedAnswers = alphagramData.validWords;
         
         // Update the total score
@@ -235,8 +232,8 @@ class ShabbleGame {
         // Return the result
         return {
             success: true,
-            isCorrect: result.isCorrect,
-            score: result.score,
+            isCorrect: null, // Will be determined by server
+            score: 0, // Will be calculated by server
             totalScore: this.gameState.score,
             expectedAnswers: alphagramData.validWords
         };

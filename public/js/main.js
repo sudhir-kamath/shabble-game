@@ -1,8 +1,14 @@
+console.log('🔍 DEBUG: Script loading started');
+
 import { game } from './game.js';
 import { authManager } from './auth.js';
 
+console.log('🔍 DEBUG: Imports completed');
+
 
 document.addEventListener('DOMContentLoaded', function() {
+    
+    console.log('🔍 DEBUG: DOMContentLoaded fired');
     
     // Get DOM elements
     const elements = {
@@ -56,6 +62,14 @@ document.addEventListener('DOMContentLoaded', function() {
         editCountrySelect: document.getElementById('edit-country-select'),
         cancelEditBtn: document.getElementById('cancel-edit-btn')
     };
+
+    // DEBUG: Log element discovery
+    console.log('🔍 DEBUG: Element discovery results:');
+    console.log('  startBtn:', elements.startBtn);
+    console.log('  instructionsBtn:', elements.instructionsBtn);
+    console.log('  googleSigninBtn:', elements.googleSigninBtn);
+    console.log('  signoutBtn:', elements.signoutBtn);
+    console.log('  themeToggleBtn:', elements.themeToggleBtn);
 
     // --- UI Update Functions ---
 
@@ -300,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set initial random quote
     setRandomQuote();
 
-    elements.themeToggleBtn.addEventListener('click', toggleTheme);
+    console.log('🔍 DEBUG: Script execution reached end of initialization');
 
 
     // --- Game Logic Integration ---
@@ -537,22 +551,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Event Listeners ---
     
 
+    console.log('🔍 DEBUG: Adding start button event listener');
     if (elements.startBtn) {
         elements.startBtn.addEventListener('click', () => {
+            console.log('🔍 DEBUG: Start button clicked');
             // Check if user is signed in before starting game
             if (!authManager.isSignedIn()) {
+                console.log('🔍 DEBUG: User not signed in, showing alert');
                 alert('Please sign in with Google to play the game.');
                 return;
             }
+            console.log('🔍 DEBUG: User signed in, starting game');
             setRandomQuote();
             startGame();
         });
+        console.log('🔍 DEBUG: Start button event listener added successfully');
     } else {
+        console.error('🔍 DEBUG: Start button not found!');
     }
 
+    console.log('🔍 DEBUG: Adding instructions button event listener');
     if (elements.instructionsBtn) {
-        elements.instructionsBtn.addEventListener('click', showInstructions);
+        elements.instructionsBtn.addEventListener('click', () => {
+            console.log('🔍 DEBUG: Instructions button clicked');
+            showInstructions();
+        });
+        console.log('🔍 DEBUG: Instructions button event listener added successfully');
     } else {
+        console.error('🔍 DEBUG: Instructions button not found!');
     }
     elements.playAgainBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -699,7 +725,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     elements.doneBtn.addEventListener('click', endGame);
     elements.secondAttemptBtn.addEventListener('click', startSecondAttempt);
-    elements.themeToggleBtn.addEventListener('click', toggleTheme);
+    
+    console.log('🔍 DEBUG: Adding theme toggle event listener');
+    if (elements.themeToggleBtn) {
+        elements.themeToggleBtn.addEventListener('click', () => {
+            console.log('🔍 DEBUG: Theme toggle button clicked');
+            toggleTheme();
+        });
+        console.log('🔍 DEBUG: Theme toggle event listener added successfully');
+    } else {
+        console.error('🔍 DEBUG: Theme toggle button not found!');
+    }
 
     elements.extraTimeBtn.addEventListener('click', () => {
         const result = game.useExtraTime();
@@ -743,13 +779,20 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Google sign-in
-    elements.googleSigninBtn.addEventListener('click', async () => {
-        const result = await authManager.signInWithGoogle();
-        if (!result.success) {
-            console.error('Sign-in failed:', result.error);
-            // Could show error message to user here
-        }
-    });
+    console.log('🔍 DEBUG: Adding Google sign-in event listener');
+    if (elements.googleSigninBtn) {
+        elements.googleSigninBtn.addEventListener('click', async () => {
+            console.log('🔍 DEBUG: Google sign-in button clicked');
+            const result = await authManager.signInWithGoogle();
+            if (!result.success) {
+                console.error('Sign-in failed:', result.error);
+                // Could show error message to user here
+            }
+        });
+        console.log('🔍 DEBUG: Google sign-in event listener added successfully');
+    } else {
+        console.error('🔍 DEBUG: Google sign-in button not found!');
+    }
 
     // Sign out
     elements.signoutBtn.addEventListener('click', async () => {

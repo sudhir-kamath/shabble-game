@@ -24,16 +24,39 @@ const submitAnswer = (req, res) => {
 
         const results = alphagrams.map(alphagramData => {
             const userInput = answers[alphagramData.alphagram] || '';
-            const scoreResult = dictionary.calculateScore(alphagramData, userInput);
+            
+            // Parse user input into array of words
+            let userWords = [];
+            if (userInput.trim()) {
+                if (userInput.toLowerCase().trim() === 'x') {
+                    // User marked as fake - empty array means no words guessed
+                    userWords = [];
+                } else {
+                    // Split by spaces, commas, or semicolons and filter out empty strings
+                    userWords = userInput.split(/[,;\s]+/).filter(word => word.trim().length > 0);
+                }
+            }
+            
+            const scoreResult = dictionary.calculateScore(alphagramData, userWords);
             
             totalScore += scoreResult.score;
+            
+            // Determine correctness based on scoring results
+            let isCorrect = false;
+            if (alphagramData.isFake) {
+                // For fake alphagrams, correct answer is 'x' or empty
+                isCorrect = userInput.toLowerCase().trim() === 'x' || userInput.trim() === '';
+            } else {
+                // For real alphagrams, correct if user found at least one valid word
+                isCorrect = scoreResult.validWords.length > 0;
+            }
             
             return {
                 alphagram: alphagramData.alphagram,
                 userInput: userInput,
-                isCorrect: scoreResult.isCorrect,
+                isCorrect: isCorrect,
                 score: scoreResult.score,
-                validWords: alphagramData.validWords,
+                validWords: scoreResult.validWords || alphagramData.validWords,
                 isFake: alphagramData.isFake
             };
         });
