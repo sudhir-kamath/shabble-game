@@ -82,6 +82,10 @@ body::before {
     z-index: -1;
 }
 
+.visually-hidden {
+    display: none;
+}
+
 .light-mode body::before {
     background: radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
@@ -771,8 +775,8 @@ header {
 
 .secondary-btn {
     background-color: transparent;
-    border: 1px solid var(--primary);
-    color: var(--primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-color-secondary);
 }
 
 .secondary-btn:not(:disabled):hover {
