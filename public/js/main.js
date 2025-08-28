@@ -335,6 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Show header elements for game
         elements.timerDisplay.classList.remove('hidden');
+        elements.headerFinalScore.classList.add('hidden'); // Hide score until game ends
         elements.doneBtn.disabled = false;
         elements.extraTimeBtn.disabled = false;
         elements.extraTimeBtn.classList.remove('hidden');
@@ -366,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const input = card.querySelector('.answer-input');
 
             if (alphagramData.score === 10) {
-                // Correctly answered cards are locked
+                // Correctly answered cards are locked and highlighted green
                 card.classList.remove('incorrect', 'partial');
                 card.classList.add('correct');
                 input.disabled = true;
@@ -420,18 +421,21 @@ document.addEventListener('DOMContentLoaded', function() {
         [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board only after the second attempt
-        if (results.isSecondAttempt) {
-            results.alphagrams.forEach(result => {
+        if (results.isSecondAttempt && results.results) {
+            results.results.forEach(result => {
                 const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
                 if (!card) return; // Card might not be on the board if the game resets quickly
                 const input = card.querySelector('.answer-input');
                 input.value = result.userInput;
                 input.disabled = true;
 
-                card.classList.remove('correct', 'incorrect', 'partial');
+                console.log(`DEBUG CLIENT: ${result.alphagram} - isCorrect: ${result.isCorrect} - score: ${result.score}`);
+                
+                card.classList.remove('correct', 'incorrect', 'partial', 'blank');
                 if (result.isCorrect === true) card.classList.add('correct');
                 else if (result.isCorrect === false) card.classList.add('incorrect');
                 else if (result.isCorrect === 'partial') card.classList.add('partial');
+                else if (result.isCorrect === 'blank') card.classList.add('blank');
 
                 // Setup the answer card overlay for this card
                 setupAnswerCardListeners(card, result);
@@ -477,8 +481,8 @@ document.addEventListener('DOMContentLoaded', function() {
         [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board only after the second attempt
-        if (results.isSecondAttempt) {
-            results.alphagrams.forEach(result => {
+        if (results.isSecondAttempt && results.results) {
+            results.results.forEach(result => {
                 const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
                 if (!card) return;
                 const input = card.querySelector('.answer-input');
@@ -514,6 +518,33 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hide in-game controls
         elements.timerDisplay.classList.add('hidden');
         elements.extraTimeBtn.classList.add('hidden');
+
+        // Apply highlighting and enable hover functionality
+        const gameState = game.getGameState();
+        if (gameState.lastResults) {
+            gameState.lastResults.forEach(result => {
+                const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
+                if (!card) return;
+                
+                const input = card.querySelector('.answer-input');
+                input.value = result.userInput;
+                input.disabled = true;
+
+                // Apply highlighting based on correctness
+                console.log(`DEBUG REVIEW: ${result.alphagram} - isCorrect: ${result.isCorrect} - score: ${result.score}`);
+                
+                card.classList.remove('correct', 'incorrect', 'partial', 'blank');
+                if (result.isCorrect === true) {
+                    card.classList.add('correct');
+                } else if (result.isCorrect === false) {
+                    card.classList.add('incorrect');
+                } else if (result.isCorrect === 'partial') {
+                    card.classList.add('partial');
+                } else if (result.isCorrect === 'blank') {
+                    card.classList.add('blank');
+                }
+            });
+        }
     };
 
     // --- Helper Functions ---

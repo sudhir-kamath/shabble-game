@@ -25,6 +25,8 @@ const submitAnswer = (req, res) => {
         const results = alphagrams.map(alphagramData => {
             const userInput = answers[alphagramData.alphagram] || '';
             
+            console.log(`DEBUG RAW: ${alphagramData.alphagram} - raw userInput: "${userInput}" - type: ${typeof userInput} - isFake: ${alphagramData.isFake}`);
+            
             // Parse user input into array of words
             let userWords = [];
             let isBlankSubmission = false;
@@ -46,22 +48,39 @@ const submitAnswer = (req, res) => {
             
             totalScore += scoreResult.score;
             
-            // Determine correctness based on scoring results
+            // Determine correctness for UI highlighting
             let isCorrect = false;
-            if (alphagramData.isFake) {
-                // For fake alphagrams, correct answer is 'x' or empty
-                isCorrect = userInput.toLowerCase().trim() === 'x' || userInput.trim() === '';
+            if (isBlankSubmission) {
+                // Any blank submission should be marked as 'blank' regardless of fake/real
+                isCorrect = 'blank';
+            } else if (alphagramData.isFake) {
+                if (userInput.toLowerCase().trim() === 'x') {
+                    isCorrect = true; // Correctly identified as fake
+                } else {
+                    isCorrect = false; // Submitted words for fake alphagram
+                }
             } else {
-                // For real alphagrams, correct if user found at least one valid word
-                isCorrect = scoreResult.validWords.length > 0;
+                // For real alphagrams with actual input
+                if (scoreResult.score < 0) {
+                    isCorrect = false; // Any negative score means incorrect (penalty applied)
+                } else if (scoreResult.validWords.length === alphagramData.validWords.length && alphagramData.validWords.length > 0) {
+                    isCorrect = true; // Found all words
+                } else if (scoreResult.validWords.length > 0) {
+                    isCorrect = 'partial'; // Found some words (only when no penalty)
+                } else {
+                    isCorrect = false; // No correct words found
+                }
             }
+            
+            console.log(`DEBUG: ${alphagramData.alphagram} - userInput: "${userInput}" - isBlankSubmission: ${isBlankSubmission} - isCorrect: ${isCorrect} - score: ${scoreResult.score} - validWords: ${scoreResult.validWords?.length || 0}/${alphagramData.validWords?.length || 0}`);
             
             return {
                 alphagram: alphagramData.alphagram,
                 userInput: userInput,
                 isCorrect: isCorrect,
                 score: scoreResult.score,
-                validWords: scoreResult.validWords || alphagramData.validWords,
+                validWords: alphagramData.validWords, // Always show all valid words, not just user's correct ones
+                invalidWords: scoreResult.invalidWords || [],
                 isFake: alphagramData.isFake
             };
         });

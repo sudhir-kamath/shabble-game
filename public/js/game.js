@@ -184,6 +184,9 @@ class ShabbleGame {
             if (!this.gameState.isSecondAttempt) {
                 this.gameState.initialScore = result.score;
             }
+            
+            // Store detailed results for each alphagram for highlighting and hover functionality
+            this.gameState.lastResults = result.results;
 
             // Merge server results with local state for UI display
             const finalResults = {
@@ -280,14 +283,22 @@ class ShabbleGame {
             timeLeft: this.gameState.timeLeft,
             score: this.gameState.score,
             usedExtraTime: this.gameState.usedExtraTime,
-            alphagrams: this.gameState.alphagrams.map(alphagram => ({
-                alphagram: alphagram.alphagram,
-                isFake: alphagram.isFake,
-                validWords: alphagram.validWords,
-                userInput: this.gameState.answers[alphagram.alphagram]?.userInput || '',
-                score: this.gameState.answers[alphagram.alphagram]?.score || 0,
-                isCorrect: this.gameState.answers[alphagram.alphagram]?.isCorrect
-            }))
+            isSecondAttempt: this.gameState.isSecondAttempt,
+            lastResults: this.gameState.lastResults,
+            alphagrams: this.gameState.alphagrams.map(alphagram => {
+                // Find the result for this alphagram from the last server response
+                const result = this.gameState.lastResults?.find(r => r.alphagram === alphagram.alphagram);
+                return {
+                    alphagram: alphagram.alphagram,
+                    isFake: alphagram.isFake,
+                    validWords: alphagram.validWords,
+                    userInput: this.gameState.answers[alphagram.alphagram]?.userInput || '',
+                    score: result?.score || 0,
+                    isCorrect: result?.isCorrect,
+                    validWords: result?.validWords || alphagram.validWords,
+                    invalidWords: result?.invalidWords || []
+                };
+            })
         };
     }
 }

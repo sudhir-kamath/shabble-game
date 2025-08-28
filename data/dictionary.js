@@ -2254,7 +2254,7 @@ function calculateScore(alphagramData, userWords, isBlankSubmission = false) {
             score = 10; // +10 points for correctly identifying fake with 'x'
         } else {
             // User submitted words for a fake alphagram
-            score = -5 * userWords.length; // -5 points for each incorrect word
+            score = -5; // -5 points total for any incorrect submission
             for (const word of userWords) {
                 invalidUserWords.push(word);
             }
@@ -2267,24 +2267,26 @@ function calculateScore(alphagramData, userWords, isBlankSubmission = false) {
         if (correctWordsSet.has(word)) {
             validUserWords.push(word);
         } else {
-            score -= 5; // -5 points for each incorrect word
             invalidUserWords.push(word);
         }
     }
 
-    // Handle scoring for real alphagrams
+    // Handle scoring for real alphagrams with penalty system
     if (isBlankSubmission) {
         // Blank submission - no penalty, just 0 points
         score = 0;
     } else if (userWords.length === 0 && correctWordsSet.size > 0) {
         // User explicitly marked real alphagram as 'x' - penalty
         score = -5; // -5 points for incorrectly marking real word set as 'x'
+    } else if (invalidUserWords.length > 0) {
+        // If ANY answer is wrong, player gets -5 points total (ignoring correct answers)
+        score = -5;
     } else if (validUserWords.length === correctWordsSet.size && correctWordsSet.size > 0) {
-        score += 10; // +10 points for finding ALL words in the alphagram
+        score = 10; // +10 points for finding ALL words in the alphagram
     } else if (validUserWords.length > 0) {
-        // Partial points: proportional to correct answers found
+        // Partial points: proportional to correct answers found (only if no wrong answers)
         const partialScore = Math.round((validUserWords.length / correctWordsSet.size) * 10);
-        score += partialScore;
+        score = partialScore;
     }
 
     return {
