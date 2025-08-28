@@ -8,6 +8,8 @@ class ShabbleGame {
             timeLeft: 120, // 2 minutes in seconds
             score: 0,
             usedExtraTime: false,
+            isSecondAttempt: false,
+            initialScore: 0,
             alphagrams: [],
             answers: {},
             startTime: null,
@@ -19,6 +21,7 @@ class ShabbleGame {
         this.pauseGame = this.pauseGame.bind(this);
         this.resumeGame = this.resumeGame.bind(this);
         this.endGame = this.endGame.bind(this);
+        this.startSecondAttempt = this.startSecondAttempt.bind(this);
         this.updateTimer = this.updateTimer.bind(this);
         this.submitAnswer = this.submitAnswer.bind(this);
         this.calculateScore = this.calculateScore.bind(this);
@@ -36,6 +39,8 @@ class ShabbleGame {
             timeLeft: 120,
             score: 0,
             usedExtraTime: false,
+            isSecondAttempt: false,
+            initialScore: 0,
             alphagrams: generatedAlphagrams, // Randomized: 15-17 real, 3-5 fake (total 20)
             answers: {},
             startTime: new Date(),
@@ -102,6 +107,25 @@ class ShabbleGame {
         return false;
     }
     
+    startSecondAttempt() {
+        if (this.gameState.isPlaying || this.gameState.isSecondAttempt) {
+            return { success: false, message: 'Invalid state for second attempt.' };
+        }
+
+        this.gameState.isSecondAttempt = true;
+        this.gameState.initialScore = this.gameState.score;
+        this.gameState.timeLeft = 60; // 60 seconds for the second attempt
+        this.gameState.isPlaying = true;
+
+        this.startTimer();
+
+        return {
+            success: true,
+            timeLeft: this.gameState.timeLeft,
+            initialScore: this.gameState.initialScore
+        };
+    }
+
     // End the game and calculate final scores
     endGame() {
         if (this.gameState.timerInterval) {
@@ -137,6 +161,10 @@ class ShabbleGame {
         }
 
         this.gameState.score = totalScore;
+
+        if (!this.gameState.isSecondAttempt) {
+            this.gameState.initialScore = totalScore;
+        }
         
         // Calculate time taken
         const timeTaken = Math.floor((this.gameState.endTime - this.gameState.startTime) / 1000);
@@ -144,6 +172,8 @@ class ShabbleGame {
         // Return game results
         return {
             score: this.gameState.score,
+            initialScore: this.gameState.initialScore,
+            isSecondAttempt: this.gameState.isSecondAttempt,
             timeTaken,
             alphagrams: this.gameState.alphagrams.map(alphagram => ({
                 alphagram: alphagram.alphagram,

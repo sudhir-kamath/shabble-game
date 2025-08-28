@@ -19,8 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
         closeModalBtn: document.getElementById('close-modal'),
         playAgainBtn: document.getElementById('play-again'),
         playAgainHeaderBtn: document.getElementById('play-again-header-btn'),
+        secondAttemptBtn: document.getElementById('second-attempt-btn'),
         timerDisplay: document.getElementById('timer'),
-        scoreDisplay: document.getElementById('score'),
+        scoreDisplay: document.getElementById('final-score'),
         quoteText: document.getElementById('quote-text'),
         lengthCheckboxes: {
             2: document.getElementById('length-2'),
@@ -343,6 +344,41 @@ document.addEventListener('DOMContentLoaded', function() {
         announce('Game started. Good luck!');
     };
 
+    const startSecondAttempt = () => {
+        const result = game.startSecondAttempt();
+        if (!result.success) {
+            console.error('Failed to start second attempt:', result.message);
+            return;
+        }
+
+        showOverlay(null); // Hide game over modal
+        updateTimerDisplay(result.timeLeft);
+        elements.doneBtn.disabled = false;
+
+        // Re-evaluate the board for the second attempt
+        const gameState = game.getGameState();
+        gameState.alphagrams.forEach(alphagramData => {
+            const card = elements.gameBoard.querySelector(`[data-alphagram="${alphagramData.alphagram}"]`);
+            if (!card) return;
+            const input = card.querySelector('.answer-input');
+
+            if (alphagramData.score === 10) {
+                // Correctly answered cards are locked
+                card.classList.remove('incorrect', 'partial');
+                card.classList.add('correct');
+                input.disabled = true;
+            } else {
+                // Incorrectly answered cards are reset for another try
+                card.classList.remove('correct', 'partial');
+                card.classList.add('incorrect');
+                input.disabled = false;
+                // The user's previous incorrect answer is preserved in the input field
+            }
+        });
+
+        announce('Second attempt started. You have 60 seconds.');
+    };
+
     const endGame = () => {
         const results = game.endGame();
         
@@ -359,7 +395,15 @@ document.addEventListener('DOMContentLoaded', function() {
             congratsMessage = "Well tried! Better luck next time";
         }
         
-        elements.gameOverMessage.innerHTML = `${congratsMessage}<br><br>Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
+        if (results.isSecondAttempt) {
+            elements.gameOverMessage.innerHTML = `Game Over! <br><br>Initial Score: ${Math.round(results.initialScore)}<br>Second Attempt Score: <span id="final-score">${Math.round(results.score)}</span>`;
+            elements.secondAttemptBtn.classList.add('visually-hidden');
+        } else {
+            elements.gameOverMessage.innerHTML = `${congratsMessage}<br><br>Your score is <span id="final-score">${Math.round(results.score)}</span>.`;
+
+            elements.secondAttemptBtn.classList.remove('visually-hidden');
+        }
+
         // Show game over modal
         showOverlay(elements.gameOverModal);
         announce(`Game over. Your final score is ${Math.round(results.score)}.`);
@@ -367,22 +411,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Disable game buttons
         [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
 
-        // Show results on the board
-        results.alphagrams.forEach(result => {
-            const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
-            if (!card) return; // Card might not be on the board if the game resets quickly
-            const input = card.querySelector('.answer-input');
-            input.value = result.userInput;
-            input.disabled = true;
+        // Show results on the board only after the second attempt
+        if (results.isSecondAttempt) {
+            results.alphagrams.forEach(result => {
+                const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
+                if (!card) return; // Card might not be on the board if the game resets quickly
+                const input = card.querySelector('.answer-input');
+                input.value = result.userInput;
+                input.disabled = true;
 
-            card.classList.remove('correct', 'incorrect', 'partial');
-            if (result.isCorrect === true) card.classList.add('correct');
-            else if (result.isCorrect === false) card.classList.add('incorrect');
-            else if (result.isCorrect === 'partial') card.classList.add('partial');
+                card.classList.remove('correct', 'incorrect', 'partial');
+                if (result.isCorrect === true) card.classList.add('correct');
+                else if (result.isCorrect === false) card.classList.add('incorrect');
+                else if (result.isCorrect === 'partial') card.classList.add('partial');
 
-            // Setup the answer card overlay for this card
-            setupAnswerCardListeners(card, result);
-        });
+                // Setup the answer card overlay for this card
+                setupAnswerCardListeners(card, result);
+            });
+        }
     };
 
     const endGameDueToTimeout = () => {
@@ -401,7 +447,15 @@ document.addEventListener('DOMContentLoaded', function() {
             congratsMessage = "Well tried! Better luck next time";
         }
         
-        elements.gameOverMessage.innerHTML = `You ran out of time! Next time you can buy an extra 30 seconds at a cost of 25 points.<br><br>${congratsMessage}<br><br>Your final score is <span id="final-score">${Math.round(results.score)}</span>.`;
+        if (results.isSecondAttempt) {
+            elements.gameOverMessage.innerHTML = `Time's up! <br><br>Initial Score: ${Math.round(results.initialScore)}<br>Second Attempt Score: <span id="final-score">${Math.round(results.score)}</span>`;
+            elements.secondAttemptBtn.classList.add('visually-hidden');
+        } else {
+            elements.gameOverMessage.innerHTML = `You ran out of time! You can try again with a 60-second timer.<br><br>Your score is <span id="final-score">${Math.round(results.score)}</span>.`;
+
+            elements.secondAttemptBtn.classList.remove('visually-hidden');
+        }
+
         // Show game over modal
         showOverlay(elements.gameOverModal);
         announce(`Time's up! Your final score is ${Math.round(results.score)}.`);
@@ -409,26 +463,28 @@ document.addEventListener('DOMContentLoaded', function() {
         // Disable game buttons
         [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
 
-        // Show results on the board
-        results.alphagrams.forEach(result => {
-            const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
-            if (!card) return;
-            const input = card.querySelector('.answer-input');
-            input.value = result.userInput;
-            input.disabled = true;
+        // Show results on the board only after the second attempt
+        if (results.isSecondAttempt) {
+            results.alphagrams.forEach(result => {
+                const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
+                if (!card) return;
+                const input = card.querySelector('.answer-input');
+                input.value = result.userInput;
+                input.disabled = true;
 
-            // Apply styling based on correctness
-            if (result.isCorrect === true) {
-                card.classList.add('correct');
-            } else if (result.isCorrect === false) {
-                card.classList.add('incorrect');
-            } else if (result.isCorrect === 'partial') {
-                card.classList.add('partial');
-            }
+                // Apply styling based on correctness
+                if (result.isCorrect === true) {
+                    card.classList.add('correct');
+                } else if (result.isCorrect === false) {
+                    card.classList.add('incorrect');
+                } else if (result.isCorrect === 'partial') {
+                    card.classList.add('partial');
+                }
 
-            // Setup the answer card overlay for this card
-            setupAnswerCardListeners(card, result);
-        });
+                // Setup the answer card overlay for this card
+                setupAnswerCardListeners(card, result);
+            });
+        }
     };
 
     const reviewAnswers = () => {
@@ -439,12 +495,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Get final score and display it in the header
         const finalScore = Math.round(game.getGameState().score);
-        elements.scoreDisplay.textContent = finalScore;
+        elements.headerFinalScore.textContent = `Score: ${finalScore}`;
         elements.headerFinalScore.classList.remove('hidden');
 
         // Hide in-game controls
         elements.timerDisplay.classList.add('hidden');
-        elements.doneBtn.classList.add('hidden');
         elements.extraTimeBtn.classList.add('hidden');
     };
 
@@ -534,8 +589,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Game over modal close button (Review Answers)
     if (elements.closeModalBtn) {
         elements.closeModalBtn.addEventListener('click', () => {
-            elements.gameOverModal.classList.remove('active');
-            
+            showOverlay(null); // Hide the modal
+            reviewAnswers(); // Show the final board state
+
+            // Ensure the correct buttons are visible post-game
+            const gameState = game.getGameState();
+            if (!gameState.isSecondAttempt) {
+                elements.secondAttemptBtn.classList.remove('visually-hidden');
+            }
         });
     }
 
@@ -612,6 +673,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     elements.doneBtn.addEventListener('click', endGame);
+    elements.secondAttemptBtn.addEventListener('click', startSecondAttempt);
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
 
     elements.extraTimeBtn.addEventListener('click', () => {
