@@ -48,6 +48,9 @@
                             <button id="header-instructions-btn" class="icon-btn" title="Instructions">
                                 <i class="fas fa-question-circle"></i>
                             </button>
+                            <button id="feedback-btn" class="icon-btn" title="Send Feedback">
+                                <i class="fas fa-comment"></i>
+                            </button>
                         </div>
                         <button id="play-again-header-btn" class="btn" title="Play Again">
                             <i class="fas fa-redo"></i>
@@ -326,6 +329,10 @@
                             </button>
                         </div>
                         
+                        <div class="stats-beta-notice">
+                            <p>The statistics section is in beta. Please share feedback on what stats you'd like to see</p>
+                        </div>
+                        
                         <div class="stats-content">
                             <div class="stats-grid">
                                 <div class="stat-card">
@@ -363,41 +370,20 @@
                                 <div class="stat-card">
                                     <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
                                     <div class="stat-info">
-                                        <div class="stat-value" id="first-attempt-correct">0</div>
-                                        <div class="stat-label">First Attempt Correct</div>
+                                        <div class="stat-value" id="average-first-attempt-score">0</div>
+                                        <div class="stat-label">Average First Attempt Score</div>
                                     </div>
                                 </div>
                                 
                                 <div class="stat-card">
                                     <div class="stat-icon"><i class="fas fa-star"></i></div>
                                     <div class="stat-info">
-                                        <div class="stat-value" id="perfect-games">0</div>
-                                        <div class="stat-label">Perfect Games</div>
+                                        <div class="stat-value" id="average-final-score">0</div>
+                                        <div class="stat-label">Average Final Score</div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="stats-section">
-                                <h3><i class="fas fa-fire"></i> Streaks & Performance</h3>
-                                <div class="performance-stats">
-                                    <div class="perf-item">
-                                        <span class="perf-label">Current Streak:</span>
-                                        <span class="perf-value" id="current-streak">0</span>
-                                    </div>
-                                    <div class="perf-item">
-                                        <span class="perf-label">Best Streak:</span>
-                                        <span class="perf-value" id="best-streak">0</span>
-                                    </div>
-                                    <div class="perf-item">
-                                        <span class="perf-label">Total Play Time:</span>
-                                        <span class="perf-value" id="total-play-time">0m</span>
-                                    </div>
-                                    <div class="perf-item">
-                                        <span class="perf-label">Average Game Time:</span>
-                                        <span class="perf-value" id="average-game-time">0m</span>
-                                    </div>
-                                </div>
-                            </div>
                             
                             <div class="stats-section">
                                 <h3><i class="fas fa-history"></i> Recent Games</h3>
@@ -419,6 +405,28 @@
                 </div>
 
             </main>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Send Feedback</h2>
+                <button id="close-feedback-modal" class="close-btn" aria-label="Close feedback modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="feedback-message">
+                    <i class="fas fa-envelope feedback-icon"></i>
+                    <p>Please send your feedback and suggestions to:</p>
+                    <div class="email-info">
+                        <strong>sudhir.kamath@gmail.com</strong>
+                    </div>
+                    <p>with subject line: <strong>"Shabble feedback"</strong></p>
+                </div>
+            </div>
         </div>
     </div>
 

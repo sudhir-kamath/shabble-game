@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         userAvatar: document.getElementById('user-avatar'),
         userName: document.getElementById('user-name'),
         headerInstructionsBtn: document.getElementById('header-instructions-btn'),
+        feedbackBtn: document.getElementById('feedback-btn'),
         backBtn: document.getElementById('back-btn'),
         doneBtn: document.getElementById('done-btn'),
         extraTimeBtn: document.getElementById('extra-time'),
@@ -60,7 +61,10 @@ document.addEventListener('DOMContentLoaded', function() {
         editProfileForm: document.getElementById('edit-profile-form'),
         editNicknameInput: document.getElementById('edit-nickname-input'),
         editCountrySelect: document.getElementById('edit-country-select'),
-        cancelEditBtn: document.getElementById('cancel-edit-btn')
+        cancelEditBtn: document.getElementById('cancel-edit-btn'),
+        // Feedback modal elements
+        feedbackModal: document.getElementById('feedback-modal'),
+        closeFeedbackModal: document.getElementById('close-feedback-modal')
     };
 
     console.log('  themeToggleBtn:', elements.themeToggleBtn);
@@ -301,14 +305,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('total-alphagrams').textContent = stats.totalAlphagramsSeen || 0;
         document.getElementById('best-score').textContent = stats.bestScore || 0;
         document.getElementById('average-score').textContent = stats.averageScore || 0;
-        document.getElementById('first-attempt-correct').textContent = stats.totalCorrectFirstAttempt || 0;
-        document.getElementById('perfect-games').textContent = stats.perfectGames || 0;
-
-        // Update performance stats
-        document.getElementById('current-streak').textContent = stats.streakCurrent || 0;
-        document.getElementById('best-streak').textContent = stats.streakBest || 0;
-        document.getElementById('total-play-time').textContent = formatTime(detailed.timeStats?.totalPlayTime);
-        document.getElementById('average-game-time').textContent = formatTime(detailed.timeStats?.averageGameTime);
+        document.getElementById('average-first-attempt-score').textContent = stats.averageFirstAttemptScore || 0;
+        document.getElementById('average-final-score').textContent = stats.averageFinalScore || 0;
 
         // Update recent games
         const recentGamesContainer = document.getElementById('recent-games-list');
@@ -319,10 +317,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="game-date">${formatDate(game.date)}</div>
                         <div class="game-details">
                             ${game.wordLength}-letter words • ${game.correctFirst}/${game.alphagramCount} first attempt
-                            ${game.perfect ? '<span class="perfect-badge">PERFECT</span>' : ''}
                         </div>
                     </div>
-                    <div class="game-score">${game.score}</div>
+                    <div class="game-scores">
+                        <div class="score-item">
+                            <span class="score-label">First:</span>
+                            <span class="score-value">${game.firstAttemptScore || 0}</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Final:</span>
+                            <span class="score-value">${game.score}</span>
+                        </div>
+                    </div>
                 </div>
             `).join('');
         } else {
@@ -733,6 +739,20 @@ document.addEventListener('DOMContentLoaded', function() {
             showInstructions();
         }
     });
+
+    // Feedback button event listener
+    if (elements.feedbackBtn) {
+        elements.feedbackBtn.addEventListener('click', () => {
+            showOverlay(elements.feedbackModal);
+        });
+    }
+
+    // Close feedback modal
+    if (elements.closeFeedbackModal) {
+        elements.closeFeedbackModal.addEventListener('click', () => {
+            showOverlay(null);
+        });
+    }
 
     if (elements.backBtn) {
         elements.backBtn.addEventListener('click', () => {
