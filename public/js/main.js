@@ -304,9 +304,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('total-games').textContent = stats.gamesPlayed || 0;
         document.getElementById('total-alphagrams').textContent = stats.totalAlphagramsSeen || 0;
         document.getElementById('best-score').textContent = stats.bestScore || 0;
-        document.getElementById('average-score').textContent = stats.averageScore || 0;
         document.getElementById('average-first-attempt-score').textContent = stats.averageFirstAttemptScore || 0;
         document.getElementById('average-final-score').textContent = stats.averageFinalScore || 0;
+
+        // Update word length accuracy bars
+        updateWordLengthAccuracy(stats);
 
         // Update recent games
         const recentGamesContainer = document.getElementById('recent-games-list');
@@ -333,6 +335,42 @@ document.addEventListener('DOMContentLoaded', function() {
             `).join('');
         } else {
             recentGamesContainer.innerHTML = '<p class="no-data">No games played yet. Start playing to see your history!</p>';
+        }
+    };
+
+    const updateWordLengthAccuracy = (stats) => {
+        const detailed = window.gameAnalytics.getDetailedStats();
+        
+        // Calculate accuracy for each word length (2, 3, 4, 5) based on individual alphagrams
+        for (let length = 2; length <= 5; length++) {
+            let totalAlphagrams = 0;
+            let correctFirst = 0;
+            
+            // Use wordStats which tracks individual alphagram performance
+            Object.entries(detailed.wordStats || {}).forEach(([alphagram, stats]) => {
+                // Check if this alphagram is of the target length
+                if (alphagram.length === length) {
+                    totalAlphagrams += stats.seen;
+                    correctFirst += stats.firstAttemptCorrect;
+                }
+            });
+            
+            let accuracy = 0;
+            if (totalAlphagrams > 0) {
+                accuracy = Math.round((correctFirst / totalAlphagrams) * 100);
+            }
+            
+            // Update the progress bar and percentage
+            const fillElement = document.getElementById(`accuracy-${length}-fill`);
+            const percentElement = document.getElementById(`accuracy-${length}-percent`);
+            
+            if (fillElement && percentElement) {
+                fillElement.style.width = `${accuracy}%`;
+                percentElement.textContent = `${accuracy}%`;
+                
+                // Debug logging
+                console.log(`Word length ${length}: ${correctFirst}/${totalAlphagrams} = ${accuracy}%`);
+            }
         }
     };
 
@@ -669,6 +707,13 @@ document.addEventListener('DOMContentLoaded', function() {
             gameState.lastResults.forEach(result => {
                 const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
                 if (!card) return;
+                
+                // Apply color highlighting based on correctness
+                card.classList.remove('correct', 'incorrect', 'partial', 'blank');
+                if (result.isCorrect === true) card.classList.add('correct');
+                else if (result.isCorrect === false) card.classList.add('incorrect');
+                else if (result.isCorrect === 'partial') card.classList.add('partial');
+                else if (result.isCorrect === 'blank') card.classList.add('blank');
                 
                 // Set up hover functionality for answer cards
                 setupAnswerCardListeners(card, result);

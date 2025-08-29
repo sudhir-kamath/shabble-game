@@ -133,12 +133,16 @@ class GameAnalytics {
         if (!this.analyticsData.preferences.trackingEnabled || !this.currentSession) return;
 
         this.currentSession.firstAttemptResults = results.results || [];
+        this.currentSession.finalScore = results.score || 0;
+        this.currentSession.gameEndTime = new Date().toISOString();
+        this.currentSession.completed = true;
         
         // Update session alphagram data
         this.currentSession.alphagrams.forEach(sessionAlphagram => {
             const result = this.currentSession.firstAttemptResults.find(r => r.alphagram === sessionAlphagram.alphagram);
             if (result) {
                 sessionAlphagram.firstAttemptCorrect = result.isCorrect === true;
+                sessionAlphagram.missed = result.isCorrect !== true;
                 sessionAlphagram.userAnswers.push({
                     attempt: 1,
                     answer: result.userInput,
@@ -147,6 +151,9 @@ class GameAnalytics {
                 });
             }
         });
+
+        // Process and save the completed game
+        this.processCompletedGame();
 
         console.log('Analytics: First attempt tracked', { 
             correct: this.currentSession.firstAttemptResults.filter(r => r.isCorrect === true).length,
@@ -160,7 +167,6 @@ class GameAnalytics {
         this.currentSession.secondAttemptResults = results.results || [];
         this.currentSession.finalScore = results.score || 0;
         this.currentSession.gameEndTime = new Date().toISOString();
-        this.currentSession.completed = true;
 
         // Update session alphagram data
         this.currentSession.alphagrams.forEach(sessionAlphagram => {
@@ -177,13 +183,42 @@ class GameAnalytics {
             }
         });
 
-        // Process and save the completed game
-        this.processCompletedGame();
+        // Update the existing game record instead of creating a new one
+        this.updateExistingGameRecord();
 
         console.log('Analytics: Second attempt tracked', { 
             finalScore: this.currentSession.finalScore,
             completed: true 
         });
+    }
+
+    updateExistingGameRecord() {
+        if (!this.currentSession) return;
+
+        const session = this.currentSession;
+        
+        // Find the existing game record by sessionId
+        const existingGameIndex = this.analyticsData.gameHistory.findIndex(
+            game => game.sessionId === session.sessionId
+        );
+
+        if (existingGameIndex !== -1) {
+            // Update the existing record with second attempt data
+            const gameRecord = this.analyticsData.gameHistory[existingGameIndex];
+            gameRecord.score = session.finalScore;
+            gameRecord.correctSecond = session.alphagrams.filter(a => a.secondAttemptCorrect).length;
+            gameRecord.missed = session.alphagrams.filter(a => a.missed).length;
+            
+            // Update game duration
+            const gameTime = session.gameEndTime && session.gameStartTime ? 
+                new Date(session.gameEndTime) - new Date(session.gameStartTime) : 0;
+            gameRecord.duration = gameTime;
+
+            // Save updated analytics
+            this.saveAnalyticsData();
+            
+            console.log('Analytics: Existing game record updated', gameRecord);
+        }
     }
 
     processCompletedGame() {
@@ -271,12 +306,17 @@ class GameAnalytics {
             wordStats.lastSeen = new Date().toISOString();
         });
 
+        // Calculate first attempt score from session data
+        const firstAttemptScore = session.firstAttemptResults ? 
+            session.firstAttemptResults.reduce((sum, result) => sum + (result.score || 0), 0) : 0;
+
         // Add to game history (keep last 100 games)
         const gameRecord = {
             sessionId: session.sessionId,
             date: session.gameEndTime,
             wordLength: session.wordLength,
             score: session.finalScore,
+            firstAttemptScore: firstAttemptScore,
             alphagramCount: session.alphagrams.length,
             correctFirst: session.alphagrams.filter(a => a.firstAttemptCorrect).length,
             correctSecond: session.alphagrams.filter(a => a.secondAttemptCorrect).length,
@@ -299,9 +339,21 @@ class GameAnalytics {
 
     // Data retrieval methods
     getStats() {
+        const gameHistory = this.analyticsData.gameHistory || [];
+        
+        // Calculate average first attempt score from game history
+        const averageFirstAttemptScore = gameHistory.length > 0 ? 
+            Math.round(gameHistory.reduce((sum, game) => sum + (game.firstAttemptScore || 0), 0) / gameHistory.length) : 0;
+        
+        // Calculate average final score from game history
+        const averageFinalScore = gameHistory.length > 0 ? 
+            Math.round(gameHistory.reduce((sum, game) => sum + (game.score || 0), 0) / gameHistory.length) : 0;
+
         return {
             ...this.analyticsData.totalStats,
-            recentGames: this.analyticsData.gameHistory.slice(0, 10),
+            averageFirstAttemptScore,
+            averageFinalScore,
+            recentGames: gameHistory.slice(0, 10),
             categoryBreakdown: this.analyticsData.categoryStats
         };
     }
