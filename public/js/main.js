@@ -204,15 +204,12 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const renderGameBoard = (alphagrams) => {
-        console.log('🔍 DEBUG: renderGameBoard called with:', alphagrams);
         elements.gameBoard.innerHTML = '';
         if (!alphagrams || alphagrams.length === 0) {
             console.error('No alphagrams to render.');
             return;
         }
-        console.log('🔍 DEBUG: About to render', alphagrams.length, 'alphagrams');
         alphagrams.forEach(({ alphagram, length }, index) => {
-            console.log('🔍 DEBUG: Rendering alphagram:', alphagram, 'length:', length, 'index:', index);
             const card = document.createElement('div');
             card.className = 'alphagram-card';
             card.dataset.alphagram = alphagram;
@@ -253,11 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             elements.gameBoard.appendChild(card);
-            console.log('🔍 DEBUG: Card appended to game board:', card);
         });
-        
-        console.log('🔍 DEBUG: Final game board HTML:', elements.gameBoard.innerHTML);
-        console.log('🔍 DEBUG: Game board children count:', elements.gameBoard.children.length);
     };
 
     const showOverlay = (overlay) => {
@@ -438,17 +431,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Game Logic Integration ---
 
     const startGame = async (selectedLengths) => {
-        console.log('🔍 DEBUG: startGame called with:', selectedLengths);
-        
         const initialState = await game.startNewGame(selectedLengths);
-        console.log('🔍 DEBUG: initialState received:', initialState);
         
         if (!initialState) {
             console.error('Failed to start game');
             return;
         }
-
-        console.log('🔍 DEBUG: About to render board with alphagrams:', initialState.alphagrams);
 
         // Track game start in analytics
         if (window.gameAnalytics) {
@@ -465,9 +453,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const gameScreen = document.getElementById('game-screen');
         if (gameScreen) {
             gameScreen.classList.remove('hidden');
-            console.log('🔍 DEBUG: Game screen shown');
-        } else {
-            console.error('🔍 DEBUG: Game screen element not found!');
         }
         
         elements.timerDisplay.classList.remove('hidden');
@@ -477,6 +462,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Enable game control buttons
         elements.doneBtn.disabled = false;
         elements.extraTimeBtn.disabled = false;
+        
+        // Reset extra time button to initial state
+        elements.extraTimeBtn.innerHTML = '<i class="fas fa-clock"></i> <span class="btn-text">+30s</span>';
         
         // Set up timer update callback
         game.onTimeUpdate = updateTimerDisplay;
@@ -676,92 +664,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
                 if (!card) return;
                 
-                const input = card.querySelector('.answer-input');
-                input.value = result.userInput;
-                input.disabled = true;
-
-                // Apply highlighting based on correctness
-                console.log(`DEBUG REVIEW: ${result.alphagram} - isCorrect: ${result.isCorrect} - score: ${result.score}`);
-                
-                card.classList.remove('correct', 'incorrect', 'partial', 'blank');
-                if (result.isCorrect === true) {
-                    card.classList.add('correct');
-                } else if (result.isCorrect === false) {
-                    card.classList.add('incorrect');
-                } else if (result.isCorrect === 'partial') {
-                    card.classList.add('partial');
-                } else if (result.isCorrect === 'blank') {
-                    card.classList.add('blank');
-                }
-
-                // Setup the answer card overlay for this card
+                // Set up hover functionality for answer cards
                 setupAnswerCardListeners(card, result);
             });
         }
     };
 
-    // --- Helper Functions ---
-
+    // Get user answers from the game board
     const getUserAnswers = () => {
         const answers = {};
         const cards = document.querySelectorAll('.alphagram-card');
         cards.forEach(card => {
             const alphagram = card.dataset.alphagram;
             const input = card.querySelector('.answer-input');
-            if (alphagram && input) {
-                answers[alphagram] = input.value.trim();
-            }
+            answers[alphagram] = input ? input.value.trim() : '';
         });
         return answers;
     };
-    
+
+    // Show instructions overlay
     const showInstructions = () => {
         elements.instructions.classList.add('active');
     };
 
-    // --- Event Listeners ---
-    
-
-    console.log('🔍 DEBUG: Adding start button event listener');
-    if (elements.startBtn) {
-        elements.startBtn.addEventListener('click', () => {
-            console.log('🔍 DEBUG: Start button clicked');
-            
-            // Check if user is signed in before starting game
-            if (!authManager.isSignedIn()) {
-                console.log('🔍 DEBUG: User not signed in, showing alert');
-                alert('Please sign in with Google to play the game.');
-                return;
-            }
-            
-            console.log('🔍 DEBUG: User signed in, starting game');
-            
-            // Get selected word lengths
-            const selectedLengths = Array.from(document.querySelectorAll('.word-length-selection input[type="checkbox"]:checked'))
-                .map(input => parseInt(input.value));
-            
-            if (selectedLengths.length === 0) {
-                selectedLengths.push(4); // Default to 4-letter words
-            }
-            
-            console.log('🔍 DEBUG: Selected lengths:', selectedLengths);
-            startGame(selectedLengths);
-        });
-        console.log('🔍 DEBUG: Start button event listener added successfully');
-    } else {
-        console.error('🔍 DEBUG: Start button not found!');
-    }
-
-    console.log('🔍 DEBUG: Adding instructions button event listener');
-    if (elements.instructionsBtn) {
-        elements.instructionsBtn.addEventListener('click', () => {
-            console.log('🔍 DEBUG: Instructions button clicked');
-            showInstructions();
-        });
-        console.log('🔍 DEBUG: Instructions button event listener added successfully');
-    } else {
-        console.error('🔍 DEBUG: Instructions button not found!');
-    }
     elements.playAgainBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -895,30 +820,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get selected word lengths from checkboxes
     function getSelectedWordLengths() {
-        const selectedLengths = [];
-        for (const [length, checkbox] of Object.entries(elements.lengthCheckboxes)) {
-            if (checkbox.checked) {
-                selectedLengths.push(parseInt(length));
-            }
-        }
+        const checkboxes = document.querySelectorAll('.word-length-selection input[type="checkbox"]:checked');
+        const selectedLengths = Array.from(checkboxes).map(cb => parseInt(cb.value));
         return selectedLengths.length > 0 ? selectedLengths : [4]; // Default to 4-letter if none selected
     }
 
+    if (elements.startBtn) {
+        elements.startBtn.addEventListener('click', () => {
+            // Check if user is signed in before starting game
+            if (!authManager.isSignedIn()) {
+                alert('Please sign in with Google to play the game.');
+                return;
+            }
+            
+            // Get selected word lengths
+            const selectedLengths = Array.from(document.querySelectorAll('.word-length-selection input[type="checkbox"]:checked'))
+                .map(input => parseInt(input.value));
+            
+            if (selectedLengths.length === 0) {
+                selectedLengths.push(4); // Default to 4-letter words
+            }
+            
+            startGame(selectedLengths);
+        });
+    } else {
+        console.error('Start button not found!');
+    }
+
+    if (elements.instructionsBtn) {
+        elements.instructionsBtn.addEventListener('click', () => {
+            showInstructions();
+        });
+    } else {
+        console.error('Instructions button not found!');
+    }
 
     elements.doneBtn.addEventListener('click', endGame);
     elements.secondAttemptBtn.addEventListener('click', startSecondAttempt);
     
     // Extra time button event listener
     elements.extraTimeBtn.addEventListener('click', () => {
-        console.log('🔍 DEBUG: Extra time button clicked');
         const result = game.useExtraTime();
         if (result.success) {
-            console.log('🔍 DEBUG: Extra time added successfully, new time:', result.newTimeLeft);
-            // Disable the button after use (can only be used once)
+            // Disable the button after use (can only be used once) - just grey it out
             elements.extraTimeBtn.disabled = true;
-            elements.extraTimeBtn.innerHTML = '<i class="fas fa-check"></i> <span class="btn-text">Used</span>';
         } else {
-            console.log('🔍 DEBUG: Failed to add extra time:', result.message);
             alert(result.message);
         }
     });
