@@ -126,7 +126,6 @@ class GameAnalytics {
             userAnswers: []
         }));
 
-        console.log('Analytics: Game started', { wordLength, alphagramCount: alphagrams.length });
     }
 
     trackFirstAttempt(results) {
@@ -155,10 +154,6 @@ class GameAnalytics {
         // Process and save the completed game
         this.processCompletedGame();
 
-        console.log('Analytics: First attempt tracked', { 
-            correct: this.currentSession.firstAttemptResults.filter(r => r.isCorrect === true).length,
-            total: this.currentSession.firstAttemptResults.length 
-        });
     }
 
     trackSecondAttempt(results) {
@@ -186,10 +181,6 @@ class GameAnalytics {
         // Update the existing game record instead of creating a new one
         this.updateExistingGameRecord();
 
-        console.log('Analytics: Second attempt tracked', { 
-            finalScore: this.currentSession.finalScore,
-            completed: true 
-        });
     }
 
     updateExistingGameRecord() {
@@ -217,7 +208,6 @@ class GameAnalytics {
             // Save updated analytics
             this.saveAnalyticsData();
             
-            console.log('Analytics: Existing game record updated', gameRecord);
         }
     }
 
@@ -334,7 +324,6 @@ class GameAnalytics {
         // Save updated analytics
         this.saveAnalyticsData();
 
-        console.log('Analytics: Game processed and saved', gameRecord);
     }
 
     // Data retrieval methods
@@ -372,7 +361,6 @@ class GameAnalytics {
         localStorage.removeItem(this.sessionKey);
         this.analyticsData = this.getDefaultAnalyticsData();
         this.currentSession = null;
-        console.log('Analytics: All data cleared');
     }
 
     exportData() {

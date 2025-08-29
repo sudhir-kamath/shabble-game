@@ -69,8 +69,6 @@ class ShabbleGame {
 
             this.startTimer();
 
-            console.log('🔍 DEBUG: Raw server data:', gameData);
-            console.log('🔍 DEBUG: Processed alphagrams:', this.gameState.alphagrams);
             
             return {
                 alphagrams: this.gameState.alphagrams.map(a => ({

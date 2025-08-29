@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', function() {
         closeFeedbackModal: document.getElementById('close-feedback-modal')
     };
 
-    console.log('  themeToggleBtn:', elements.themeToggleBtn);
 
     // --- UI Update Functions ---
 
@@ -368,8 +367,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 fillElement.style.width = `${accuracy}%`;
                 percentElement.textContent = `${accuracy}%`;
                 
-                // Debug logging
-                console.log(`Word length ${length}: ${correctFirst}/${totalAlphagrams} = ${accuracy}%`);
             }
         }
     };
@@ -469,7 +466,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set initial random quote
     setRandomQuote();
 
-    console.log('🔍 DEBUG: Script execution reached end of initialization');
 
 
     // --- Game Logic Integration ---
@@ -604,7 +600,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.value = result.userInput;
                 input.disabled = true;
 
-                console.log(`DEBUG CLIENT: ${result.alphagram} - isCorrect: ${result.isCorrect} - score: ${result.score}`);
                 
                 card.classList.remove('correct', 'incorrect', 'partial', 'blank');
                 if (result.isCorrect === true) card.classList.add('correct');
@@ -988,15 +983,11 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Google sign-in
-    console.log('🔍 DEBUG: Adding Google sign-in event listener');
     if (elements.googleSigninBtn) {
         elements.googleSigninBtn.addEventListener('click', async () => {
-            console.log('🔍 DEBUG: Google sign-in button clicked');
             authManager.signIn();
         });
-        console.log('🔍 DEBUG: Google sign-in event listener added successfully');
     } else {
-        console.error('🔍 DEBUG: Google sign-in button not found!');
     }
 
     // Sign out

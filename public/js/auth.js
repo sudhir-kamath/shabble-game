@@ -120,7 +120,6 @@ class AuthManager {
 
     async verifyTokenWithBackend() {
         if (!this.user) {
-            console.log('verifyTokenWithBackend: No user, skipping verification.');
             return;
         }
 
@@ -137,9 +136,7 @@ class AuthManager {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                console.log('Backend token verification successful:', result.message);
             } else {
-                console.error('Backend token verification failed:', result.error || 'Unknown error');
             }
         } catch (error) {
             console.error('Error sending token to backend:', error);
