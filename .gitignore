@@ -12,4 +12,4 @@
 # Build output
 /dist
 /build
-/service-account-key.json
+/serviceaccountkey.json
