@@ -908,6 +908,21 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.doneBtn.addEventListener('click', endGame);
     elements.secondAttemptBtn.addEventListener('click', startSecondAttempt);
     
+    // Extra time button event listener
+    elements.extraTimeBtn.addEventListener('click', () => {
+        console.log('🔍 DEBUG: Extra time button clicked');
+        const result = game.useExtraTime();
+        if (result.success) {
+            console.log('🔍 DEBUG: Extra time added successfully, new time:', result.newTimeLeft);
+            // Disable the button after use (can only be used once)
+            elements.extraTimeBtn.disabled = true;
+            elements.extraTimeBtn.innerHTML = '<i class="fas fa-check"></i> <span class="btn-text">Used</span>';
+        } else {
+            console.log('🔍 DEBUG: Failed to add extra time:', result.message);
+            alert(result.message);
+        }
+    });
+    
     // Theme toggle event listener
     if (elements.themeToggleBtn) {
         elements.themeToggleBtn.addEventListener('click', toggleTheme);
