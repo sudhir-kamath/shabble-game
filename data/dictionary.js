@@ -2232,22 +2232,88 @@ function generateGame(selectedLengths = [4]) {
     return alphagrams.sort(() => Math.random() - 0.5);
 }
 
+// Scoring logic
+function calculateScore(alphagramData, userWords, isBlankSubmission = false) {
+    if (!alphagramData) return { score: 0, validWords: [], invalidWords: [] };
+
+    const { validWords: correctWords, isFake } = alphagramData;
+    const correctWordsSet = new Set(correctWords.map(w => w.toLowerCase()));
+    const userWordsSet = new Set(userWords.map(w => w.toLowerCase()));
+
+    let score = 0;
+    const validUserWords = [];
+    const invalidUserWords = [];
+
+    // If the alphagram is fake
+    if (isFake) {
+        if (isBlankSubmission) {
+            // Blank submission on fake - no points (neither correct nor incorrect)
+            score = 0;
+        } else if (userWords.length === 0) {
+            // User explicitly marked as fake with 'x' - correct identification
+            score = 10; // +10 points for correctly identifying fake with 'x'
+        } else {
+            // User submitted words for a fake alphagram
+            score = -5; // -5 points total for any incorrect submission
+            for (const word of userWords) {
+                invalidUserWords.push(word);
+            }
+        }
+        return { score, validWords: [], invalidWords: invalidUserWords };
+    }
+
+    // Process words for real alphagrams
+    for (const word of userWordsSet) {
+        if (correctWordsSet.has(word)) {
+            validUserWords.push(word);
+        } else {
+            invalidUserWords.push(word);
+        }
+    }
+
+    // Handle scoring for real alphagrams with penalty system
+    if (isBlankSubmission) {
+        // Blank submission - no penalty, just 0 points
+        score = 0;
+    } else if (userWords.length === 0 && correctWordsSet.size > 0) {
+        // User explicitly marked real alphagram as 'x' - penalty
+        score = -5; // -5 points for incorrectly marking real word set as 'x'
+    } else if (invalidUserWords.length > 0) {
+        // If ANY answer is wrong, player gets -5 points total (ignoring correct answers)
+        score = -5;
+    } else if (validUserWords.length === correctWordsSet.size && correctWordsSet.size > 0) {
+        score = 10; // +10 points for finding ALL words in the alphagram
+    } else if (validUserWords.length > 0) {
+        // Partial points: proportional to correct answers found (only if no wrong answers)
+        const partialScore = Math.round((validUserWords.length / correctWordsSet.size) * 10);
+        score = partialScore;
+    }
+
+    return {
+        score,
+        validWords: validUserWords,
+        invalidWords: invalidUserWords,
+    };
+}
+
+// Check if a word is valid for any length
+function isValidWord(word) {
+    const length = word.length;
+    return DICTIONARY_SETS[length] && DICTIONARY_SETS[length].has(word.toLowerCase());
+}
+
 // Initialize the alphagram maps when this module loads
 initializeAlphagramMaps();
 
 // Export the public API
-export {
+module.exports = {
     DICTIONARIES,
     DICTIONARY_SETS,
     ALPHAGRAM_MAPS,
     DICTIONARY_2,
     DICTIONARY_3,
     DICTIONARY_4,
-    createAlphagram,
-    isValidWord,
-    getValidAnagrams,
-    getRandomWord,
-    generateFakeAlphagram,
     generateGame,
-    initializeAlphagramMaps
+    calculateScore,
+    isValidWord
 };

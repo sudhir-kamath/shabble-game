@@ -38,12 +38,20 @@
                         <button id="extra-time" class="btn" title="Get 30 extra seconds (-25 points)" aria-label="Get 30 extra seconds for a cost of 25 points" disabled>
                             <i class="fas fa-hourglass-half"></i> <span class="btn-text">+30s</span>
                         </button>
-                        <button id="header-instructions-btn" class="btn" aria-label="How to Play">
-                            <i class="fas fa-question-circle"></i>
-                        </button>
-                        <button id="theme-toggle" class="btn" aria-label="Toggle dark/light mode">
-                            <i class="fas fa-moon"></i>
-                        </button>
+                        <div class="header-controls">
+                            <button id="stats-btn" class="icon-btn" title="View Statistics">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-btn" title="Toggle theme">
+                                <i class="fas fa-sun"></i>
+                            </button>
+                            <button id="header-instructions-btn" class="icon-btn" title="Instructions">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                            <button id="feedback-btn" class="icon-btn" title="Send Feedback">
+                                <i class="fas fa-comment"></i>
+                            </button>
+                        </div>
                         <button id="play-again-header-btn" class="btn" title="Play Again">
                             <i class="fas fa-redo"></i>
                         </button>
@@ -184,6 +192,7 @@
                                         <option value="ZA">🇿🇦 South Africa</option>
                                         <option value="KR">🇰🇷 South Korea</option>
                                         <option value="ES">🇪🇸 Spain</option>
+                                        <option value="LK">🇱🇰 Sri Lanka</option>
                                         <option value="SE">🇸🇪 Sweden</option>
                                         <option value="CH">🇨🇭 Switzerland</option>
                                         <option value="TH">🇹🇭 Thailand</option>
@@ -258,6 +267,7 @@
                                         <option value="ZA">🇿🇦 South Africa</option>
                                         <option value="KR">🇰🇷 South Korea</option>
                                         <option value="ES">🇪🇸 Spain</option>
+                                        <option value="LK">🇱🇰 Sri Lanka</option>
                                         <option value="SE">🇸🇪 Sweden</option>
                                         <option value="CH">🇨🇭 Switzerland</option>
                                         <option value="TH">🇹🇭 Thailand</option>
@@ -309,10 +319,145 @@
                     </div>
                 </div>
 
+                <!-- Statistics Modal -->
+                <div id="stats-modal" class="overlay">
+                    <div class="overlay-content stats-modal">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-chart-bar"></i> Your Statistics</h2>
+                            <button id="close-stats-modal" class="close-btn" title="Close">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="stats-beta-notice">
+                            <p>The statistics section is in beta. Please share feedback on what stats you'd like to see</p>
+                        </div>
+                        
+                        <div class="stats-content">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-gamepad"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="total-games">0</div>
+                                        <div class="stat-label">Games Played</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-eye"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="total-alphagrams">0</div>
+                                        <div class="stat-label">Alphagrams Seen</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="best-score">0</div>
+                                        <div class="stat-label">Best Score</div>
+                                    </div>
+                                </div>
+                                
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="average-first-attempt-score">0</div>
+                                        <div class="stat-label">Average First Attempt Score</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="average-final-score">0</div>
+                                        <div class="stat-label">Average Final Score</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                            <div class="stats-section">
+                                <h3><i class="fas fa-chart-bar"></i> Accuracy by Word Length</h3>
+                                <div class="word-length-accuracy">
+                                    <div class="accuracy-item">
+                                        <div class="accuracy-label">2-letter words</div>
+                                        <div class="accuracy-bar">
+                                            <div class="accuracy-fill" id="accuracy-2-fill"></div>
+                                        </div>
+                                        <div class="accuracy-percentage" id="accuracy-2-percent">0%</div>
+                                    </div>
+                                    <div class="accuracy-item">
+                                        <div class="accuracy-label">3-letter words</div>
+                                        <div class="accuracy-bar">
+                                            <div class="accuracy-fill" id="accuracy-3-fill"></div>
+                                        </div>
+                                        <div class="accuracy-percentage" id="accuracy-3-percent">0%</div>
+                                    </div>
+                                    <div class="accuracy-item">
+                                        <div class="accuracy-label">4-letter words</div>
+                                        <div class="accuracy-bar">
+                                            <div class="accuracy-fill" id="accuracy-4-fill"></div>
+                                        </div>
+                                        <div class="accuracy-percentage" id="accuracy-4-percent">0%</div>
+                                    </div>
+                                    <div class="accuracy-item">
+                                        <div class="accuracy-label">5-letter words</div>
+                                        <div class="accuracy-bar">
+                                            <div class="accuracy-fill" id="accuracy-5-fill"></div>
+                                        </div>
+                                        <div class="accuracy-percentage" id="accuracy-5-percent">0%</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stats-section">
+                                <h3><i class="fas fa-history"></i> Recent Games</h3>
+                                <div class="recent-games" id="recent-games-list">
+                                    <p class="no-data">No games played yet. Start playing to see your history!</p>
+                                </div>
+                            </div>
+                            
+                            <div class="stats-actions">
+                                <button id="export-stats" class="btn secondary-btn">
+                                    <i class="fas fa-download"></i> Export Data
+                                </button>
+                                <button id="clear-stats" class="btn danger-btn">
+                                    <i class="fas fa-trash"></i> Clear All Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
 
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Send Feedback</h2>
+                <button id="close-feedback-modal" class="close-btn" aria-label="Close feedback modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="feedback-message">
+                    <i class="fas fa-envelope feedback-icon"></i>
+                    <p>Please send your feedback and suggestions to:</p>
+                    <div class="email-info">
+                        <strong>sudhir.kamath@gmail.com</strong>
+                    </div>
+                    <p>with subject line: <strong>"Shabble feedback"</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/analytics.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

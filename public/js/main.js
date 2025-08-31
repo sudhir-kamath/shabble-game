@@ -1,13 +1,9 @@
 import { game } from './game.js';
-import { initializeAlphagramMaps } from './dictionary.js';
 import { authManager } from './auth.js';
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize alphagram maps for all word lengths
-    initializeAlphagramMaps();
     
-    // Get DOM elements
     const elements = {
         startScreen: document.getElementById('start-screen'),
         gameBoard: document.getElementById('game-board'),
@@ -20,6 +16,13 @@ document.addEventListener('DOMContentLoaded', function() {
         playAgainBtn: document.getElementById('play-again'),
         playAgainHeaderBtn: document.getElementById('play-again-header-btn'),
         secondAttemptBtn: document.getElementById('second-attempt-btn'),
+        headerInstructionsBtn: document.getElementById('header-instructions-btn'),
+        themeToggleBtn: document.getElementById('theme-toggle'),
+        statsBtn: document.getElementById('stats-btn'),
+        statsModal: document.getElementById('stats-modal'),
+        closeStatsModal: document.getElementById('close-stats-modal'),
+        exportStatsBtn: document.getElementById('export-stats'),
+        clearStatsBtn: document.getElementById('clear-stats'),
         timerDisplay: document.getElementById('timer'),
         scoreDisplay: document.getElementById('final-score'),
         quoteText: document.getElementById('quote-text'),
@@ -37,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         userAvatar: document.getElementById('user-avatar'),
         userName: document.getElementById('user-name'),
         headerInstructionsBtn: document.getElementById('header-instructions-btn'),
+        feedbackBtn: document.getElementById('feedback-btn'),
         backBtn: document.getElementById('back-btn'),
         doneBtn: document.getElementById('done-btn'),
         extraTimeBtn: document.getElementById('extra-time'),
@@ -57,8 +61,12 @@ document.addEventListener('DOMContentLoaded', function() {
         editProfileForm: document.getElementById('edit-profile-form'),
         editNicknameInput: document.getElementById('edit-nickname-input'),
         editCountrySelect: document.getElementById('edit-country-select'),
-        cancelEditBtn: document.getElementById('cancel-edit-btn')
+        cancelEditBtn: document.getElementById('cancel-edit-btn'),
+        // Feedback modal elements
+        feedbackModal: document.getElementById('feedback-modal'),
+        closeFeedbackModal: document.getElementById('close-feedback-modal')
     };
+
 
     // --- UI Update Functions ---
 
@@ -188,6 +196,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
+    // Function to shuffle letters in a string
+    const shuffleLetters = (str) => {
+        const letters = str.split('');
+        for (let i = letters.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [letters[i], letters[j]] = [letters[j], letters[i]];
+        }
+        return letters.join('');
+    };
+
     const renderGameBoard = (alphagrams) => {
         elements.gameBoard.innerHTML = '';
         if (!alphagrams || alphagrams.length === 0) {
@@ -198,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = document.createElement('div');
             card.className = 'alphagram-card';
             card.dataset.alphagram = alphagram;
+            card.dataset.originalAlphagram = alphagram; // Store original for reference
             card.dataset.length = length || alphagram.length; // Use provided length or calculate from alphagram
             const inputId = `alphagram-input-${index}`;
 
@@ -213,6 +232,26 @@ document.addEventListener('DOMContentLoaded', function() {
                        spellcheck="false"
                        name="answer-${index}">
             `;
+            
+            // Add click event listener for shuffling
+            const alphagramLabel = card.querySelector('.alphagram');
+            alphagramLabel.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Only allow shuffling during active gameplay (not during review)
+                const input = card.querySelector('.answer-input');
+                if (input.disabled) return;
+                
+                const currentText = alphagramLabel.textContent;
+                const shuffledText = shuffleLetters(currentText);
+                alphagramLabel.textContent = shuffledText;
+                
+                // Add a brief animation to indicate the shuffle
+                card.classList.add('shuffling');
+                setTimeout(() => card.classList.remove('shuffling'), 300);
+            });
+            
             elements.gameBoard.appendChild(card);
         });
     };
@@ -237,6 +276,130 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.classList.add('light-mode');
         elements.themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
     }
+
+    // Statistics functions
+    const formatTime = (milliseconds) => {
+        if (!milliseconds) return '0m';
+        const minutes = Math.floor(milliseconds / 60000);
+        const seconds = Math.floor((milliseconds % 60000) / 1000);
+        return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+    };
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    };
+
+    const displayStats = () => {
+        if (!window.gameAnalytics) {
+            console.warn('Analytics not available');
+            return;
+        }
+
+        const stats = window.gameAnalytics.getStats();
+        const detailed = window.gameAnalytics.getDetailedStats();
+
+        // Update main stats
+        document.getElementById('total-games').textContent = stats.gamesPlayed || 0;
+        document.getElementById('total-alphagrams').textContent = stats.totalAlphagramsSeen || 0;
+        document.getElementById('best-score').textContent = stats.bestScore || 0;
+        document.getElementById('average-first-attempt-score').textContent = stats.averageFirstAttemptScore || 0;
+        document.getElementById('average-final-score').textContent = stats.averageFinalScore || 0;
+
+        // Update word length accuracy bars
+        updateWordLengthAccuracy(stats);
+
+        // Update recent games
+        const recentGamesContainer = document.getElementById('recent-games-list');
+        if (stats.recentGames && stats.recentGames.length > 0) {
+            recentGamesContainer.innerHTML = stats.recentGames.map(game => `
+                <div class="game-item">
+                    <div class="game-info">
+                        <div class="game-date">${formatDate(game.date)}</div>
+                        <div class="game-details">
+                            ${game.wordLength}-letter words • ${game.correctFirst}/${game.alphagramCount} first attempt
+                        </div>
+                    </div>
+                    <div class="game-scores">
+                        <div class="score-item">
+                            <span class="score-label">First:</span>
+                            <span class="score-value">${game.firstAttemptScore || 0}</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Final:</span>
+                            <span class="score-value">${game.score}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            recentGamesContainer.innerHTML = '<p class="no-data">No games played yet. Start playing to see your history!</p>';
+        }
+    };
+
+    const updateWordLengthAccuracy = (stats) => {
+        const detailed = window.gameAnalytics.getDetailedStats();
+        
+        // Calculate accuracy for each word length (2, 3, 4, 5) based on individual alphagrams
+        for (let length = 2; length <= 5; length++) {
+            let totalAlphagrams = 0;
+            let correctFirst = 0;
+            
+            // Use wordStats which tracks individual alphagram performance
+            Object.entries(detailed.wordStats || {}).forEach(([alphagram, stats]) => {
+                // Check if this alphagram is of the target length
+                if (alphagram.length === length) {
+                    totalAlphagrams += stats.seen;
+                    correctFirst += stats.firstAttemptCorrect;
+                }
+            });
+            
+            let accuracy = 0;
+            if (totalAlphagrams > 0) {
+                accuracy = Math.round((correctFirst / totalAlphagrams) * 100);
+            }
+            
+            // Update the progress bar and percentage
+            const fillElement = document.getElementById(`accuracy-${length}-fill`);
+            const percentElement = document.getElementById(`accuracy-${length}-percent`);
+            
+            if (fillElement && percentElement) {
+                fillElement.style.width = `${accuracy}%`;
+                percentElement.textContent = `${accuracy}%`;
+                
+            }
+        }
+    };
+
+    const showStatsModal = () => {
+        displayStats();
+        showOverlay(elements.statsModal);
+    };
+
+    const exportStats = () => {
+        if (!window.gameAnalytics) return;
+        
+        const data = window.gameAnalytics.exportData();
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `shabble-stats-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const clearAllStats = () => {
+        if (!window.gameAnalytics) return;
+        
+        if (confirm('Are you sure you want to clear all your statistics? This action cannot be undone.')) {
+            window.gameAnalytics.clearAllData();
+            displayStats(); // Refresh the display
+            alert('All statistics have been cleared.');
+        }
+    };
 
     // Initialize auth state management
     setupAuthListeners();
@@ -303,45 +466,48 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set initial random quote
     setRandomQuote();
 
-    elements.themeToggleBtn.addEventListener('click', toggleTheme);
 
 
     // --- Game Logic Integration ---
 
-    const startGame = () => {
+    const startGame = async (selectedLengths) => {
+        const initialState = await game.startNewGame(selectedLengths);
         
-        // Hide start screen
-        elements.startScreen.classList.remove('active');
-        elements.startScreen.classList.add('hidden');
-        
-        // Show game screen
-        const gameScreen = document.getElementById('game-screen');
-        gameScreen.classList.remove('hidden');
-        gameScreen.classList.add('active');
-        
-        // Get selected word lengths
-        const selectedLengths = getSelectedWordLengths();
-        
-        // Set random motivational quote
-        setRandomQuote();
-        
-        const initialState = game.startNewGame(selectedLengths);
-        renderGameBoard(initialState.alphagrams);
-        elements.gameBoard.style.display = 'grid'; // Make sure game board is visible
-        updateTimerDisplay(initialState.timeLeft); // Initial timer display with correct time
+        if (!initialState) {
+            console.error('Failed to start game');
+            return;
+        }
 
-        // Show header elements for game
+        // Track game start in analytics
+        if (window.gameAnalytics) {
+            window.gameAnalytics.trackGameStart(selectedLengths, initialState.alphagrams);
+        }
+
+        renderGameBoard(initialState.alphagrams);
+        elements.gameBoard.style.display = 'grid';
+        updateTimerDisplay(initialState.timeLeft);
+
+        showOverlay(null); // Hide home screen
+        
+        // Show the game screen
+        const gameScreen = document.getElementById('game-screen');
+        if (gameScreen) {
+            gameScreen.classList.remove('hidden');
+        }
+        
         elements.timerDisplay.classList.remove('hidden');
+        elements.extraTimeBtn.classList.remove('hidden');
+        elements.headerFinalScore.classList.add('hidden');
+        
+        // Enable game control buttons
         elements.doneBtn.disabled = false;
         elements.extraTimeBtn.disabled = false;
-        elements.extraTimeBtn.classList.remove('hidden');
-
-        // Reset button states
-        [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = false);
-
-        // --- Final Setup ---
-        game.onTimeUpdate = updateTimerDisplay; // Hook up timer updates
-        announce('Game started. Good luck!');
+        
+        // Reset extra time button to initial state
+        elements.extraTimeBtn.innerHTML = '<i class="fas fa-clock"></i> <span class="btn-text">+30s</span>';
+        
+        // Set up timer update callback
+        game.onTimeUpdate = updateTimerDisplay;
     };
 
     const startSecondAttempt = () => {
@@ -363,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const input = card.querySelector('.answer-input');
 
             if (alphagramData.score === 10) {
-                // Correctly answered cards are locked
+                // Correctly answered cards are locked and highlighted green
                 card.classList.remove('incorrect', 'partial');
                 card.classList.add('correct');
                 input.disabled = true;
@@ -379,8 +545,22 @@ document.addEventListener('DOMContentLoaded', function() {
         announce('Second attempt started. You have 60 seconds.');
     };
 
-    const endGame = () => {
-        const results = game.endGame();
+    const endGame = async () => {
+        const userAnswers = getUserAnswers();
+        const results = await game.endGame(userAnswers);
+        if (!results) {
+            alert('Failed to submit results. Please check your connection.');
+            return;
+        }
+
+        // Track analytics for first or second attempt
+        if (window.gameAnalytics) {
+            if (results.isSecondAttempt) {
+                window.gameAnalytics.trackSecondAttempt(results);
+            } else {
+                window.gameAnalytics.trackFirstAttempt(results);
+            }
+        }
         
         // Calculate score percentage and set dynamic message
         const maxPossibleScore = 200; // 20 alphagrams × 10 points each
@@ -412,27 +592,41 @@ document.addEventListener('DOMContentLoaded', function() {
         [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board only after the second attempt
-        if (results.isSecondAttempt) {
-            results.alphagrams.forEach(result => {
+        if (results.isSecondAttempt && results.results) {
+            results.results.forEach(result => {
                 const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
                 if (!card) return; // Card might not be on the board if the game resets quickly
                 const input = card.querySelector('.answer-input');
                 input.value = result.userInput;
                 input.disabled = true;
 
-                card.classList.remove('correct', 'incorrect', 'partial');
+                
+                card.classList.remove('correct', 'incorrect', 'partial', 'blank');
                 if (result.isCorrect === true) card.classList.add('correct');
                 else if (result.isCorrect === false) card.classList.add('incorrect');
                 else if (result.isCorrect === 'partial') card.classList.add('partial');
-
-                // Setup the answer card overlay for this card
-                setupAnswerCardListeners(card, result);
+                else if (result.isCorrect === 'blank') card.classList.add('blank');
             });
+            reviewAnswers();
         }
     };
 
-    const endGameDueToTimeout = () => {
-        const results = game.endGame();
+    const endGameDueToTimeout = async () => {
+        const userAnswers = getUserAnswers();
+        const results = await game.endGame(userAnswers);
+        if (!results) {
+            alert('Failed to submit results. Please check your connection.');
+            return;
+        }
+        
+        // Track analytics for first or second attempt
+        if (window.gameAnalytics) {
+            if (results.isSecondAttempt) {
+                window.gameAnalytics.trackSecondAttempt(results);
+            } else {
+                window.gameAnalytics.trackFirstAttempt(results);
+            }
+        }
         
         // Calculate score percentage and set dynamic message
         const maxPossibleScore = 200; // 20 alphagrams × 10 points each
@@ -447,12 +641,14 @@ document.addEventListener('DOMContentLoaded', function() {
             congratsMessage = "Well tried! Better luck next time";
         }
         
+        // Set timeout-specific message
+        const timeoutMessage = "You ran out of time! Next time you can buy an extra 30 seconds at a cost of 25 points";
+        
         if (results.isSecondAttempt) {
-            elements.gameOverMessage.innerHTML = `Time's up! <br><br>Initial Score: ${Math.round(results.initialScore)}<br>Second Attempt Score: <span id="final-score">${Math.round(results.score)}</span>`;
+            elements.gameOverMessage.innerHTML = `${timeoutMessage}<br><br>Initial Score: ${Math.round(results.initialScore)}<br>Second Attempt Score: <span id="final-score">${Math.round(results.score)}</span>`;
             elements.secondAttemptBtn.classList.add('visually-hidden');
         } else {
-            elements.gameOverMessage.innerHTML = `You ran out of time! You can try again with a 60-second timer.<br><br>Your score is <span id="final-score">${Math.round(results.score)}</span>.`;
-
+            elements.gameOverMessage.innerHTML = `${timeoutMessage}<br><br>Your score is <span id="final-score">${Math.round(results.score)}</span>.`;
             elements.secondAttemptBtn.classList.remove('visually-hidden');
         }
 
@@ -464,8 +660,8 @@ document.addEventListener('DOMContentLoaded', function() {
         [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board only after the second attempt
-        if (results.isSecondAttempt) {
-            results.alphagrams.forEach(result => {
+        if (results.isSecondAttempt && results.results) {
+            results.results.forEach(result => {
                 const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
                 if (!card) return;
                 const input = card.querySelector('.answer-input');
@@ -480,10 +676,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (result.isCorrect === 'partial') {
                     card.classList.add('partial');
                 }
-
-                // Setup the answer card overlay for this card
-                setupAnswerCardListeners(card, result);
             });
+            reviewAnswers();
         }
     };
 
@@ -501,34 +695,44 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hide in-game controls
         elements.timerDisplay.classList.add('hidden');
         elements.extraTimeBtn.classList.add('hidden');
+
+        // Apply highlighting and enable hover functionality
+        const gameState = game.getGameState();
+        if (gameState.lastResults) {
+            gameState.lastResults.forEach(result => {
+                const card = elements.gameBoard.querySelector(`[data-alphagram="${result.alphagram}"]`);
+                if (!card) return;
+                
+                // Apply color highlighting based on correctness
+                card.classList.remove('correct', 'incorrect', 'partial', 'blank');
+                if (result.isCorrect === true) card.classList.add('correct');
+                else if (result.isCorrect === false) card.classList.add('incorrect');
+                else if (result.isCorrect === 'partial') card.classList.add('partial');
+                else if (result.isCorrect === 'blank') card.classList.add('blank');
+                
+                // Set up hover functionality for answer cards
+                setupAnswerCardListeners(card, result);
+            });
+        }
     };
 
-    // --- Helper Functions ---
-    
+    // Get user answers from the game board
+    const getUserAnswers = () => {
+        const answers = {};
+        const cards = document.querySelectorAll('.alphagram-card');
+        cards.forEach(card => {
+            const alphagram = card.dataset.alphagram;
+            const input = card.querySelector('.answer-input');
+            answers[alphagram] = input ? input.value.trim() : '';
+        });
+        return answers;
+    };
+
+    // Show instructions overlay
     const showInstructions = () => {
         elements.instructions.classList.add('active');
     };
 
-    // --- Event Listeners ---
-    
-
-    if (elements.startBtn) {
-        elements.startBtn.addEventListener('click', () => {
-            // Check if user is signed in before starting game
-            if (!authManager.isSignedIn()) {
-                alert('Please sign in with Google to play the game.');
-                return;
-            }
-            setRandomQuote();
-            startGame();
-        });
-    } else {
-    }
-
-    if (elements.instructionsBtn) {
-        elements.instructionsBtn.addEventListener('click', showInstructions);
-    } else {
-    }
     elements.playAgainBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -575,6 +779,20 @@ document.addEventListener('DOMContentLoaded', function() {
             showInstructions();
         }
     });
+
+    // Feedback button event listener
+    if (elements.feedbackBtn) {
+        elements.feedbackBtn.addEventListener('click', () => {
+            showOverlay(elements.feedbackModal);
+        });
+    }
+
+    // Close feedback modal
+    if (elements.closeFeedbackModal) {
+        elements.closeFeedbackModal.addEventListener('click', () => {
+            showOverlay(null);
+        });
+    }
 
     if (elements.backBtn) {
         elements.backBtn.addEventListener('click', () => {
@@ -662,33 +880,80 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get selected word lengths from checkboxes
     function getSelectedWordLengths() {
-        const selectedLengths = [];
-        for (const [length, checkbox] of Object.entries(elements.lengthCheckboxes)) {
-            if (checkbox.checked) {
-                selectedLengths.push(parseInt(length));
-            }
-        }
+        const checkboxes = document.querySelectorAll('.word-length-selection input[type="checkbox"]:checked');
+        const selectedLengths = Array.from(checkboxes).map(cb => parseInt(cb.value));
         return selectedLengths.length > 0 ? selectedLengths : [4]; // Default to 4-letter if none selected
     }
 
+    if (elements.startBtn) {
+        elements.startBtn.addEventListener('click', () => {
+            // Check if user is signed in before starting game
+            if (!authManager.isSignedIn()) {
+                alert('Please sign in with Google to play the game.');
+                return;
+            }
+            
+            // Get selected word lengths
+            const selectedLengths = Array.from(document.querySelectorAll('.word-length-selection input[type="checkbox"]:checked'))
+                .map(input => parseInt(input.value));
+            
+            if (selectedLengths.length === 0) {
+                selectedLengths.push(4); // Default to 4-letter words
+            }
+            
+            startGame(selectedLengths);
+        });
+    } else {
+        console.error('Start button not found!');
+    }
+
+    if (elements.instructionsBtn) {
+        elements.instructionsBtn.addEventListener('click', () => {
+            showInstructions();
+        });
+    } else {
+        console.error('Instructions button not found!');
+    }
 
     elements.doneBtn.addEventListener('click', endGame);
     elements.secondAttemptBtn.addEventListener('click', startSecondAttempt);
-    elements.themeToggleBtn.addEventListener('click', toggleTheme);
-
+    
+    // Extra time button event listener
     elements.extraTimeBtn.addEventListener('click', () => {
         const result = game.useExtraTime();
         if (result.success) {
-            updateTimerDisplay(result.newTimeLeft);
-            elements.extraTimeBtn.disabled = true; // Disable after use
-            announce('30 seconds added. 25 points deducted.');
+            // Disable the button after use (can only be used once) - just grey it out
+            elements.extraTimeBtn.disabled = true;
+        } else {
+            alert(result.message);
         }
     });
-
-    // Load theme from localStorage
-    if (localStorage.getItem('theme') === 'light') {
-        toggleTheme();
+    
+    // Theme toggle event listener
+    if (elements.themeToggleBtn) {
+        elements.themeToggleBtn.addEventListener('click', toggleTheme);
     }
+
+    // Statistics event listeners
+    if (elements.statsBtn) {
+        elements.statsBtn.addEventListener('click', showStatsModal);
+    }
+    if (elements.closeStatsModal) {
+        elements.closeStatsModal.addEventListener('click', () => showOverlay(null));
+    }
+    if (elements.exportStatsBtn) {
+        elements.exportStatsBtn.addEventListener('click', exportStats);
+    }
+    if (elements.clearStatsBtn) {
+        elements.clearStatsBtn.addEventListener('click', clearAllStats);
+    }
+
+    elements.playAgainBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showOverlay(null);
+        startGame(getSelectedWordLengths());
+    });
 
     // --- Authentication Event Handlers ---
     
@@ -718,13 +983,12 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Google sign-in
-    elements.googleSigninBtn.addEventListener('click', async () => {
-        const result = await authManager.signInWithGoogle();
-        if (!result.success) {
-            console.error('Sign-in failed:', result.error);
-            // Could show error message to user here
-        }
-    });
+    if (elements.googleSigninBtn) {
+        elements.googleSigninBtn.addEventListener('click', async () => {
+            authManager.signIn();
+        });
+    } else {
+    }
 
     // Sign out
     elements.signoutBtn.addEventListener('click', async () => {
