@@ -24,7 +24,7 @@ class GameAnalytics {
             userId: null,
             totalStats: {
                 gamesPlayed: 0,
-                totalAlphagramsSeen: 0,
+                totalAlphagramsCorrectlySolved: 0,
                 totalCorrectFirstAttempt: 0,
                 totalCorrectSecondAttempt: 0,
                 totalMissed: 0,
@@ -141,7 +141,7 @@ class GameAnalytics {
             const result = this.currentSession.firstAttemptResults.find(r => r.alphagram === sessionAlphagram.alphagram);
             if (result) {
                 sessionAlphagram.firstAttemptCorrect = result.isCorrect === true;
-                sessionAlphagram.missed = result.isCorrect !== true;
+                sessionAlphagram.missed = result.isCorrect === false;
                 sessionAlphagram.userAnswers.push({
                     attempt: 1,
                     answer: result.userInput,
@@ -168,7 +168,7 @@ class GameAnalytics {
             const result = this.currentSession.secondAttemptResults.find(r => r.alphagram === sessionAlphagram.alphagram);
             if (result) {
                 sessionAlphagram.secondAttemptCorrect = result.isCorrect === true;
-                sessionAlphagram.missed = result.isCorrect !== true;
+                sessionAlphagram.missed = result.isCorrect === false;
                 sessionAlphagram.userAnswers.push({
                     attempt: 2,
                     answer: result.userInput,
@@ -223,7 +223,7 @@ class GameAnalytics {
 
         // Update total stats
         stats.gamesPlayed++;
-        stats.totalAlphagramsSeen += session.alphagrams.length;
+        stats.totalAlphagramsCorrectlySolved += session.alphagrams.filter(a => a.firstAttemptCorrect || a.secondAttemptCorrect).length;
         stats.totalCorrectFirstAttempt += session.alphagrams.filter(a => a.firstAttemptCorrect).length;
         stats.totalCorrectSecondAttempt += session.alphagrams.filter(a => a.secondAttemptCorrect).length;
         stats.totalMissed += session.alphagrams.filter(a => a.missed).length;

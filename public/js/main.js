@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update main stats
         document.getElementById('total-games').textContent = stats.gamesPlayed || 0;
-        document.getElementById('total-alphagrams').textContent = stats.totalAlphagramsSeen || 0;
+        document.getElementById('total-alphagrams').textContent = stats.totalAlphagramsCorrectlySolved || 0;
         document.getElementById('best-score').textContent = stats.bestScore || 0;
         document.getElementById('average-first-attempt-score').textContent = stats.averageFirstAttemptScore || 0;
         document.getElementById('average-final-score').textContent = stats.averageFinalScore || 0;
