@@ -653,7 +653,7 @@ document.addEventListener('DOMContentLoaded', function() {
         announce(`Game over. Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons
-        [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
+        [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board only after the second attempt
         if (results.isSecondAttempt && results.results) {
@@ -721,7 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
         announce(`Time's up! Your final score is ${Math.round(results.score)}.`);
 
         // Disable game buttons
-        [elements.doneBtn, elements.extraTimeBtn, elements.headerInstructionsBtn].forEach(btn => btn.disabled = true);
+        [elements.doneBtn, elements.extraTimeBtn].forEach(btn => btn.disabled = true);
 
         // Show results on the board only after the second attempt
         if (results.isSecondAttempt && results.results) {
