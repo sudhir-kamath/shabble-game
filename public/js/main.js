@@ -301,7 +301,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update main stats
         document.getElementById('total-games').textContent = stats.gamesPlayed || 0;
-        document.getElementById('total-alphagrams').textContent = stats.totalAlphagramsCorrectlySolved || 0;
+        const correctlySolved = stats.totalAlphagramsCorrectlySolved || 0;
+        const totalPresented = stats.totalAlphagramsPresented || 0;
+        const percentage = totalPresented > 0 ? Math.round((correctlySolved / totalPresented) * 100) : 0;
+        document.getElementById('total-alphagrams').textContent = `${correctlySolved} (${percentage}%)`;
         document.getElementById('best-score').textContent = stats.bestScore || 0;
         document.getElementById('average-first-attempt-score').textContent = stats.averageFirstAttemptScore || 0;
         document.getElementById('average-final-score').textContent = stats.averageFinalScore || 0;

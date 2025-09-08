@@ -24,6 +24,7 @@ class GameAnalytics {
             userId: null,
             totalStats: {
                 gamesPlayed: 0,
+                totalAlphagramsPresented: 0,
                 totalAlphagramsCorrectlySolved: 0,
                 totalCorrectFirstAttempt: 0,
                 totalCorrectSecondAttempt: 0,
@@ -223,6 +224,7 @@ class GameAnalytics {
 
         // Update total stats
         stats.gamesPlayed++;
+        stats.totalAlphagramsPresented += session.alphagrams.length;
         stats.totalAlphagramsCorrectlySolved += session.alphagrams.filter(a => a.firstAttemptCorrect || a.secondAttemptCorrect).length;
         stats.totalCorrectFirstAttempt += session.alphagrams.filter(a => a.firstAttemptCorrect).length;
         stats.totalCorrectSecondAttempt += session.alphagrams.filter(a => a.secondAttemptCorrect).length;
