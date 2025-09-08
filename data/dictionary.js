@@ -2181,6 +2181,7 @@ function factorial(n) {
 function generateGame(selectedLengths = [4]) {
     const totalAlphagrams = 20;
     const alphagrams = [];
+    const usedAlphagrams = new Set(); // Track used alphagrams to prevent duplicates
     
     // Calculate distribution per length (approximately equal)
     const lengthsCount = selectedLengths.length;
@@ -2200,31 +2201,47 @@ function generateGame(selectedLengths = [4]) {
         const fakeCount = Math.max(1, Math.floor(count * fakePercentage + 0.5));
         const realCount = count - fakeCount;
         
-        // Get real alphagrams for this length
+        // Get all available alphagrams for this length and shuffle them
         const availableAlphagrams = Array.from(ALPHAGRAM_MAPS[length].entries())
             .filter(([_, words]) => words.length > 0)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, realCount);
+            .sort(() => Math.random() - 0.5);
         
-        // Add real alphagrams
+        // Add real alphagrams (with deduplication)
+        let addedReal = 0;
         for (const [alphagram, words] of availableAlphagrams) {
-            alphagrams.push({
-                alphagram: alphagram.toUpperCase(),
-                validWords: [...new Set(words)], // Remove duplicates using Set
-                isFake: false,
-                length: length
-            });
+            if (addedReal >= realCount) break;
+            
+            const upperAlphagram = alphagram.toUpperCase();
+            if (!usedAlphagrams.has(upperAlphagram)) {
+                usedAlphagrams.add(upperAlphagram);
+                alphagrams.push({
+                    alphagram: upperAlphagram,
+                    validWords: [...new Set(words)], // Remove duplicates using Set
+                    isFake: false,
+                    length: length
+                });
+                addedReal++;
+            }
         }
         
-        // Add fake alphagrams for this length
-        for (let i = 0; i < fakeCount; i++) {
+        // Add fake alphagrams for this length (with deduplication)
+        let addedFake = 0;
+        let attempts = 0;
+        const maxAttempts = fakeCount * 10; // Prevent infinite loops
+        
+        while (addedFake < fakeCount && attempts < maxAttempts) {
             const fakeAlphagram = generateFakeAlphagram(length);
-            alphagrams.push({
-                alphagram: fakeAlphagram,
-                validWords: [],
-                isFake: true,
-                length: length
-            });
+            if (!usedAlphagrams.has(fakeAlphagram)) {
+                usedAlphagrams.add(fakeAlphagram);
+                alphagrams.push({
+                    alphagram: fakeAlphagram,
+                    validWords: [],
+                    isFake: true,
+                    length: length
+                });
+                addedFake++;
+            }
+            attempts++;
         }
     }
     
