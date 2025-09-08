@@ -394,11 +394,72 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearAllStats = () => {
         if (!window.gameAnalytics) return;
         
-        if (confirm('Are you sure you want to clear all your statistics? This action cannot be undone.')) {
+        // Create custom confirmation modal
+        const confirmModal = document.createElement('div');
+        confirmModal.className = 'overlay active';
+        confirmModal.innerHTML = `
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>⚠️ Clear All Statistics</h2>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to permanently delete ALL your game statistics?</p>
+                    <p>This will clear:</p>
+                    <ul>
+                        <li>Games played</li>
+                        <li>Alphagrams correctly solved</li>
+                        <li>Best scores</li>
+                        <li>Game history</li>
+                        <li>All performance data</li>
+                    </ul>
+                    <p><strong>This action cannot be undone!</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-clear" class="btn danger-btn">
+                        <i class="fas fa-trash"></i> Yes, Clear All Data
+                    </button>
+                    <button id="cancel-clear" class="btn secondary-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(confirmModal);
+        
+        // Handle confirmation
+        document.getElementById('confirm-clear').addEventListener('click', () => {
             window.gameAnalytics.clearAllData();
-            displayStats(); // Refresh the display
-            alert('All statistics have been cleared.');
-        }
+            displayStats();
+            document.body.removeChild(confirmModal);
+            
+            // Show success message
+            const successModal = document.createElement('div');
+            successModal.className = 'overlay active';
+            successModal.innerHTML = `
+                <div class="modal">
+                    <div class="modal-header">
+                        <h2>✅ Statistics Cleared</h2>
+                    </div>
+                    <div class="modal-body">
+                        <p>All statistics have been permanently cleared.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="close-success" class="btn primary-btn">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(successModal);
+            
+            document.getElementById('close-success').addEventListener('click', () => {
+                document.body.removeChild(successModal);
+            });
+        });
+        
+        // Handle cancel
+        document.getElementById('cancel-clear').addEventListener('click', () => {
+            document.body.removeChild(confirmModal);
+        });
     };
 
     // Initialize auth state management
