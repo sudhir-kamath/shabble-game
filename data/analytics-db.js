@@ -53,16 +53,16 @@ class AnalyticsDB {
 
     // User management
     async createOrUpdateUser(userData) {
-        const { firebaseUid, nickname, country, privacyConsent } = userData;
+        const { firebaseUid, nickname, country, privacyConsent, email, displayName } = userData;
         
         return new Promise((resolve, reject) => {
             const userId = this.hashData(firebaseUid);
             
             this.db.run(`
                 INSERT OR REPLACE INTO users 
-                (id, firebase_uid, nickname, country, privacy_consent, last_active)
-                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            `, [userId, firebaseUid, nickname, country, privacyConsent], function(err) {
+                (id, firebase_uid, nickname, country, privacy_consent, email, display_name, last_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            `, [userId, firebaseUid, nickname, country, privacyConsent, email, displayName], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -73,25 +73,46 @@ class AnalyticsDB {
     }
 
     // Game session tracking
-    async startGameSession(sessionData) {
-        const { userId, wordLengths, ipAddress, userAgent } = sessionData;
-        
+    async startGameSession({ userId, wordLengths, ipAddress, userAgent }) {
         return new Promise((resolve, reject) => {
             const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const ipHash = ipAddress ? this.hashData(ipAddress) : null;
             const userAgentHash = userAgent ? this.hashData(userAgent) : null;
             
-            this.db.run(`
-                INSERT INTO game_sessions 
-                (id, user_id, word_lengths, ip_hash, user_agent_hash)
-                VALUES (?, ?, ?, ?, ?)
-            `, [sessionId, userId, JSON.stringify(wordLengths), ipHash, userAgentHash], function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ sessionId });
-                }
-            });
+            // If userId is provided, convert Firebase UID to internal user ID
+            if (userId) {
+                this.db.get(`SELECT id FROM users WHERE firebase_uid = ?`, [userId], (err, user) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    
+                    const internalUserId = user ? user.id : null;
+                    console.log(`Converting Firebase UID ${userId} to internal ID ${internalUserId}`);
+                    if (!user) {
+                        console.log(`No user found for Firebase UID: ${userId}`);
+                        this.db.all('SELECT firebase_uid, id, nickname FROM users', (err, rows) => {
+                            console.log('Available users:', rows);
+                        });
+                    }
+                    
+                    this.db.run(`
+                        INSERT INTO game_sessions 
+                        (id, user_id, word_lengths, ip_hash, user_agent_hash)
+                        VALUES (?, ?, ?, ?, ?)
+                    `, [sessionId, internalUserId, JSON.stringify(wordLengths), ipHash, userAgentHash], function(err) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve({ sessionId });
+                        }
+                    });
+                });
+            } else {
+                // No user ID provided - reject anonymous sessions
+                console.log('Rejecting anonymous session - authentication required');
+                reject(new Error('Authentication required: Cannot create anonymous sessions'));
+            }
         });
     }
 
@@ -237,15 +258,17 @@ class AnalyticsDB {
             this.db.all(`
                 SELECT 
                     u.id,
+                    COALESCE(u.display_name, u.nickname, 'Player ' || SUBSTR(u.id, 1, 8)) as display_name,
                     u.nickname,
                     u.firebase_uid,
                     u.country,
+                    u.email,
                     u.created_at,
                     u.last_active,
                     COUNT(gs.id) as total_games
                 FROM users u
                 LEFT JOIN game_sessions gs ON u.id = gs.user_id
-                GROUP BY u.id, u.nickname, u.firebase_uid, u.country, u.created_at, u.last_active
+                GROUP BY u.id, u.display_name, u.nickname, u.firebase_uid, u.country, u.email, u.created_at, u.last_active
                 ORDER BY u.last_active DESC
             `, (err, rows) => {
                 if (err) {

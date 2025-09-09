@@ -1,6 +1,9 @@
 import { game } from './game.js';
 import { authManager } from './auth.js';
 
+// Make authManager globally accessible
+window.authManager = authManager;
+
 
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -506,6 +509,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Game Logic Integration ---
 
     const startGame = async (selectedLengths) => {
+        // Enforce authentication requirement
+        console.log('Auth check - authManager exists:', !!window.authManager);
+        console.log('Auth check - isSignedIn:', window.authManager?.isSignedIn());
+        
+        if (!window.authManager || !window.authManager.isSignedIn()) {
+            console.log('Authentication failed - showing modal');
+            showAuthRequiredModal();
+            return;
+        }
+        
+        console.log('Authentication passed - starting game');
+
         const initialState = await game.startNewGame(selectedLengths);
         
         if (!initialState) {
@@ -595,6 +610,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 window.gameAnalytics.trackFirstAttempt(results);
             }
+            
+            // Finish the game session with final results
+            window.gameAnalytics.finishGame(results);
         }
         
         // Calculate score percentage and set dynamic message
@@ -661,6 +679,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 window.gameAnalytics.trackFirstAttempt(results);
             }
+            
+            // Finish the game session with final results
+            window.gameAnalytics.finishGame(results);
         }
         
         // Calculate score percentage and set dynamic message
@@ -989,6 +1010,59 @@ document.addEventListener('DOMContentLoaded', function() {
         showOverlay(null);
         startGame(getSelectedWordLengths());
     });
+
+    // Show authentication required modal
+    function showAuthRequiredModal() {
+        const authModal = document.createElement('div');
+        authModal.className = 'overlay active';
+        authModal.innerHTML = `
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>🔐 Authentication Required</h2>
+                </div>
+                <div class="modal-body">
+                    <p>You must be signed in to play Shabble!</p>
+                    <p>Please sign in with your Google account to:</p>
+                    <ul>
+                        <li>Track your game statistics</li>
+                        <li>Save your progress and scores</li>
+                        <li>Compete on leaderboards</li>
+                        <li>Access all game features</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button id="auth-modal-signin" class="btn primary-btn">
+                        <i class="fab fa-google"></i> Sign In with Google
+                    </button>
+                    <button id="auth-modal-close" class="btn secondary-btn">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(authModal);
+
+        // Handle sign in button
+        document.getElementById('auth-modal-signin').addEventListener('click', async () => {
+            document.body.removeChild(authModal);
+            if (window.authManager) {
+                await window.authManager.signInWithGoogle();
+            }
+        });
+
+        // Handle close button
+        document.getElementById('auth-modal-close').addEventListener('click', () => {
+            document.body.removeChild(authModal);
+        });
+
+        // Close on overlay click
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                document.body.removeChild(authModal);
+            }
+        });
+    }
 
     // --- Authentication Event Handlers ---
     

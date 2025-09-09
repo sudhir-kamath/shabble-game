@@ -17,6 +17,8 @@ class AnalyticsController {
             const ipAddress = req.ip || req.connection.remoteAddress;
             const userAgent = req.get('User-Agent');
 
+            console.log('Analytics session start - userId:', userId, 'wordLengths:', wordLengths);
+
             const result = await this.db.startGameSession({
                 userId,
                 wordLengths,
@@ -38,22 +40,17 @@ class AnalyticsController {
     }
 
     // Record user registration/profile update
-    async recordUser(req, res) {
+    async createOrUpdateUser(req, res) {
         try {
-            const { firebaseUid, nickname, country, privacyConsent } = req.body;
-
-            if (!firebaseUid) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Firebase UID is required'
-                });
-            }
-
+            const { firebaseUid, nickname, country, privacyConsent, email, displayName } = req.body;
+            
             const result = await this.db.createOrUpdateUser({
                 firebaseUid,
                 nickname,
                 country,
-                privacyConsent: privacyConsent !== false // Default to true
+                privacyConsent,
+                email,
+                displayName
             });
 
             res.json({
@@ -61,10 +58,10 @@ class AnalyticsController {
                 userId: result.userId
             });
         } catch (error) {
-            console.error('Error recording user:', error);
+            console.error('Error creating/updating user:', error);
             res.status(500).json({
                 success: false,
-                error: 'Failed to record user data'
+                error: 'Failed to create/update user'
             });
         }
     }

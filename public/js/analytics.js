@@ -153,9 +153,35 @@ class GameAnalytics {
         }
         
         try {
-            const userId = window.authManager?.isSignedIn() ? 
-                window.authManager.getCurrentUser()?.uid : null;
+            // Try multiple ways to get the authenticated user
+            let userId = null;
+            let authSource = 'none';
             
+            // Method 1: Check AuthManager
+            if (window.authManager?.isSignedIn()) {
+                userId = window.authManager.getCurrentUser()?.uid;
+                authSource = 'authManager';
+            }
+            
+            // Method 2: Check Firebase Auth directly
+            if (!userId && window.firebaseAuth) {
+                const currentUser = window.firebaseAuth.currentUser;
+                if (currentUser) {
+                    userId = currentUser.uid;
+                    authSource = 'window.firebaseAuth';
+                }
+            }
+            
+            // Method 3: Check legacy Firebase
+            if (!userId && window.firebase?.auth) {
+                const currentUser = window.firebase.auth().currentUser;
+                if (currentUser) {
+                    userId = currentUser.uid;
+                    authSource = 'firebase.auth';
+                }
+            }
+            
+            console.log('Auth debug - userId:', userId, 'source:', authSource);
             console.log('Starting server session for userId:', userId, 'wordLengths:', wordLengths);
             
             const response = await fetch('/api/analytics/session/start', {
@@ -464,32 +490,36 @@ class GameAnalytics {
 
         // Update total statistics
         this.analyticsData.totalStats.gamesPlayed++;
-        this.analyticsData.totalStats.totalAlphagramsPresented += session.alphagrams.length;
         
-        // Count correctly solved alphagrams
-        const correctlySolved = session.alphagrams.filter(a => 
-            a.firstAttemptCorrect || a.secondAttemptCorrect
+        // Handle different session result formats
+        const alphagrams = session.alphagrams || session.results || [];
+        this.analyticsData.totalStats.totalAlphagramsPresented += alphagrams.length;
+        
+        // Count correctly solved alphagrams (only count true, not 'blank' or 'partial')
+        const correctlySolved = alphagrams.filter(a => 
+            a.isCorrect === true
         ).length;
         
         this.analyticsData.totalStats.totalAlphagramsCorrectlySolved += correctlySolved;
         
         // Update score statistics
-        if (session.finalScore > this.analyticsData.totalStats.bestScore) {
-            this.analyticsData.totalStats.bestScore = session.finalScore;
+        const finalScore = session.finalScore || session.score || 0;
+        if (finalScore > this.analyticsData.totalStats.bestScore) {
+            this.analyticsData.totalStats.bestScore = finalScore;
         }
         
-        this.analyticsData.totalStats.totalScore += session.finalScore;
+        this.analyticsData.totalStats.totalScore += finalScore;
         this.analyticsData.totalStats.averageScore = 
             this.analyticsData.totalStats.totalScore / this.analyticsData.totalStats.gamesPlayed;
 
         // Add to game history (keep last 100 games)
         const gameRecord = {
             date: new Date().toISOString(),
-            score: session.finalScore,
-            alphagrams: session.alphagrams.length,
+            score: finalScore,
+            alphagrams: alphagrams.length,
             correctlySolved: correctlySolved,
-            wordLength: session.wordLength,
-            duration: this.calculateGameDuration(session)
+            wordLength: session.wordLength || 'mixed',
+            duration: session.timeTaken || 0
         };
         
         this.analyticsData.gameHistory.unshift(gameRecord);
@@ -498,31 +528,31 @@ class GameAnalytics {
         }
 
         // Send data to server
-        const gameDuration = this.calculateGameDuration(session);
+        const gameDuration = session.timeTaken || 0;
         console.log('Finishing server session with data:', {
-            totalAlphagrams: session.alphagrams.length,
+            totalAlphagrams: alphagrams.length,
             alphagramsSolved: correctlySolved,
-            finalScore: session.finalScore,
-            completed: session.completed,
+            finalScore: finalScore,
+            completed: true,
             gameDuration: gameDuration
         });
         
         this.finishServerSession(
-            session.alphagrams.length,
+            alphagrams.length,
             correctlySolved,
-            session.finalScore,
-            session.completed,
+            finalScore,
+            true,
             gameDuration
         );
 
         // Record individual alphagram attempts to server
-        session.alphagrams.forEach(alphagram => {
+        alphagrams.forEach(alphagram => {
             this.recordServerAttempt(
                 alphagram.alphagram,
                 alphagram.length,
-                alphagram.firstAttemptCorrect || alphagram.secondAttemptCorrect,
-                alphagram.firstAttemptCorrect,
-                alphagram.secondAttemptCorrect,
+                alphagram.isCorrect === true,
+                alphagram.isCorrect === true,
+                false, // No second attempt tracking in current system
                 alphagram.userAnswers,
                 [] // We don't have correct answers stored in the session
             );

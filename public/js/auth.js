@@ -1,5 +1,8 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js';
 
+// Make auth globally accessible for analytics
+window.firebaseAuth = auth;
+
 class AuthManager {
     constructor() {
         this.user = null;
@@ -136,10 +139,12 @@ class AuthManager {
     }
 
     getCurrentUser() {
+        console.log('getCurrentUser called, returning:', this.user);
         return this.user;
     }
 
     isSignedIn() {
+        console.log('isSignedIn called, user:', this.user, 'returning:', this.user !== null);
         return this.user !== null;
     }
 

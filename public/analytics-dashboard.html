@@ -217,28 +217,36 @@
         }
         
         .player-item {
-            background: white;
-            border: 2px solid #eee;
-            border-radius: 8px;
             padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
+            background: white;
         }
-        
+
         .player-item:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            background: #f8f9fa;
+            border-color: #007bff;
+            transform: translateY(-1px);
         }
-        
+
         .player-item.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            background: #e3f2fd;
+            border-color: #2196f3;
         }
-        
+
         .player-name {
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .player-identifier {
+            font-size: 12px;
+            color: #666;
             margin-bottom: 5px;
         }
         
@@ -724,7 +732,10 @@
                 const playerItem = document.createElement('div');
                 playerItem.className = 'player-item';
                 playerItem.innerHTML = `
-                    <div class="player-name">${player.nickname || 'Anonymous Player'}</div>
+                    <div class="player-name">${player.display_name}</div>
+                    <div class="player-identifier">
+                        ${player.email ? `📧 ${player.email.substring(0, 25)}${player.email.length > 25 ? '...' : ''}` : `ID: ${player.id.substring(0, 8)}`}
+                    </div>
                     <div class="player-stats-summary">
                         ${player.total_games || 0} games • ${player.total_alphagrams_solved || 0}/${player.total_alphagrams_seen || 0} solved
                         ${player.last_active ? `• Last active: ${new Date(player.last_active).toLocaleDateString()}` : ''}
@@ -745,7 +756,9 @@
         function searchPlayers() {
             const searchTerm = document.getElementById('player-search').value.toLowerCase();
             const filteredPlayers = currentPlayers.filter(player => 
-                (player.nickname || '').toLowerCase().includes(searchTerm)
+                (player.display_name || '').toLowerCase().includes(searchTerm) ||
+                (player.email || '').toLowerCase().includes(searchTerm) ||
+                (player.id || '').toLowerCase().includes(searchTerm)
             );
             displayPlayerList(filteredPlayers);
         }
@@ -787,7 +800,7 @@
         function displayPlayerStats(stats) {
             // Update player header
             document.getElementById('selected-player-name').textContent = 
-                `${stats.player.nickname || 'Anonymous Player'} Statistics`;
+                `${stats.player.display_name} Statistics`;
             document.getElementById('player-member-since').textContent = 
                 `Member since: ${new Date(stats.player.memberSince).toLocaleDateString()}`;
             document.getElementById('player-last-active').textContent = 
