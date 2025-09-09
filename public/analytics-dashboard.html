@@ -135,13 +135,210 @@
             border-radius: 8px;
             margin: 20px 0;
         }
+        
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .view-toggle {
+            display: flex;
+            align-items: center;
+        }
+        
+        .view-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .view-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .view-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .player-search-section {
+            margin-bottom: 30px;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .player-search-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .player-search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s ease;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .player-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .player-item {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .player-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .player-item.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+        
+        .player-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .player-stats-summary {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .player-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .player-header h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .player-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .word-length-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .word-length-card {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .word-length-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .word-length-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .word-length-stat {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #eee;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
     </style>
 </head>
 <body>
     <div class="dashboard">
         <div class="dashboard-header">
-            <h1><i class="fas fa-chart-line"></i> Shabble Analytics Dashboard</h1>
-            <p>Global game statistics and player insights</p>
+            <h1>📊 Shabble Analytics Dashboard</h1>
+            <div class="header-controls">
+                <div class="view-toggle">
+                    <button id="globalViewBtn" class="view-btn active">Global Stats</button>
+                    <button id="playerViewBtn" class="view-btn">Player Stats</button>
+                </div>
+                <button id="refreshBtn" class="refresh-btn">🔄 Refresh Data</button>
+            </div>
         </div>
         
         <button class="refresh-btn" onclick="loadDashboard()">
@@ -153,6 +350,115 @@
         </div>
         
         <div id="error" class="error" style="display: none;"></div>
+        
+        <!-- Global Analytics View -->
+        <div id="global-view" style="display: none;">
+            <!-- Overview Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-games">0</div>
+                    <div class="stat-label">Total Games</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="unique-players">0</div>
+                    <div class="stat-label">Unique Players</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="average-score">0</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completion-rate">0%</div>
+                    <div class="stat-label">Completion Rate</div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="chart-container">
+                <div class="chart-title">Recent Activity (Last 24 Hours)</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="games-24h">0</div>
+                        <div class="stat-label">Games Played</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="players-24h">0</div>
+                        <div class="stat-label">Active Players</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Daily Trend Chart -->
+            <div class="chart-container">
+                <div class="chart-title">Daily Trend (Last 7 Days)</div>
+                <canvas id="dailyChart" width="800" height="300"></canvas>
+            </div>
+            
+            <!-- Word Performance Table -->
+            <div class="chart-container">
+                <div class="chart-title">Word Performance</div>
+                <div id="word-performance" class="table-container"></div>
+            </div>
+        </div>
+        
+        <!-- Player Analytics View -->
+        <div id="player-view" style="display: none;">
+            <div class="player-search-section">
+                <div class="search-container">
+                    <input type="text" id="player-search" placeholder="Search players by nickname..." class="player-search-input">
+                    <button id="search-btn" class="search-btn">🔍 Search</button>
+                </div>
+                <div id="player-list" class="player-list"></div>
+            </div>
+            
+            <div id="player-stats-content" style="display: none;">
+                <div class="player-header">
+                    <h2 id="selected-player-name">Player Statistics</h2>
+                    <div class="player-info">
+                        <span id="player-member-since"></span>
+                        <span id="player-last-active"></span>
+                    </div>
+                </div>
+                
+                <!-- Player Overview Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="player-total-games">0</div>
+                        <div class="stat-label">Total Games</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="player-average-score">0</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="player-best-score">0</div>
+                        <div class="stat-label">Best Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="player-success-rate">0%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+                
+                <!-- Performance by Word Length -->
+                <div class="chart-container">
+                    <div class="chart-title">Performance by Word Length</div>
+                    <div id="word-length-stats" class="word-length-grid"></div>
+                </div>
+                
+                <!-- Recent Games -->
+                <div class="chart-container">
+                    <div class="chart-title">Recent Games</div>
+                    <div id="recent-games-table" class="table-container"></div>
+                </div>
+                
+                <!-- Top Alphagram Performance -->
+                <div class="chart-container">
+                    <div class="chart-title">Alphagram Performance (Top 20)</div>
+                    <div id="alphagram-performance" class="table-container"></div>
+                </div>
+            </div>
+        </div>
         
         <div id="dashboard-content" style="display: none;">
             <!-- Overview Stats -->
@@ -362,11 +668,292 @@
             }
         }
         
-        // Load dashboard on page load
-        document.addEventListener('DOMContentLoaded', loadDashboard);
+        // Player analytics functionality
+        let currentPlayers = [];
+        let selectedPlayer = null;
         
-        // Auto-refresh every 5 minutes
-        setInterval(loadDashboard, 5 * 60 * 1000);
+        // View switching
+        function switchToGlobalView() {
+            document.getElementById('global-view').style.display = 'block';
+            document.getElementById('player-view').style.display = 'none';
+            document.getElementById('globalViewBtn').classList.add('active');
+            document.getElementById('playerViewBtn').classList.remove('active');
+            loadDashboard().catch(error => {
+                console.error('Error loading dashboard:', error);
+            });
+        }
+        
+        function switchToPlayerView() {
+            document.getElementById('global-view').style.display = 'none';
+            document.getElementById('player-view').style.display = 'block';
+            document.getElementById('globalViewBtn').classList.remove('active');
+            document.getElementById('playerViewBtn').classList.add('active');
+            loadPlayerList().catch(error => {
+                console.error('Error loading player list:', error);
+            });
+        }
+        
+        // Load player list
+        async function loadPlayerList() {
+            try {
+                const response = await fetch('/api/analytics/players');
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentPlayers = data.players;
+                    displayPlayerList(currentPlayers);
+                } else {
+                    console.error('Failed to load players:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading players:', error);
+            }
+        }
+        
+        // Display player list
+        function displayPlayerList(players) {
+            const playerList = document.getElementById('player-list');
+            playerList.innerHTML = '';
+            
+            if (players.length === 0) {
+                playerList.innerHTML = '<div class="no-players">No players found</div>';
+                return;
+            }
+            
+            players.forEach(player => {
+                const playerItem = document.createElement('div');
+                playerItem.className = 'player-item';
+                playerItem.innerHTML = `
+                    <div class="player-name">${player.nickname || 'Anonymous Player'}</div>
+                    <div class="player-stats-summary">
+                        ${player.total_games || 0} games • ${player.total_alphagrams_solved || 0}/${player.total_alphagrams_seen || 0} solved
+                        ${player.last_active ? `• Last active: ${new Date(player.last_active).toLocaleDateString()}` : ''}
+                    </div>
+                `;
+                
+                playerItem.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectPlayer(player, playerItem).catch(error => {
+                        console.error('Error selecting player:', error);
+                    });
+                });
+                playerList.appendChild(playerItem);
+            });
+        }
+        
+        // Search players
+        function searchPlayers() {
+            const searchTerm = document.getElementById('player-search').value.toLowerCase();
+            const filteredPlayers = currentPlayers.filter(player => 
+                (player.nickname || '').toLowerCase().includes(searchTerm)
+            );
+            displayPlayerList(filteredPlayers);
+        }
+        
+        // Select player and load their stats
+        async function selectPlayer(player, clickedElement) {
+            selectedPlayer = player;
+            
+            // Update UI to show selection
+            document.querySelectorAll('.player-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            if (clickedElement) {
+                clickedElement.classList.add('selected');
+            }
+            
+            // Load player stats
+            await loadPlayerStats(player.id);
+        }
+        
+        // Load player statistics
+        async function loadPlayerStats(playerId) {
+            try {
+                const response = await fetch(`/api/analytics/players/${playerId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayPlayerStats(data.stats);
+                    document.getElementById('player-stats-content').style.display = 'block';
+                } else {
+                    console.error('Failed to load player stats:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading player stats:', error);
+            }
+        }
+        
+        // Display player statistics
+        function displayPlayerStats(stats) {
+            // Update player header
+            document.getElementById('selected-player-name').textContent = 
+                `${stats.player.nickname || 'Anonymous Player'} Statistics`;
+            document.getElementById('player-member-since').textContent = 
+                `Member since: ${new Date(stats.player.memberSince).toLocaleDateString()}`;
+            document.getElementById('player-last-active').textContent = 
+                `Last active: ${new Date(stats.player.lastActive).toLocaleDateString()}`;
+            
+            // Update overview stats
+            document.getElementById('player-total-games').textContent = stats.overview.totalGames;
+            document.getElementById('player-average-score').textContent = stats.overview.averageScore;
+            document.getElementById('player-best-score').textContent = stats.overview.bestScore;
+            document.getElementById('player-success-rate').textContent = `${stats.overview.overallSuccessRate}%`;
+            
+            // Display word length performance
+            displayWordLengthStats(stats.byWordLength);
+            
+            // Display recent games
+            displayRecentGames(stats.recentGames);
+            
+            // Display alphagram performance
+            displayAlphagramPerformance(stats.alphagramPerformance);
+        }
+        
+        // Display word length statistics
+        function displayWordLengthStats(wordLengthStats) {
+            const container = document.getElementById('word-length-stats');
+            container.innerHTML = '';
+            
+            wordLengthStats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'word-length-card';
+                card.innerHTML = `
+                    <div class="word-length-title">${stat.wordLength}-Letter Words</div>
+                    <div class="word-length-stats">
+                        <div class="word-length-stat">
+                            <span>Games:</span>
+                            <span>${stat.gamesPlayed}</span>
+                        </div>
+                        <div class="word-length-stat">
+                            <span>Avg Score:</span>
+                            <span>${stat.averageScore}</span>
+                        </div>
+                        <div class="word-length-stat">
+                            <span>Success Rate:</span>
+                            <span>${stat.successRate}%</span>
+                        </div>
+                        <div class="word-length-stat">
+                            <span>Completion:</span>
+                            <span>${stat.completionRate}%</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Display recent games
+        function displayRecentGames(recentGames) {
+            const container = document.getElementById('recent-games-table');
+            
+            if (recentGames.length === 0) {
+                container.innerHTML = '<div class="no-data">No recent games found</div>';
+                return;
+            }
+            
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Word Lengths</th>
+                        <th>Score</th>
+                        <th>Solved/Seen</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            
+            const tbody = table.querySelector('tbody');
+            recentGames.forEach(game => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(game.date).toLocaleDateString()}</td>
+                    <td>${game.wordLengths.join(', ')}</td>
+                    <td>${game.score}</td>
+                    <td>${game.alphagramsSolved}/${game.alphagramsSeen}</td>
+                    <td>${game.duration} min</td>
+                    <td>${game.completed ? '✅ Completed' : '⏱️ Timeout'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+        
+        // Display alphagram performance
+        function displayAlphagramPerformance(alphagramStats) {
+            const container = document.getElementById('alphagram-performance');
+            
+            if (alphagramStats.length === 0) {
+                container.innerHTML = '<div class="no-data">No alphagram data found</div>';
+                return;
+            }
+            
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Alphagram</th>
+                        <th>Length</th>
+                        <th>Times Seen</th>
+                        <th>Times Solved</th>
+                        <th>First Attempt</th>
+                        <th>Solve Rate</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            
+            const tbody = table.querySelector('tbody');
+            alphagramStats.forEach(stat => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${stat.alphagram}</strong></td>
+                    <td>${stat.wordLength}</td>
+                    <td>${stat.timesSeen}</td>
+                    <td>${stat.timesSolved}</td>
+                    <td>${stat.firstAttemptCorrect}</td>
+                    <td>${stat.solveRate}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // View toggle buttons
+            document.getElementById('globalViewBtn').addEventListener('click', switchToGlobalView);
+            document.getElementById('playerViewBtn').addEventListener('click', switchToPlayerView);
+            
+            // Player search
+            document.getElementById('search-btn').addEventListener('click', searchPlayers);
+            document.getElementById('player-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchPlayers();
+                }
+            });
+            
+            // Start with global view
+            switchToGlobalView();
+        });
+        
+        // Auto-refresh every 5 minutes (only for global view)
+        setInterval(() => {
+            if (document.getElementById('global-view').style.display !== 'none') {
+                loadDashboard().catch(error => {
+                    console.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 5 * 60 * 1000);
     </script>
 </body>
 </html>

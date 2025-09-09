@@ -231,6 +231,157 @@ class AnalyticsDB {
         });
     }
 
+    // Player-specific analytics
+    async getPlayerList() {
+        return new Promise((resolve, reject) => {
+            this.db.all(`
+                SELECT 
+                    u.id,
+                    u.nickname,
+                    u.firebase_uid,
+                    u.country,
+                    u.created_at,
+                    u.last_active,
+                    COUNT(gs.id) as total_games
+                FROM users u
+                LEFT JOIN game_sessions gs ON u.id = gs.user_id
+                GROUP BY u.id, u.nickname, u.firebase_uid, u.country, u.created_at, u.last_active
+                ORDER BY u.last_active DESC
+            `, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+
+    async getPlayerStats(playerId) {
+        return new Promise((resolve, reject) => {
+            this.db.get(`
+                SELECT 
+                    u.id,
+                    u.nickname,
+                    u.firebase_uid,
+                    u.country,
+                    u.created_at,
+                    u.last_active,
+                    COUNT(gs.id) as total_games,
+                    AVG(gs.final_score) as average_score,
+                    MAX(gs.final_score) as best_score,
+                    SUM(gs.total_alphagrams) as total_alphagrams_seen,
+                    SUM(gs.alphagrams_solved) as total_alphagrams_solved,
+                    AVG(CASE WHEN gs.completed = 1 THEN 1.0 ELSE 0.0 END) as completion_rate,
+                    AVG(gs.game_duration) as average_game_duration
+                FROM users u
+                LEFT JOIN game_sessions gs ON u.id = gs.user_id
+                WHERE u.id = ? OR u.nickname = ? OR u.firebase_uid = ?
+                GROUP BY u.id, u.nickname, u.firebase_uid, u.country, u.created_at, u.last_active
+            `, [playerId, playerId, playerId], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row);
+                }
+            });
+        });
+    }
+
+    async getPlayerStatsByWordLength(playerId) {
+        return new Promise((resolve, reject) => {
+            this.db.all(`
+                SELECT 
+                    JSON_EXTRACT(gs.word_lengths, '$[0]') as word_length,
+                    COUNT(gs.id) as games_played,
+                    AVG(gs.final_score) as average_score,
+                    SUM(gs.total_alphagrams) as total_alphagrams_seen,
+                    SUM(gs.alphagrams_solved) as total_alphagrams_solved,
+                    AVG(CASE WHEN gs.alphagrams_solved > 0 THEN 
+                        CAST(gs.alphagrams_solved AS FLOAT) / gs.total_alphagrams 
+                        ELSE 0 END) as success_rate,
+                    AVG(CASE WHEN gs.completed = 1 THEN 1.0 ELSE 0.0 END) as completion_rate
+                FROM users u
+                JOIN game_sessions gs ON u.id = gs.user_id
+                WHERE u.id = ? OR u.nickname = ? OR u.firebase_uid = ?
+                GROUP BY JSON_EXTRACT(gs.word_lengths, '$[0]')
+                ORDER BY word_length
+            `, [playerId, playerId, playerId], (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+
+    async getPlayerAlphagramStats(playerId, wordLength = null) {
+        return new Promise((resolve, reject) => {
+            let query = `
+                SELECT 
+                    aa.alphagram,
+                    aa.word_length,
+                    COUNT(aa.id) as times_seen,
+                    SUM(CASE WHEN aa.solved = 1 THEN 1 ELSE 0 END) as times_solved,
+                    SUM(CASE WHEN aa.first_attempt_correct = 1 THEN 1 ELSE 0 END) as first_attempt_correct,
+                    AVG(CASE WHEN aa.solved = 1 THEN 1.0 ELSE 0.0 END) as solve_rate
+                FROM users u
+                JOIN game_sessions gs ON u.id = gs.user_id
+                JOIN alphagram_attempts aa ON gs.id = aa.session_id
+                WHERE (u.id = ? OR u.nickname = ? OR u.firebase_uid = ?)
+            `;
+            
+            let params = [playerId, playerId, playerId];
+            
+            if (wordLength) {
+                query += ` AND aa.word_length = ?`;
+                params.push(wordLength);
+            }
+            
+            query += `
+                GROUP BY aa.alphagram, aa.word_length
+                ORDER BY times_seen DESC, aa.word_length, aa.alphagram
+            `;
+            
+            this.db.all(query, params, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+
+    async getPlayerRecentGames(playerId, limit = 10) {
+        return new Promise((resolve, reject) => {
+            this.db.all(`
+                SELECT 
+                    gs.id,
+                    gs.session_start,
+                    gs.session_end,
+                    gs.word_lengths,
+                    gs.total_alphagrams,
+                    gs.alphagrams_solved,
+                    gs.final_score,
+                    gs.completed,
+                    gs.game_duration
+                FROM users u
+                JOIN game_sessions gs ON u.id = gs.user_id
+                WHERE u.id = ? OR u.nickname = ? OR u.firebase_uid = ?
+                ORDER BY gs.session_start DESC
+                LIMIT ?
+            `, [playerId, playerId, playerId, limit], (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+
     close() {
         if (this.db) {
             this.db.close((err) => {

@@ -25,7 +25,12 @@ router.get('/stats/daily', (req, res) => analyticsController.getDailyStats(req, 
 router.get('/stats/words', (req, res) => analyticsController.getWordStats(req, res));
 router.get('/stats/activity', (req, res) => analyticsController.getRecentActivity(req, res));
 
-// Dashboard endpoint
+// Dashboard data endpoint
 router.get('/dashboard', (req, res) => analyticsController.getDashboardData(req, res));
+
+// Player-specific analytics endpoints
+router.get('/players', (req, res) => analyticsController.getPlayerList(req, res));
+router.get('/players/:playerId', (req, res) => analyticsController.getPlayerStats(req, res));
+router.get('/players/:playerId/alphagrams', (req, res) => analyticsController.getPlayerAlphagramStats(req, res));
 
 module.exports = router;

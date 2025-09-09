@@ -261,6 +261,145 @@ class AnalyticsController {
             });
         }
     }
+
+    // Player-specific analytics endpoints
+    async getPlayerList(req, res) {
+        try {
+            const players = await this.db.getPlayerList();
+            
+            res.json({
+                success: true,
+                players: players
+            });
+        } catch (error) {
+            console.error('Error getting player list:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get player list'
+            });
+        }
+    }
+
+    async getPlayerStats(req, res) {
+        try {
+            const { playerId } = req.params;
+            
+            if (!playerId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Player ID is required'
+                });
+            }
+
+            const [playerStats, wordLengthStats, alphagramStats, recentGames] = await Promise.all([
+                this.db.getPlayerStats(playerId),
+                this.db.getPlayerStatsByWordLength(playerId),
+                this.db.getPlayerAlphagramStats(playerId),
+                this.db.getPlayerRecentGames(playerId, 10)
+            ]);
+
+            if (!playerStats) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Player not found'
+                });
+            }
+
+            // Format the response
+            const formattedStats = {
+                player: {
+                    id: playerStats.id,
+                    nickname: playerStats.nickname,
+                    country: playerStats.country,
+                    memberSince: playerStats.created_at,
+                    lastActive: playerStats.last_active
+                },
+                overview: {
+                    totalGames: playerStats.total_games || 0,
+                    averageScore: Math.round((playerStats.average_score || 0) * 100) / 100,
+                    bestScore: playerStats.best_score || 0,
+                    totalAlphagramsSeen: playerStats.total_alphagrams_seen || 0,
+                    totalAlphagramsSolved: playerStats.total_alphagrams_solved || 0,
+                    overallSuccessRate: playerStats.total_alphagrams_seen > 0 ? 
+                        Math.round((playerStats.total_alphagrams_solved / playerStats.total_alphagrams_seen) * 100) : 0,
+                    completionRate: Math.round((playerStats.completion_rate || 0) * 100),
+                    averageGameDuration: Math.round((playerStats.average_game_duration || 0) / 60 * 100) / 100 // minutes
+                },
+                byWordLength: wordLengthStats.map(stat => ({
+                    wordLength: stat.word_length,
+                    gamesPlayed: stat.games_played,
+                    averageScore: Math.round((stat.average_score || 0) * 100) / 100,
+                    alphagramsSeen: stat.total_alphagrams_seen || 0,
+                    alphagramsSolved: stat.total_alphagrams_solved || 0,
+                    successRate: Math.round((stat.success_rate || 0) * 100),
+                    completionRate: Math.round((stat.completion_rate || 0) * 100)
+                })),
+                alphagramPerformance: alphagramStats.slice(0, 20).map(stat => ({
+                    alphagram: stat.alphagram,
+                    wordLength: stat.word_length,
+                    timesSeen: stat.times_seen,
+                    timesSolved: stat.times_solved,
+                    firstAttemptCorrect: stat.first_attempt_correct,
+                    solveRate: Math.round((stat.solve_rate || 0) * 100)
+                })),
+                recentGames: recentGames.map(game => ({
+                    sessionId: game.id,
+                    date: game.session_start,
+                    wordLengths: JSON.parse(game.word_lengths || '[]'),
+                    alphagramsSeen: game.total_alphagrams,
+                    alphagramsSolved: game.alphagrams_solved,
+                    score: game.final_score,
+                    completed: game.completed === 1,
+                    duration: Math.round((game.game_duration || 0) / 60 * 100) / 100 // minutes
+                }))
+            };
+
+            res.json({
+                success: true,
+                stats: formattedStats
+            });
+        } catch (error) {
+            console.error('Error getting player stats:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get player statistics'
+            });
+        }
+    }
+
+    async getPlayerAlphagramStats(req, res) {
+        try {
+            const { playerId } = req.params;
+            const { wordLength } = req.query;
+            
+            if (!playerId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Player ID is required'
+                });
+            }
+
+            const alphagramStats = await this.db.getPlayerAlphagramStats(playerId, wordLength);
+            
+            res.json({
+                success: true,
+                stats: alphagramStats.map(stat => ({
+                    alphagram: stat.alphagram,
+                    wordLength: stat.word_length,
+                    timesSeen: stat.times_seen,
+                    timesSolved: stat.times_solved,
+                    firstAttemptCorrect: stat.first_attempt_correct,
+                    solveRate: Math.round((stat.solve_rate || 0) * 100)
+                }))
+            });
+        } catch (error) {
+            console.error('Error getting player alphagram stats:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get player alphagram statistics'
+            });
+        }
+    }
 }
 
 module.exports = AnalyticsController;
