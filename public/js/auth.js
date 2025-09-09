@@ -13,26 +13,18 @@ class AuthManager {
         // Listen for authentication state changes
         onAuthStateChanged(auth, async (user) => {
             this.user = user;
-
-            if (user) {
-                // Verify the token with the backend as soon as the user is authenticated.
-                await this.verifyTokenWithBackend();
-            }
+            // Reset signing in flag when auth state changes
+            this.signingIn = false;
             
-            // Reset signing flag when auth state changes
             if (user) {
-                this.signingIn = false;
+                // Check if this is a first-time user
+                if (this.isFirstTimeUser(user) && this.onProfileSetupNeeded) {
+                    this.onProfileSetupNeeded(user);
+                }
             }
             
             if (this.onUserStateChange) {
                 this.onUserStateChange(user);
-            }
-            
-            // Check if profile setup is needed for new users
-            if (user && this.isFirstTimeUser(user)) {
-                if (this.onProfileSetupNeeded) {
-                    this.onProfileSetupNeeded(user);
-                }
             }
         });
     }
@@ -55,7 +47,6 @@ class AuthManager {
                     isFirstTime: false
                 };
             }
-            
             this.signingIn = true;
             
             const result = await signInWithPopup(auth, provider);
@@ -68,6 +59,7 @@ class AuthManager {
             };
         } catch (error) {
             this.signingIn = false;
+            console.error('Sign-in error:', error);
             
             // Handle specific Firebase auth errors
             if (error.code === 'auth/cancelled-popup-request') {
@@ -83,14 +75,14 @@ class AuthManager {
             } else if (error.code === 'auth/popup-closed-by-user') {
                 return {
                     success: false,
-                    error: 'Sign-in popup was closed. Please try again.'
+                    error: 'Sign-in was cancelled by user.'
+                };
+            } else {
+                return {
+                    success: false,
+                    error: error.message || 'An error occurred during sign-in'
                 };
             }
-            
-            return {
-                success: false,
-                error: error.message
-            };
         }
     }
 

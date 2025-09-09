@@ -115,6 +115,11 @@ class GameAnalytics {
     trackGameStart(wordLength, alphagrams) {
         if (!this.analyticsData.preferences.trackingEnabled) return;
 
+        // Ensure we have a valid session
+        if (!this.currentSession) {
+            this.startNewSession();
+        }
+
         this.currentSession.gameStartTime = new Date().toISOString();
         this.currentSession.wordLength = wordLength;
         this.currentSession.alphagrams = alphagrams.map(item => ({

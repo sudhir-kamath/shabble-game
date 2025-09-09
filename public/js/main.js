@@ -483,16 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateAuthUI(user);
         };
         
-        // Google sign-in button
-        if (elements.googleSigninBtn) {
-            elements.googleSigninBtn.addEventListener('click', async () => {
-                const result = await authManager.signInWithGoogle();
-                if (!result.success) {
-                    console.error('Sign-in failed:', result.error);
-                    // You could show an error message to the user here
-                }
-            });
-        }
+        // Google sign-in button (handled later in initialization)
         
         // Sign-out button
         if (elements.signoutBtn) {
@@ -505,27 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    function updateAuthUI(user) {
-        if (user) {
-            // User is signed in
-            elements.signedOutView.classList.add('hidden');
-            elements.signedInView.classList.remove('hidden');
-            
-            // Update user info
-            if (elements.userAvatar && user.photoURL) {
-                elements.userAvatar.src = user.photoURL;
-                elements.userAvatar.style.display = 'block';
-            }
-            
-            if (elements.userName) {
-                elements.userName.textContent = user.displayName || 'User';
-            }
-        } else {
-            // User is signed out
-            elements.signedOutView.classList.remove('hidden');
-            elements.signedInView.classList.add('hidden');
-        }
-    }
+    // updateAuthUI function is defined later with profile support
 
     // Set initial random quote
     setRandomQuote();
@@ -1048,10 +1019,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Google sign-in
     if (elements.googleSigninBtn) {
-        elements.googleSigninBtn.addEventListener('click', async () => {
-            authManager.signIn();
+        elements.googleSigninBtn.addEventListener('click', async (e) => {
+            // Prevent multiple clicks
+            if (elements.googleSigninBtn.disabled) {
+                return;
+            }
+            
+            elements.googleSigninBtn.disabled = true;
+            elements.googleSigninBtn.textContent = 'Signing in...';
+            
+            try {
+                const result = await authManager.signInWithGoogle();
+                if (!result.success) {
+                    console.error('Sign-in failed:', result.error);
+                    // Show error to user if needed
+                }
+            } finally {
+                // Re-enable button
+                elements.googleSigninBtn.disabled = false;
+                elements.googleSigninBtn.innerHTML = '<i class="fab fa-google"></i> Sign in with Google';
+            }
         });
-    } else {
     }
 
     // Sign out
