@@ -8,6 +8,8 @@ class GameAnalytics {
         this.storageKey = 'shabble-analytics';
         this.sessionKey = 'shabble-session';
         this.currentSession = null;
+        this.serverSessionId = null;
+        this.serverEnabled = true; // Enable server analytics by default
         this.init();
     }
 
@@ -108,6 +110,125 @@ class GameAnalytics {
             const user = window.authManager.getCurrentUser();
             this.currentSession.userId = user?.uid || null;
             this.analyticsData.userId = user?.uid || null;
+            
+            // Register user with server analytics
+            this.registerUserWithServer();
+        }
+    }
+
+    // Server analytics methods
+    async registerUserWithServer() {
+        if (!this.serverEnabled || !window.authManager?.isSignedIn()) return;
+        
+        try {
+            const user = window.authManager.getCurrentUser();
+            const profile = window.authManager.getCurrentUserProfile();
+            
+            const response = await fetch('/api/analytics/user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    firebaseUid: user.uid,
+                    nickname: profile?.nickname || user.displayName,
+                    country: profile?.country,
+                    privacyConsent: this.analyticsData.preferences.trackingEnabled
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('User registered with server analytics:', result);
+            }
+        } catch (error) {
+            console.warn('Failed to register user with server analytics:', error);
+        }
+    }
+
+    async startServerSession(wordLengths) {
+        if (!this.serverEnabled || !this.analyticsData.preferences.trackingEnabled) {
+            console.log('Server session not started - serverEnabled:', this.serverEnabled, 'trackingEnabled:', this.analyticsData.preferences.trackingEnabled);
+            return;
+        }
+        
+        try {
+            const userId = window.authManager?.isSignedIn() ? 
+                window.authManager.getCurrentUser()?.uid : null;
+            
+            console.log('Starting server session for userId:', userId, 'wordLengths:', wordLengths);
+            
+            const response = await fetch('/api/analytics/session/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId,
+                    wordLengths
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                this.serverSessionId = result.sessionId;
+                console.log('Server analytics session started successfully:', this.serverSessionId);
+            } else {
+                console.error('Failed to start server session - HTTP', response.status);
+            }
+        } catch (error) {
+            console.warn('Failed to start server analytics session:', error);
+        }
+    }
+
+    async recordServerAttempt(alphagram, wordLength, solved, firstAttemptCorrect, secondAttemptCorrect, userAnswers, correctAnswers) {
+        if (!this.serverEnabled || !this.serverSessionId || !this.analyticsData.preferences.trackingEnabled) return;
+        
+        try {
+            await fetch('/api/analytics/attempt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sessionId: this.serverSessionId,
+                    alphagram,
+                    wordLength,
+                    solved,
+                    firstAttemptCorrect,
+                    secondAttemptCorrect,
+                    userAnswers,
+                    correctAnswers
+                })
+            });
+        } catch (error) {
+            console.warn('Failed to record server attempt:', error);
+        }
+    }
+
+    async finishServerSession(totalAlphagrams, alphagramsSolved, finalScore, completed, gameDuration) {
+        if (!this.serverEnabled || !this.serverSessionId) return;
+        
+        try {
+            await fetch('/api/analytics/session/finish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sessionId: this.serverSessionId,
+                    totalAlphagrams,
+                    alphagramsSolved,
+                    finalScore,
+                    completed,
+                    gameDuration
+                })
+            });
+            
+            this.serverSessionId = null;
+            console.log('Server analytics session finished');
+        } catch (error) {
+            console.warn('Failed to finish server analytics session:', error);
         }
     }
 
@@ -131,6 +252,11 @@ class GameAnalytics {
             missed: false,
             userAnswers: []
         }));
+
+        // Start server session
+        const wordLengths = Array.isArray(wordLength) ? wordLength : [wordLength];
+        console.log('Starting server session with word lengths:', wordLengths);
+        this.startServerSession(wordLengths);
 
     }
 
@@ -331,6 +457,82 @@ class GameAnalytics {
         // Save updated analytics
         this.saveAnalyticsData();
 
+    }
+
+    finishGame(session) {
+        if (!this.analyticsData.preferences.trackingEnabled) return;
+
+        // Update total statistics
+        this.analyticsData.totalStats.gamesPlayed++;
+        this.analyticsData.totalStats.totalAlphagramsPresented += session.alphagrams.length;
+        
+        // Count correctly solved alphagrams
+        const correctlySolved = session.alphagrams.filter(a => 
+            a.firstAttemptCorrect || a.secondAttemptCorrect
+        ).length;
+        
+        this.analyticsData.totalStats.totalAlphagramsCorrectlySolved += correctlySolved;
+        
+        // Update score statistics
+        if (session.finalScore > this.analyticsData.totalStats.bestScore) {
+            this.analyticsData.totalStats.bestScore = session.finalScore;
+        }
+        
+        this.analyticsData.totalStats.totalScore += session.finalScore;
+        this.analyticsData.totalStats.averageScore = 
+            this.analyticsData.totalStats.totalScore / this.analyticsData.totalStats.gamesPlayed;
+
+        // Add to game history (keep last 100 games)
+        const gameRecord = {
+            date: new Date().toISOString(),
+            score: session.finalScore,
+            alphagrams: session.alphagrams.length,
+            correctlySolved: correctlySolved,
+            wordLength: session.wordLength,
+            duration: this.calculateGameDuration(session)
+        };
+        
+        this.analyticsData.gameHistory.unshift(gameRecord);
+        if (this.analyticsData.gameHistory.length > 100) {
+            this.analyticsData.gameHistory = this.analyticsData.gameHistory.slice(0, 100);
+        }
+
+        // Send data to server
+        const gameDuration = this.calculateGameDuration(session);
+        console.log('Finishing server session with data:', {
+            totalAlphagrams: session.alphagrams.length,
+            alphagramsSolved: correctlySolved,
+            finalScore: session.finalScore,
+            completed: session.completed,
+            gameDuration: gameDuration
+        });
+        
+        this.finishServerSession(
+            session.alphagrams.length,
+            correctlySolved,
+            session.finalScore,
+            session.completed,
+            gameDuration
+        );
+
+        // Record individual alphagram attempts to server
+        session.alphagrams.forEach(alphagram => {
+            this.recordServerAttempt(
+                alphagram.alphagram,
+                alphagram.length,
+                alphagram.firstAttemptCorrect || alphagram.secondAttemptCorrect,
+                alphagram.firstAttemptCorrect,
+                alphagram.secondAttemptCorrect,
+                alphagram.userAnswers,
+                [] // We don't have correct answers stored in the session
+            );
+        });
+
+        // Save updated analytics
+        this.saveAnalyticsData();
+        
+        // Reset current session
+        this.currentSession = null;
     }
 
     // Data retrieval methods

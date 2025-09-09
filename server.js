@@ -27,6 +27,10 @@ app.use('/api/game', gameRoutes);
 const authRoutes = require('./routes/auth-routes');
 app.use('/api/auth', authRoutes);
 
+// Analytics API routes
+const analyticsRoutes = require('./routes/analytics-routes');
+app.use('/api/analytics', analyticsRoutes);
+
 // A simple test route
 app.get('/api/hello', (req, res) => {
     res.send('Hello from the Shabble backend!');
