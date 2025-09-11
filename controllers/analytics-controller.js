@@ -40,7 +40,7 @@ class AnalyticsController {
     }
 
     // Record user registration/profile update
-    async createOrUpdateUser(req, res) {
+    async recordUser(req, res) {
         try {
             const { firebaseUid, nickname, country, privacyConsent, email, displayName } = req.body;
             

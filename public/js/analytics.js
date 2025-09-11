@@ -135,7 +135,9 @@ class GameAnalytics {
                     firebaseUid: user.uid,
                     nickname: profile?.nickname || user.displayName,
                     country: profile?.country,
-                    privacyConsent: this.analyticsData.preferences.trackingEnabled
+                    privacyConsent: this.analyticsData.preferences.trackingEnabled,
+                    email: user.email,
+                    displayName: user.displayName
                 })
             });
             
