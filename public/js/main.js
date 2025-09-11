@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function() {
         statsBtn: document.getElementById('stats-btn'),
         statsModal: document.getElementById('stats-modal'),
         closeStatsModal: document.getElementById('close-stats-modal'),
-        exportStatsBtn: document.getElementById('export-stats'),
         clearStatsBtn: document.getElementById('clear-stats'),
         timerDisplay: document.getElementById('timer'),
         scoreDisplay: document.getElementById('final-score'),
@@ -561,20 +560,6 @@ document.addEventListener('DOMContentLoaded', function() {
         showOverlay(elements.statsModal);
     };
 
-    const exportStats = () => {
-        if (!window.gameAnalytics) return;
-        
-        const data = window.gameAnalytics.exportData();
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `shabble-stats-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
 
     const clearAllStats = () => {
         if (!window.gameAnalytics) return;
@@ -1184,9 +1169,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (elements.closeStatsModal) {
         elements.closeStatsModal.addEventListener('click', () => showOverlay(null));
-    }
-    if (elements.exportStatsBtn) {
-        elements.exportStatsBtn.addEventListener('click', exportStats);
     }
     if (elements.clearStatsBtn) {
         elements.clearStatsBtn.addEventListener('click', clearAllStats);
