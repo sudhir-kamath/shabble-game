@@ -427,6 +427,14 @@ class GameAnalytics {
     async recordServerAttempt(alphagram, wordLength, solved, firstAttemptCorrect, secondAttemptCorrect, userAnswers, correctAnswers) {
         if (!this.serverEnabled || !this.serverSessionId || !this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled) return;
         
+        console.log('DEBUG: Recording server attempt:', {
+            alphagram,
+            wordLength,
+            solved,
+            firstAttemptCorrect,
+            secondAttemptCorrect
+        });
+        
         try {
             const response = await fetch('/api/analytics/attempt', {
                 method: 'POST',
@@ -827,9 +835,13 @@ class GameAnalytics {
 
             // Record individual alphagram attempts to server
             alphagrams.forEach(alphagram => {
+                console.log('DEBUG: Processing alphagram for server attempt:', alphagram);
+                const wordLength = alphagram.length || alphagram.alphagram?.length || 0;
+                console.log('DEBUG: Calculated word length:', wordLength);
+                
                 this.recordServerAttempt(
                     alphagram.alphagram,
-                    alphagram.length,
+                    wordLength,
                     alphagram.firstAttemptCorrect || alphagram.secondAttemptCorrect,
                     alphagram.firstAttemptCorrect,
                     alphagram.secondAttemptCorrect,
@@ -876,9 +888,13 @@ class GameAnalytics {
                 
                 // Record individual alphagram attempts to server
                 alphagrams.forEach(alphagram => {
+                    console.log('DEBUG: Processing finishGame alphagram for server attempt:', alphagram);
+                    const wordLength = alphagram.length || alphagram.alphagram?.length || 0;
+                    console.log('DEBUG: Calculated word length for finishGame:', wordLength);
+                    
                     this.recordServerAttempt(
                         alphagram.alphagram,
-                        alphagram.length,
+                        wordLength,
                         alphagram.firstAttemptCorrect || alphagram.secondAttemptCorrect,
                         alphagram.firstAttemptCorrect,
                         alphagram.secondAttemptCorrect,
@@ -961,16 +977,20 @@ class GameAnalytics {
             alphagrams.length,
             correctlySolved,
             finalScore,
-            firstAttemptScore,
+            finalScore,
             true,
             gameDuration
         );
-
+        
         // Record individual alphagram attempts to server
         alphagrams.forEach(alphagram => {
+            console.log('DEBUG: Processing finishGame alphagram for server attempt:', alphagram);
+            const wordLength = alphagram.length || alphagram.alphagram?.length || 0;
+            console.log('DEBUG: Calculated word length for finishGame:', wordLength);
+            
             this.recordServerAttempt(
                 alphagram.alphagram,
-                alphagram.length,
+                wordLength,
                 alphagram.isCorrect === true,
                 alphagram.isCorrect === true,
                 false, // No second attempt tracking in current system

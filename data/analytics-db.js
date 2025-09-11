@@ -201,9 +201,40 @@ class AnalyticsDB {
                         if (err) {
                             reject(err);
                         } else {
-                            resolve({
-                                ...row,
-                                recentGames: games || []
+                            // Get word length accuracy breakdown
+                            this.db.all(`
+                                SELECT 
+                                    aa.word_length,
+                                    COUNT(*) as total_attempts,
+                                    SUM(CASE WHEN aa.first_attempt_correct = 1 THEN 1 ELSE 0 END) as first_attempt_correct,
+                                    SUM(CASE WHEN aa.solved = 1 THEN 1 ELSE 0 END) as total_solved
+                                FROM alphagram_attempts aa
+                                JOIN game_sessions gs ON aa.session_id = gs.id
+                                JOIN users u ON gs.user_id = u.id
+                                WHERE u.firebase_uid = ?
+                                GROUP BY aa.word_length
+                                ORDER BY aa.word_length
+                            `, [firebaseUid], (err, wordLengthStats) => {
+                                if (err) {
+                                    console.error('Error fetching word length stats:', err);
+                                    reject(err);
+                                } else {
+                                    console.log('DEBUG: Raw word length stats from DB:', wordLengthStats);
+                                    console.log('DEBUG: Number of word length records:', wordLengthStats ? wordLengthStats.length : 0);
+                                    
+                                    // Debug: Check if alphagram_attempts table has any data at all
+                                    this.db.get(`SELECT COUNT(*) as total FROM alphagram_attempts`, [], (err, countResult) => {
+                                        if (!err) {
+                                            console.log('DEBUG: Total alphagram_attempts records in DB:', countResult.total);
+                                        }
+                                    });
+                                    
+                                    resolve({
+                                        ...row,
+                                        recentGames: games || [],
+                                        wordLengthAccuracy: wordLengthStats || []
+                                    });
+                                }
                             });
                         }
                     });

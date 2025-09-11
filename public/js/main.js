@@ -422,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
             recentGamesContainer.innerHTML = '<p class="no-data">No recent games found.</p>';
         }
 
-        // Update word length accuracy bars (simplified for server data)
+        // Update word length accuracy bars using server data
         updateWordLengthAccuracyFromServer(serverStats);
     };
 
@@ -504,19 +504,40 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const updateWordLengthAccuracyFromServer = (serverStats) => {
-        // For server data, we don't have detailed word-length breakdown
-        // So we'll show a simplified accuracy based on overall stats
-        const overallAccuracy = serverStats.total_alphagrams > 0 ? 
-            Math.round((serverStats.alphagrams_solved / serverStats.total_alphagrams) * 100) : 0;
+        // Use server-provided word length accuracy data
+        const wordLengthAccuracy = serverStats.wordLengthAccuracy || [];
         
-        // Apply same accuracy to all word lengths (simplified approach)
+        console.log('DEBUG: Server stats received:', serverStats);
+        console.log('DEBUG: Word length accuracy data:', wordLengthAccuracy);
+        
+        // Create a map for quick lookup
+        const accuracyMap = {};
+        wordLengthAccuracy.forEach(stat => {
+            console.log(`DEBUG: Processing word length ${stat.word_length}:`, {
+                total_attempts: stat.total_attempts,
+                first_attempt_correct: stat.first_attempt_correct,
+                total_solved: stat.total_solved
+            });
+            
+            const accuracy = stat.total_attempts > 0 ? 
+                Math.round((stat.first_attempt_correct / stat.total_attempts) * 100) : 0;
+            accuracyMap[stat.word_length] = accuracy;
+            
+            console.log(`DEBUG: Calculated accuracy for length ${stat.word_length}: ${accuracy}%`);
+        });
+        
+        console.log('DEBUG: Final accuracy map:', accuracyMap);
+        
+        // Update each word length (2, 3, 4, 5)
         for (let length = 2; length <= 5; length++) {
             const fillElement = document.getElementById(`accuracy-${length}-fill`);
             const percentElement = document.getElementById(`accuracy-${length}-percent`);
             
             if (fillElement && percentElement) {
-                fillElement.style.width = `${overallAccuracy}%`;
-                percentElement.textContent = `${overallAccuracy}%`;
+                const accuracy = accuracyMap[length] || 0;
+                fillElement.style.width = `${accuracy}%`;
+                percentElement.textContent = `${accuracy}%`;
+                console.log(`DEBUG: Set accuracy for length ${length}: ${accuracy}%`);
             }
         }
     };
