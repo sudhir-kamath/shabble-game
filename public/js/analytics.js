@@ -5,12 +5,17 @@
 
 class GameAnalytics {
     constructor() {
-        this.storageKey = 'shabble-analytics';
-        this.sessionKey = 'shabble-session';
-        this.currentSession = null;
+        this.analyticsData = null;
+        this.serverEnabled = true;
+        this.sessionToken = null;
         this.serverSessionId = null;
-        this.serverEnabled = true; // Enable server analytics by default
-        this.init();
+        this.currentSession = null;
+        this.db = null;
+        this.needsReregistration = false;
+        this.registrationAttempts = 0;
+        this.maxRegistrationAttempts = 3;
+        this.sessionToken = localStorage.getItem('shabble_session_token');
+        this.sessionCheckInterval = null;
     }
 
     init() {
@@ -19,6 +24,12 @@ class GameAnalytics {
         // Clean up any duplicate records
         this.cleanupGameHistory();
         this.startNewSession();
+        
+        // Add test function for debugging notifications
+        window.testNotification = () => {
+            console.log('Test notification called');
+            this.showSessionInvalidatedNotification();
+        };
     }
 
     // Data structure for user analytics
@@ -120,11 +131,38 @@ class GameAnalytics {
 
     // Server analytics methods
     async registerUserWithServer() {
-        if (!this.serverEnabled || !window.authManager?.isSignedIn()) return;
+        if (!this.serverEnabled || !this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled) return;
+        
+        // Prevent infinite registration attempts
+        if (this.registrationAttempts >= this.maxRegistrationAttempts) {
+            console.warn('Max registration attempts reached, stopping to prevent infinite loop');
+            return;
+        }
+        
+        this.registrationAttempts++;
         
         try {
             const user = window.authManager.getCurrentUser();
             const profile = window.authManager.getCurrentUserProfile();
+            
+            // Check if we have a valid existing session first
+            const existingToken = localStorage.getItem('shabble_session_token');
+            if (existingToken) {
+                console.log('Checking existing session token validity...');
+                const isValid = await this.validateExistingSession(user.uid, existingToken);
+                if (isValid) {
+                    console.log('Existing session is valid, using it');
+                    this.sessionToken = existingToken;
+                    this.registrationAttempts = 0; // Reset counter on success
+                    await this.syncUserDataFromServer(user.uid);
+                    return;
+                } else {
+                    console.log('Existing session invalid or invalidated, creating new session');
+                    localStorage.removeItem('shabble_session_token');
+                    // Don't show invalidation notification here - this is the new browser
+                    // The old browser will show the notification when it tries to use its invalid token
+                }
+            }
             
             const response = await fetch('/api/analytics/user', {
                 method: 'POST',
@@ -144,16 +182,183 @@ class GameAnalytics {
             if (response.ok) {
                 const result = await response.json();
                 console.log('User registered with server analytics:', result);
+                
+                // Store session token for future requests
+                this.sessionToken = result.sessionToken;
+                localStorage.setItem('shabble_session_token', result.sessionToken);
+                this.registrationAttempts = 0; // Reset counter on success
+                
+                // Show subtle info button instead of notification
+                this.showNewSessionInfoButton();
+                
+                // Sync user data from server
+                await this.syncUserDataFromServer(user.uid);
             }
         } catch (error) {
-            console.warn('Failed to register user with server analytics:', error);
+            console.error('Error registering user with server:', error);
+            // Add exponential backoff for retries
+            setTimeout(() => {
+                this.registrationAttempts = Math.max(0, this.registrationAttempts - 1);
+            }, 5000 * this.registrationAttempts);
         }
     }
 
-    async startServerSession(wordLengths) {
-        if (!this.serverEnabled || !this.analyticsData.preferences.trackingEnabled) {
-            console.log('Server session not started - serverEnabled:', this.serverEnabled, 'trackingEnabled:', this.analyticsData.preferences.trackingEnabled);
+    async validateExistingSession(firebaseUid, sessionToken) {
+        try {
+            const response = await fetch(`/api/analytics/user/${firebaseUid}/stats?sessionToken=${encodeURIComponent(sessionToken)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                // If we get user stats successfully, the session is valid
+                return result.success === true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error validating session:', error);
+            return false;
+        }
+    }
+
+    // Sync user analytics data from server
+    async syncUserDataFromServer(firebaseUid) {
+        // Check if we need to re-register after session invalidation
+        if (this.needsReregistration && !this.sessionToken) {
+            console.log('Re-registering user before syncing data');
+            await this.registerUserWithServer();
+            this.needsReregistration = false;
+        }
+        
+        if (!this.sessionToken) return;
+        
+        try {
+            const response = await fetch(`/api/analytics/user/${firebaseUid}/stats?sessionToken=${encodeURIComponent(this.sessionToken)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                const serverStats = result.stats;
+                
+                console.log('Syncing user data from server:', serverStats);
+                
+                // Merge server data with local data
+                this.mergeServerData(serverStats);
+            } else if (response.status === 401) {
+                // Session invalid, clear token and show notification
+                this.sessionToken = null;
+                localStorage.removeItem('shabble_session_token');
+                console.warn('Session invalidated by server');
+                this.showSessionInvalidatedNotification();
+            }
+        } catch (error) {
+            console.warn('Failed to sync user data from server:', error);
+        }
+    }
+
+    // Merge server analytics data with local data
+    mergeServerData(serverStats) {
+        if (!serverStats) {
+            console.warn('No server stats to merge');
             return;
+        }
+        
+        console.log('Raw server stats received:', serverStats);
+        
+        // Handle different response formats
+        let user, recentGames;
+        if (serverStats.user) {
+            // New format with user object
+            user = serverStats.user;
+            recentGames = serverStats.recentGames || [];
+        } else {
+            // Direct format - serverStats is the user data
+            user = serverStats;
+            recentGames = serverStats.recentGames || [];
+        }
+        
+        console.log('Processed user data:', user);
+        console.log('Recent games count:', recentGames.length);
+        
+        // Update total statistics with server data
+        this.analyticsData.totalStats = {
+            gamesPlayed: user.total_games || 0,
+            totalAlphagramsPresented: user.total_alphagrams || 0,
+            totalAlphagramsCorrectlySolved: user.alphagrams_solved || 0,
+            averageScore: Math.round(user.average_score || 0),
+            bestScore: user.best_score || 0,
+            totalScore: (user.total_games || 0) * (user.average_score || 0),
+            // Add missing fields that might be needed
+            totalCorrectFirstAttempt: 0,
+            totalCorrectSecondAttempt: 0,
+            totalMissed: 0,
+            perfectGames: 0,
+            streakCurrent: 0,
+            streakBest: 0,
+            totalPlayTime: 0,
+            averageGameTime: 0,
+            fastestGame: null,
+            slowestGame: null
+        };
+        
+        // Merge recent games (keep most recent 50)
+        const serverGameIds = new Set(recentGames.map(g => g.id));
+        const localGamesNotOnServer = this.analyticsData.gameHistory.filter(
+            localGame => !serverGameIds.has(localGame.sessionId)
+        );
+        
+        // Convert server games to local format
+        const serverGamesConverted = recentGames.map(game => ({
+            sessionId: game.id || `server_${Date.now()}_${Math.random()}`,
+            date: game.date || game.created_at || new Date().toISOString(),
+            wordLength: game.word_lengths ? (typeof game.word_lengths === 'string' ? JSON.parse(game.word_lengths) : game.word_lengths) : 'mixed',
+            score: game.final_score || 0,
+            firstAttemptScore: game.first_attempt_score || 0,
+            alphagrams: game.total_alphagrams || 0,
+            alphagramCount: game.total_alphagrams || 0,
+            correctFirst: Math.floor((game.alphagrams_solved || 0) * 0.7), // Estimate
+            correctSecond: Math.floor((game.alphagrams_solved || 0) * 0.3), // Estimate  
+            correctlySolved: game.alphagrams_solved || 0,
+            missed: Math.max(0, (game.total_alphagrams || 0) - (game.alphagrams_solved || 0)),
+            completed: game.completed === 1,
+            perfect: (game.alphagrams_solved || 0) === (game.total_alphagrams || 0) && (game.total_alphagrams || 0) > 0,
+            duration: game.game_duration || 0,
+            userId: game.user_id
+        }));
+        
+        // Combine and sort by date (most recent first)
+        const allGames = [...serverGamesConverted, ...localGamesNotOnServer];
+        allGames.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // Keep only the most recent 50 games
+        this.analyticsData.gameHistory = allGames.slice(0, 50);
+        
+        // Save updated data
+        this.saveAnalyticsData();
+        
+        console.log('User data synced successfully');
+        console.log('Updated game history count:', this.analyticsData.gameHistory.length);
+        console.log('Recent games after sync:', this.analyticsData.gameHistory.slice(0, 5));
+    }
+
+    async startServerSession(wordLengths) {
+        if (!this.serverEnabled || !this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled) {
+            console.log('Server session not started - serverEnabled:', this.serverEnabled, 'trackingEnabled:', this.analyticsData?.preferences?.trackingEnabled);
+            return;
+        }
+        
+        // Check if we need to re-register after session invalidation
+        if (this.needsReregistration) {
+            console.log('Re-registering user after session invalidation');
+            await this.registerUserWithServer();
+            this.needsReregistration = false;
         }
         
         console.log('Starting server session for word lengths:', wordLengths);
@@ -197,7 +402,9 @@ class GameAnalytics {
                 },
                 body: JSON.stringify({
                     userId,
-                    wordLengths
+                    wordLengths,
+                    firebaseUid: userId,
+                    sessionToken: this.sessionToken
                 })
             });
             
@@ -205,6 +412,10 @@ class GameAnalytics {
                 const result = await response.json();
                 this.serverSessionId = result.sessionId;
                 console.log('Server analytics session started successfully:', this.serverSessionId);
+            } else if (response.status === 401) {
+                console.warn('Session invalidated - you have been signed in on another device');
+                console.log('About to call showSessionInvalidatedNotification');
+                this.showSessionInvalidatedNotification();
             } else {
                 console.error('Failed to start server session - HTTP', response.status);
             }
@@ -214,10 +425,10 @@ class GameAnalytics {
     }
 
     async recordServerAttempt(alphagram, wordLength, solved, firstAttemptCorrect, secondAttemptCorrect, userAnswers, correctAnswers) {
-        if (!this.serverEnabled || !this.serverSessionId || !this.analyticsData.preferences.trackingEnabled) return;
+        if (!this.serverEnabled || !this.serverSessionId || !this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled) return;
         
         try {
-            await fetch('/api/analytics/attempt', {
+            const response = await fetch('/api/analytics/attempt', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -230,9 +441,16 @@ class GameAnalytics {
                     firstAttemptCorrect,
                     secondAttemptCorrect,
                     userAnswers,
-                    correctAnswers
+                    correctAnswers,
+                    firebaseUid: this.analyticsData.userId,
+                    sessionToken: this.sessionToken
                 })
             });
+            
+            if (response.status === 401) {
+                console.warn('Session invalidated during attempt recording');
+                this.showSessionInvalidatedNotification();
+            }
         } catch (error) {
             console.warn('Failed to record server attempt:', error);
         }
@@ -255,26 +473,35 @@ class GameAnalytics {
                 gameDuration
             });
             
-            const response = await fetch('/api/analytics/session/finish', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    sessionId: this.serverSessionId,
-                    totalAlphagrams,
-                    alphagramsSolved,
-                    finalScore,
-                    firstAttemptScore,
-                    completed,
-                    gameDuration
-                })
-            });
-            
-            if (!response.ok) {
-                console.error('Server session finish failed:', response.status, response.statusText);
-            } else {
-                console.log('Server analytics session finished successfully');
+            try {
+                const response = await fetch('/api/analytics/session/finish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId: this.serverSessionId,
+                        totalAlphagrams,
+                        alphagramsSolved,
+                        finalScore,
+                        firstAttemptScore,
+                        completed,
+                        gameDuration,
+                        firebaseUid: this.analyticsData.userId,
+                        sessionToken: this.sessionToken
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('Server analytics session finished successfully');
+                } else if (response.status === 401) {
+                    console.warn('Session invalidated during session finish');
+                    this.showSessionInvalidatedNotification();
+                } else {
+                    console.error('Failed to finish server session - HTTP', response.status);
+                }
+            } catch (error) {
+                console.warn('Failed to finish server analytics session:', error);
             }
             
             // Don't null the session ID yet - second attempt may need it
@@ -286,7 +513,12 @@ class GameAnalytics {
 
     // Game event tracking
     trackGameStart(wordLength, alphagrams) {
-        if (!this.analyticsData.preferences.trackingEnabled) return;
+        // Initialize analytics data if not present
+        if (!this.analyticsData) {
+            this.initializeAnalyticsData();
+        }
+        
+        if (!this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled) return;
 
         // Reset any existing session to prevent conflicts
         this.currentSession = null;
@@ -315,7 +547,7 @@ class GameAnalytics {
     }
 
     trackFirstAttempt(results) {
-        if (!this.analyticsData.preferences.trackingEnabled || !this.currentSession) return;
+        if (!this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled || !this.currentSession) return;
 
         console.log('trackFirstAttempt called with results:', results);
         console.log('DEBUG: trackFirstAttempt - results.score from game:', results.score);
@@ -361,7 +593,7 @@ class GameAnalytics {
     }
 
     trackSecondAttempt(results) {
-        if (!this.analyticsData.preferences.trackingEnabled || !this.currentSession) return;
+        if (!this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled || !this.currentSession) return;
 
         this.currentSession.secondAttemptResults = results.results || [];
         this.currentSession.finalScore = results.score || 0;
@@ -524,7 +756,11 @@ class GameAnalytics {
         const missedCount = session.alphagrams.filter(a => a.missed).length;
         const alphagramCount = session.alphagrams.length;
         
-        // Add to game history (keep last 100 games)
+        // Check if a game record already exists for this session (to prevent duplicates)
+        const existingGameIndex = this.analyticsData.gameHistory.findIndex(
+            game => game.sessionId === session.sessionId
+        );
+
         const gameRecord = {
             sessionId: session.sessionId,
             date: session.gameEndTime,
@@ -542,9 +778,17 @@ class GameAnalytics {
         
         console.log('Game record created:', gameRecord);
 
-        this.analyticsData.gameHistory.unshift(gameRecord);
-        if (this.analyticsData.gameHistory.length > 100) {
-            this.analyticsData.gameHistory = this.analyticsData.gameHistory.slice(0, 100);
+        if (existingGameIndex !== -1) {
+            // Update existing record instead of creating duplicate
+            console.log('Updating existing game record at index:', existingGameIndex);
+            this.analyticsData.gameHistory[existingGameIndex] = gameRecord;
+        } else {
+            // Add new record to game history
+            console.log('Adding new game record to history');
+            this.analyticsData.gameHistory.unshift(gameRecord);
+            if (this.analyticsData.gameHistory.length > 100) {
+                this.analyticsData.gameHistory = this.analyticsData.gameHistory.slice(0, 100);
+            }
         }
 
         console.log('About to save analytics data and call server finish');
@@ -598,7 +842,7 @@ class GameAnalytics {
     }
 
     finishGame(session) {
-        if (!this.analyticsData.preferences.trackingEnabled) return;
+        if (!this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled) return;
 
         console.log('finishGame called with session:', session);
         console.log('currentSession exists:', !!this.currentSession);
@@ -612,11 +856,11 @@ class GameAnalytics {
             // If server session hasn't been finished yet, finish it now (single-attempt games)
             if (!this.currentSession.serverSessionFinished) {
                 console.log('Finishing server session for single-attempt game');
-                const alphagrams = session.alphagrams || session.results || [];
-                const correctlySolved = alphagrams.filter(a => a.isCorrect === true).length;
-                const finalScore = session.finalScore || session.score || 0;
+                const alphagrams = this.currentSession.alphagrams || [];
+                const correctlySolved = alphagrams.filter(a => a.firstAttemptCorrect || a.secondAttemptCorrect).length;
+                const finalScore = this.currentSession.finalScore || 0;
                 const firstAttemptScore = this.currentSession.firstAttemptScore || finalScore;
-                const gameDuration = session.timeTaken || 0;
+                const gameDuration = this.currentSession.timeTaken || 0;
                 
                 this.finishServerSession(
                     alphagrams.length,
@@ -629,6 +873,19 @@ class GameAnalytics {
                 
                 // Mark server session as finished
                 this.currentSession.serverSessionFinished = true;
+                
+                // Record individual alphagram attempts to server
+                alphagrams.forEach(alphagram => {
+                    this.recordServerAttempt(
+                        alphagram.alphagram,
+                        alphagram.length,
+                        alphagram.firstAttemptCorrect || alphagram.secondAttemptCorrect,
+                        alphagram.firstAttemptCorrect,
+                        alphagram.secondAttemptCorrect,
+                        alphagram.userAnswers || [],
+                        alphagram.correctAnswers || []
+                    );
+                });
             } else {
                 console.log('Server session already finished, skipping duplicate finish call');
             }
@@ -731,6 +988,9 @@ class GameAnalytics {
 
     // Data retrieval methods
     getStats() {
+        if (!this.analyticsData) {
+            return this.getDefaultAnalyticsData().totalStats;
+        }
         const gameHistory = this.analyticsData.gameHistory || [];
         
         // Calculate average first attempt score from game history
@@ -745,12 +1005,15 @@ class GameAnalytics {
             ...this.analyticsData.totalStats,
             averageFirstAttemptScore,
             averageFinalScore,
-            recentGames: gameHistory.slice(0, 10),
+            recentGames: this.analyticsData.gameHistory ? this.analyticsData.gameHistory.slice(0, 10) : [],
             categoryBreakdown: this.analyticsData.categoryStats
         };
     }
 
     getDetailedStats() {
+        if (!this.analyticsData) {
+            return this.getDefaultAnalyticsData();
+        }
         return this.analyticsData;
     }
 
@@ -759,11 +1022,38 @@ class GameAnalytics {
     }
 
     // Utility methods
-    clearAllData() {
+    async clearAllData() {
+        // Clear server data first if user is authenticated and has session token
+        if (this.analyticsData?.userId && this.sessionToken) {
+            try {
+                const response = await fetch('/api/analytics/user/clear', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        firebaseUid: this.analyticsData.userId,
+                        sessionToken: this.sessionToken
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('Server data cleared successfully');
+                } else {
+                    console.warn('Failed to clear server data:', response.status);
+                }
+            } catch (error) {
+                console.warn('Error clearing server data:', error);
+            }
+        }
+        
+        // Clear local data
         localStorage.removeItem(this.storageKey);
-        localStorage.removeItem(this.sessionKey);
+        localStorage.removeItem('shabble_session_token');
         this.analyticsData = this.getDefaultAnalyticsData();
         this.currentSession = null;
+        this.sessionToken = null;
+        this.serverEnabled = true; // Re-enable for future sessions
     }
 
     // Remove duplicate game records and fix data inconsistencies
@@ -811,12 +1101,229 @@ class GameAnalytics {
 
     // Privacy controls
     setTrackingEnabled(enabled) {
+        if (!this.analyticsData || !this.analyticsData.preferences) return;
         this.analyticsData.preferences.trackingEnabled = enabled;
         this.saveAnalyticsData();
     }
 
     isTrackingEnabled() {
-        return this.analyticsData.preferences.trackingEnabled;
+        return this.analyticsData?.preferences?.trackingEnabled || false;
+    }
+
+    // Show notification when session is invalidated
+    showSessionInvalidatedNotification() {
+        console.log('Showing session invalidated notification');
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'session-invalidated-notification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <h3>🔄 Session Updated</h3>
+                <p>You've signed in on another device. Don't worry - your game progress is safe and will sync automatically across all your devices.</p>
+                <button onclick="this.parentElement.parentElement.remove()">Got it</button>
+            </div>
+        `;
+        
+        // Add styles
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 350px;
+            font-family: Arial, sans-serif;
+        `;
+        
+        notification.querySelector('.notification-content').style.cssText = `
+            margin: 0;
+        `;
+        
+        notification.querySelector('h3').style.cssText = `
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        `;
+        
+        notification.querySelector('p').style.cssText = `
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        `;
+        
+        notification.querySelector('button').style.cssText = `
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 10000);
+        
+        // Clear invalid session token but keep server enabled
+        this.sessionToken = null;
+        localStorage.removeItem('shabble_session_token');
+        
+        // Mark that we need to re-register on next user action to avoid infinite loops
+        this.needsReregistration = true;
+        this.registrationAttempts = 0; // Reset attempts when session is invalidated
+        
+        console.log('Session invalidated notification shown and server analytics disabled');
+    }
+
+    // Show subtle info button that glows once
+    showNewSessionInfoButton() {
+        console.log('Showing new session info button');
+        
+        // Remove any existing info button
+        const existingButton = document.querySelector('.session-info-button');
+        if (existingButton) {
+            existingButton.remove();
+        }
+        
+        // Create info button
+        const infoButton = document.createElement('div');
+        infoButton.className = 'session-info-button';
+        infoButton.innerHTML = `<i class="fas fa-info-circle"></i>`;
+        
+        // Add styles
+        infoButton.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            background: #2196F3;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            animation: sessionInfoGlow 2s ease-in-out;
+        `;
+        
+        // Add glow animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes sessionInfoGlow {
+                0% { box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+                50% { box-shadow: 0 0 20px rgba(33, 150, 243, 0.8), 0 0 30px rgba(33, 150, 243, 0.4); }
+                100% { box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Add click handler to show notification
+        infoButton.addEventListener('click', () => {
+            this.showNewSessionNotification();
+            infoButton.remove();
+        });
+        
+        // Add hover effect
+        infoButton.addEventListener('mouseenter', () => {
+            infoButton.style.transform = 'scale(1.1)';
+        });
+        
+        infoButton.addEventListener('mouseleave', () => {
+            infoButton.style.transform = 'scale(1)';
+        });
+        
+        document.body.appendChild(infoButton);
+        
+        // Auto-remove after 30 seconds if not clicked
+        setTimeout(() => {
+            if (infoButton.parentElement) {
+                infoButton.remove();
+            }
+        }, 30000);
+        
+        console.log('New session info button shown');
+    }
+
+    // Show notification on new browser that other devices will be logged out
+    showNewSessionNotification() {
+        console.log('Showing new session notification');
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'new-session-notification';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <h3>✅ Signed In Successfully</h3>
+                <p>You're now signed in! Other devices using this account will be automatically logged out for security.</p>
+                <button onclick="this.parentElement.parentElement.remove()">Got it</button>
+            </div>
+        `;
+        
+        // Add styles
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2196F3;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 350px;
+            font-family: Arial, sans-serif;
+        `;
+        
+        notification.querySelector('.notification-content').style.cssText = `
+            margin: 0;
+        `;
+        
+        notification.querySelector('h3').style.cssText = `
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        `;
+        
+        notification.querySelector('p').style.cssText = `
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        `;
+        
+        notification.querySelector('button').style.cssText = `
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 8000);
+        
+        console.log('New session notification shown');
     }
 }
 

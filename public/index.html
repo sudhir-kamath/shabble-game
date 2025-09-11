@@ -459,5 +459,34 @@
 
     <script src="js/analytics.js"></script>
     <script type="module" src="js/main.js"></script>
+    <script>
+        // Initialize analytics and add test function after page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.gameAnalytics) {
+                window.gameAnalytics.init();
+                
+                // Add test function for debugging notifications
+                window.testNotification = () => {
+                    console.log('Test notification called');
+                    window.gameAnalytics.showSessionInvalidatedNotification();
+                };
+                
+                // Add function to test actual session invalidation flow
+                window.testSessionInvalidation = () => {
+                    console.log('Testing session invalidation flow');
+                    // Simulate 401 response
+                    if (window.gameAnalytics.sessionToken) {
+                        console.log('Current session token:', window.gameAnalytics.sessionToken);
+                        console.log('Calling showSessionInvalidatedNotification');
+                        window.gameAnalytics.showSessionInvalidatedNotification();
+                    } else {
+                        console.log('No session token found');
+                    }
+                };
+                
+                console.log('Test functions added to window');
+            }
+        });
+    </script>
 </body>
 </html>

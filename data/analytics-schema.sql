@@ -7,10 +7,14 @@ CREATE TABLE IF NOT EXISTS users (
     firebase_uid TEXT UNIQUE,
     nickname TEXT,
     country TEXT,
+    email TEXT,
+    display_name TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
     total_games INTEGER DEFAULT 0,
-    privacy_consent BOOLEAN DEFAULT FALSE
+    privacy_consent BOOLEAN DEFAULT FALSE,
+    active_session_token TEXT,
+    session_created_at DATETIME
 );
 
 -- Game sessions table

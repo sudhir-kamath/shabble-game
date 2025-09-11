@@ -55,13 +55,75 @@ class AnalyticsController {
 
             res.json({
                 success: true,
-                userId: result.userId
+                userId: result.userId,
+                sessionToken: result.sessionToken
             });
         } catch (error) {
             console.error('Error creating/updating user:', error);
             res.status(500).json({
                 success: false,
                 error: 'Failed to create/update user'
+            });
+        }
+    }
+
+    // Get user's complete analytics data
+    async getUserStats(req, res) {
+        try {
+            const { firebaseUid } = req.params;
+            
+            if (!firebaseUid) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Firebase UID is required'
+                });
+            }
+
+            const userStats = await this.db.getUserStats(firebaseUid);
+            
+            if (!userStats) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'User not found'
+                });
+            }
+
+            res.json({
+                success: true,
+                stats: userStats
+            });
+        } catch (error) {
+            console.error('Error getting user stats:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get user statistics'
+            });
+        }
+    }
+
+    // Clear all user data from server
+    async clearUserData(req, res) {
+        try {
+            const { firebaseUid } = req.body;
+            
+            if (!firebaseUid) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Firebase UID is required'
+                });
+            }
+
+            await this.db.clearUserData(firebaseUid);
+            
+            res.json({
+                success: true,
+                message: 'All user data cleared successfully'
+            });
+        } catch (error) {
+            console.error('Error clearing user data:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to clear user data'
             });
         }
     }

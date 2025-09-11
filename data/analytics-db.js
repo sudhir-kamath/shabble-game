@@ -23,25 +23,57 @@ class AnalyticsDB {
                     reject(err);
                 } else {
                     console.log('Connected to analytics database');
-                    this.createTables().then(resolve).catch(reject);
+                    this.initDatabase().then(resolve).catch(reject);
                 }
             });
         });
     }
 
-    async createTables() {
-        const schemaPath = path.join(__dirname, 'analytics-schema.sql');
-        const schema = fs.readFileSync(schemaPath, 'utf8');
-        
+    async initDatabase() {
         return new Promise((resolve, reject) => {
-            this.db.exec(schema, (err) => {
-                if (err) {
-                    console.error('Error creating tables:', err);
-                    reject(err);
-                } else {
-                    console.log('Analytics tables created successfully');
-                    resolve();
-                }
+            this.db.serialize(() => {
+                // Read and execute schema
+                const schemaPath = path.join(__dirname, 'analytics-schema.sql');
+                const schema = fs.readFileSync(schemaPath, 'utf8');
+                
+                // Split by semicolon and execute each statement
+                const statements = schema.split(';').filter(stmt => stmt.trim());
+                
+                statements.forEach(statement => {
+                    this.db.run(statement.trim(), (err) => {
+                        if (err && !err.message.includes('already exists')) {
+                            console.error('Database schema error:', err);
+                        }
+                    });
+                });
+                
+                // Add new columns if they don't exist (for existing databases)
+                this.db.run(`ALTER TABLE users ADD COLUMN email TEXT`, (err) => {
+                    if (err && !err.message.includes('duplicate column')) {
+                        console.error('Error adding email column:', err);
+                    }
+                });
+                
+                this.db.run(`ALTER TABLE users ADD COLUMN display_name TEXT`, (err) => {
+                    if (err && !err.message.includes('duplicate column')) {
+                        console.error('Error adding display_name column:', err);
+                    }
+                });
+                
+                this.db.run(`ALTER TABLE users ADD COLUMN active_session_token TEXT`, (err) => {
+                    if (err && !err.message.includes('duplicate column')) {
+                        console.error('Error adding active_session_token column:', err);
+                    }
+                });
+                
+                this.db.run(`ALTER TABLE users ADD COLUMN session_created_at DATETIME`, (err) => {
+                    if (err && !err.message.includes('duplicate column')) {
+                        console.error('Error adding session_created_at column:', err);
+                    }
+                });
+                
+                console.log('Analytics tables created successfully');
+                resolve();
             });
         });
     }
@@ -57,17 +89,176 @@ class AnalyticsDB {
         
         return new Promise((resolve, reject) => {
             const userId = this.hashData(firebaseUid);
+            const sessionToken = this.generateSessionToken();
             
+            // First, invalidate any existing sessions for this user
             this.db.run(`
-                INSERT OR REPLACE INTO users 
-                (id, firebase_uid, nickname, country, privacy_consent, email, display_name, last_active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            `, [userId, firebaseUid, nickname, country, privacyConsent, email, displayName], function(err) {
+                UPDATE users 
+                SET active_session_token = NULL, session_created_at = NULL
+                WHERE firebase_uid = ?
+            `, [firebaseUid], (err) => {
+                if (err) {
+                    console.error('Error invalidating existing sessions:', err);
+                    reject(err);
+                    return;
+                }
+                
+                console.log(`Invalidated existing sessions for user ${firebaseUid}`);
+                
+                // Now create/update the user with new session token
+                this.db.run(`
+                    INSERT OR REPLACE INTO users 
+                    (id, firebase_uid, nickname, country, privacy_consent, email, display_name, last_active, active_session_token, session_created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP)
+                `, [userId, firebaseUid, nickname, country, privacyConsent, email, displayName, sessionToken], function(err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        console.log(`Session invalidated and new session created for user ${firebaseUid}`);
+                        resolve({ userId, sessionToken });
+                    }
+                });
+            });
+        });
+    }
+
+    // Generate unique session token
+    generateSessionToken() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // Validate session token
+    async validateSession(firebaseUid, sessionToken) {
+        return new Promise((resolve, reject) => {
+            this.db.get(`
+                SELECT active_session_token, session_created_at 
+                FROM users 
+                WHERE firebase_uid = ?
+            `, [firebaseUid], (err, row) => {
                 if (err) {
                     reject(err);
+                } else if (!row) {
+                    resolve({ valid: false, reason: 'User not found' });
+                } else if (row.active_session_token !== sessionToken) {
+                    resolve({ valid: false, reason: 'Invalid session token' });
                 } else {
-                    resolve({ userId, rowId: this.lastID });
+                    // Check if session is expired (24 hours)
+                    const sessionAge = Date.now() - new Date(row.session_created_at).getTime();
+                    const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+                    
+                    if (sessionAge > maxAge) {
+                        resolve({ valid: false, reason: 'Session expired' });
+                    } else {
+                        resolve({ valid: true });
+                    }
                 }
+            });
+        });
+    }
+
+    // Get user's complete analytics data
+    async getUserStats(firebaseUid) {
+        return new Promise((resolve, reject) => {
+            const userId = this.hashData(firebaseUid);
+            
+            this.db.get(`
+                SELECT 
+                    u.nickname,
+                    u.country,
+                    COUNT(DISTINCT gs.id) as total_games,
+                    COALESCE(SUM(gs.total_alphagrams), 0) as total_alphagrams,
+                    COALESCE(SUM(gs.alphagrams_solved), 0) as alphagrams_solved,
+                    COALESCE(MAX(gs.final_score), 0) as best_score,
+                    COALESCE(AVG(gs.final_score), 0) as average_score
+                FROM users u
+                LEFT JOIN game_sessions gs ON u.id = gs.user_id
+                WHERE u.firebase_uid = ?
+                GROUP BY u.id
+            `, [firebaseUid], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else if (!row) {
+                    resolve(null);
+                } else {
+                    // Get recent games
+                    this.db.all(`
+                        SELECT 
+                            gs.id,
+                            gs.final_score,
+                            gs.first_attempt_score,
+                            gs.total_alphagrams,
+                            gs.alphagrams_solved,
+                            gs.completed,
+                            gs.session_start as date,
+                            gs.word_lengths,
+                            gs.game_duration
+                        FROM game_sessions gs
+                        JOIN users u ON gs.user_id = u.id
+                        WHERE u.firebase_uid = ?
+                        ORDER BY gs.session_start DESC
+                        LIMIT 50
+                    `, [firebaseUid], (err, games) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve({
+                                ...row,
+                                recentGames: games || []
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    // Clear all user data from server
+    async clearUserData(firebaseUid) {
+        return new Promise((resolve, reject) => {
+            const userId = this.hashData(firebaseUid);
+            
+            this.db.serialize(() => {
+                this.db.run('BEGIN TRANSACTION');
+                
+                // Delete alphagram attempts
+                this.db.run(`
+                    DELETE FROM alphagram_attempts 
+                    WHERE session_id IN (
+                        SELECT gs.id FROM game_sessions gs 
+                        JOIN users u ON gs.user_id = u.id 
+                        WHERE u.firebase_uid = ?
+                    )
+                `, [firebaseUid]);
+                
+                // Delete game sessions
+                this.db.run(`
+                    DELETE FROM game_sessions 
+                    WHERE user_id IN (
+                        SELECT id FROM users WHERE firebase_uid = ?
+                    )
+                `, [firebaseUid]);
+                
+                // Reset user stats but keep the user record
+                this.db.run(`
+                    UPDATE users 
+                    SET active_session_token = NULL, 
+                        session_created_at = NULL,
+                        last_active = CURRENT_TIMESTAMP
+                    WHERE firebase_uid = ?
+                `, [firebaseUid], function(err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        this.db.run('COMMIT', (commitErr) => {
+                            if (commitErr) {
+                                reject(commitErr);
+                            } else {
+                                console.log(`Cleared all data for user ${firebaseUid}`);
+                                resolve();
+                            }
+                        });
+                    }
+                }.bind(this));
             });
         });
     }

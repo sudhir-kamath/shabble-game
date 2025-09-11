@@ -293,10 +293,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     };
 
-    const displayStats = () => {
+    const displayStats = async () => {
         if (!window.gameAnalytics) {
             console.warn('Analytics not available');
             return;
+        }
+
+        // Sync latest data from server before displaying stats
+        if (window.authManager?.isSignedIn()) {
+            const user = window.authManager.getCurrentUser();
+            if (user?.uid) {
+                console.log('Syncing server data before displaying stats');
+                await window.gameAnalytics.syncUserDataFromServer(user.uid);
+            }
         }
 
         const stats = window.gameAnalytics.getStats();
@@ -317,27 +326,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update recent games
         const recentGamesContainer = document.getElementById('recent-games-list');
+        console.log('Displaying recent games:', stats.recentGames);
+        console.log('First game details:', stats.recentGames[0]);
         if (stats.recentGames && stats.recentGames.length > 0) {
-            recentGamesContainer.innerHTML = stats.recentGames.map(game => `
+            recentGamesContainer.innerHTML = stats.recentGames.map(game => {
+                console.log('Processing game for display:', game);
+                const wordLengthDisplay = Array.isArray(game.wordLength) ? game.wordLength.join(',') : game.wordLength;
+                const correctFirst = game.correctFirst || 0;
+                const alphagramCount = game.alphagramCount || game.alphagrams || 0;
+                const firstScore = game.firstAttemptScore || 0;
+                const finalScore = game.score || 0;
+                
+                return `
                 <div class="game-item">
                     <div class="game-info">
                         <div class="game-date">${formatDate(game.date)}</div>
                         <div class="game-details">
-                            ${game.wordLength}-letter words • ${game.correctFirst || game.correctlySolved || 0}/${game.alphagramCount || game.alphagrams || 0} first attempt
+                            ${wordLengthDisplay}-letter words • ${correctFirst}/${alphagramCount} first attempt
                         </div>
                     </div>
                     <div class="game-scores">
                         <div class="score-item">
                             <span class="score-label">First:</span>
-                            <span class="score-value">${game.firstAttemptScore || 0}</span>
+                            <span class="score-value">${firstScore}</span>
                         </div>
                         <div class="score-item">
                             <span class="score-label">Final:</span>
-                            <span class="score-value">${game.score}</span>
+                            <span class="score-value">${finalScore}</span>
                         </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         } else {
             recentGamesContainer.innerHTML = '<p class="no-data">No games played yet. Start playing to see your history!</p>';
         }
@@ -377,8 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    const showStatsModal = () => {
-        displayStats();
+    const showStatsModal = async () => {
+        await displayStats();
         showOverlay(elements.statsModal);
     };
 
@@ -434,8 +454,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(confirmModal);
         
         // Handle confirmation
-        document.getElementById('confirm-clear').addEventListener('click', () => {
-            window.gameAnalytics.clearAllData();
+        document.getElementById('confirm-clear').addEventListener('click', async () => {
+            await window.gameAnalytics.clearAllData();
             displayStats();
             document.body.removeChild(confirmModal);
             
