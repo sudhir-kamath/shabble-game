@@ -289,28 +289,147 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const formatDate = (dateString) => {
+        if (!dateString) {
+            return 'Unknown Date';
+        }
+        
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('Invalid date string:', dateString);
+            return 'Invalid Date';
+        }
+        
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     };
 
-    const displayStats = async () => {
-        if (!window.gameAnalytics) {
-            console.warn('Analytics not available');
-            return;
-        }
+    // Fetch stats directly from server for display
+    const fetchServerStats = async (firebaseUid) => {
+        try {
+            const sessionToken = localStorage.getItem('shabble_session_token');
+            if (!sessionToken) {
+                console.log('No session token available for server stats');
+                return null;
+            }
 
-        // Sync latest data from server before displaying stats
+            const response = await fetch(`/api/analytics/user/${firebaseUid}/stats?sessionToken=${encodeURIComponent(sessionToken)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Server stats fetched for display:', result.stats);
+                return result.stats;
+            } else {
+                console.error('Failed to fetch server stats:', response.status);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching server stats:', error);
+            return null;
+        }
+    };
+
+    // Recent games are included in the user stats response, so we don't need a separate endpoint
+
+    const displayStats = async () => {
+        // Check if user is signed in to fetch server data
         if (window.authManager?.isSignedIn()) {
             const user = window.authManager.getCurrentUser();
             if (user?.uid) {
-                console.log('Syncing server data before displaying stats');
-                await window.gameAnalytics.syncUserDataFromServer(user.uid);
+                console.log('Fetching fresh stats directly from server for display');
+                
+                // Fetch server stats (includes recent games)
+                const serverStats = await fetchServerStats(user.uid);
+
+                if (serverStats) {
+                    displayServerStats(serverStats, serverStats.recentGames || []);
+                    return;
+                }
             }
         }
 
-        const stats = window.gameAnalytics.getStats();
-        const detailed = window.gameAnalytics.getDetailedStats();
+        // Fallback to local data if server fetch fails or user not signed in
+        console.log('Falling back to local stats data for display');
+        if (window.gameAnalytics) {
+            const stats = window.gameAnalytics.getStats();
+            displayLocalStats(stats);
+        } else {
+            displayEmptyStats();
+        }
+    };
 
+    const displayServerStats = (serverStats, recentGames = []) => {
+        console.log('Displaying server stats:', serverStats);
+        
+        // Update main stats with server data
+        document.getElementById('total-games').textContent = serverStats.total_games || 0;
+        
+        const correctlySolved = serverStats.alphagrams_solved || 0;
+        const totalPresented = serverStats.total_alphagrams || 0;
+        const percentage = totalPresented > 0 ? Math.round((correctlySolved / totalPresented) * 100) : 0;
+        document.getElementById('total-alphagrams').textContent = `${correctlySolved} (${percentage}%)`;
+        
+        document.getElementById('best-score').textContent = serverStats.best_score || 0;
+        document.getElementById('average-first-attempt-score').textContent = Math.round(serverStats.average_score || 0);
+        document.getElementById('average-final-score').textContent = Math.round(serverStats.average_score || 0);
+
+        // Update recent games with server data
+        const recentGamesContainer = document.getElementById('recent-games-list');
+        if (recentGames && recentGames.length > 0) {
+            console.log('Processing recent games for display:', recentGames);
+            recentGamesContainer.innerHTML = recentGames.map(game => {
+                console.log('Game object:', game);
+                console.log('Available date fields:', {
+                    date: game.date,
+                    session_start: game.session_start,
+                    created_at: game.created_at
+                });
+                
+                const wordLengthDisplay = game.word_lengths ? 
+                    (typeof game.word_lengths === 'string' ? JSON.parse(game.word_lengths).join(',') : game.word_lengths.join(',')) : 
+                    'mixed';
+                const correctlySolved = game.alphagrams_solved || 0;
+                const totalAlphagrams = game.total_alphagrams || 0;
+                const firstScore = game.first_attempt_score || 0;
+                const finalScore = game.final_score || 0;
+                
+                // Try multiple possible date field names
+                const gameDate = game.date || game.session_start || game.created_at;
+                
+                return `
+                <div class="game-item">
+                    <div class="game-info">
+                        <div class="game-date">${formatDate(gameDate)}</div>
+                        <div class="game-details">
+                            ${wordLengthDisplay}-letter words • ${correctlySolved}/${totalAlphagrams} solved
+                        </div>
+                    </div>
+                    <div class="game-scores">
+                        <div class="score-item">
+                            <span class="score-label">First:</span>
+                            <span class="score-value">${firstScore}</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Final:</span>
+                            <span class="score-value">${finalScore}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        } else {
+            recentGamesContainer.innerHTML = '<p class="no-data">No recent games found.</p>';
+        }
+
+        // Update word length accuracy bars (simplified for server data)
+        updateWordLengthAccuracyFromServer(serverStats);
+    };
+
+    const displayLocalStats = (stats) => {
+        console.log('Displaying local fallback stats:', stats);
+        
         // Update main stats
         document.getElementById('total-games').textContent = stats.gamesPlayed || 0;
         const correctlySolved = stats.totalAlphagramsCorrectlySolved || 0;
@@ -321,16 +440,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('average-first-attempt-score').textContent = stats.averageFirstAttemptScore || 0;
         document.getElementById('average-final-score').textContent = stats.averageFinalScore || 0;
 
-        // Update word length accuracy bars
-        updateWordLengthAccuracy(stats);
-
         // Update recent games
         const recentGamesContainer = document.getElementById('recent-games-list');
-        console.log('Displaying recent games:', stats.recentGames);
-        console.log('First game details:', stats.recentGames[0]);
         if (stats.recentGames && stats.recentGames.length > 0) {
             recentGamesContainer.innerHTML = stats.recentGames.map(game => {
-                console.log('Processing game for display:', game);
                 const wordLengthDisplay = Array.isArray(game.wordLength) ? game.wordLength.join(',') : game.wordLength;
                 const correctFirst = game.correctFirst || 0;
                 const alphagramCount = game.alphagramCount || game.alphagrams || 0;
@@ -355,11 +468,57 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="score-value">${finalScore}</span>
                         </div>
                     </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
         } else {
             recentGamesContainer.innerHTML = '<p class="no-data">No games played yet. Start playing to see your history!</p>';
+        }
+
+        // Update word length accuracy bars
+        updateWordLengthAccuracy(stats);
+    };
+
+    const displayEmptyStats = () => {
+        console.log('Displaying empty stats - no data available');
+        
+        // Show zero values
+        document.getElementById('total-games').textContent = '0';
+        document.getElementById('total-alphagrams').textContent = '0 (0%)';
+        document.getElementById('best-score').textContent = '0';
+        document.getElementById('average-first-attempt-score').textContent = '0';
+        document.getElementById('average-final-score').textContent = '0';
+
+        // Show no games message
+        const recentGamesContainer = document.getElementById('recent-games-list');
+        recentGamesContainer.innerHTML = '<p class="no-data">No games played yet. Start playing to see your history!</p>';
+
+        // Reset word length accuracy bars
+        for (let length = 2; length <= 5; length++) {
+            const fillElement = document.getElementById(`accuracy-${length}-fill`);
+            const percentElement = document.getElementById(`accuracy-${length}-percent`);
+            
+            if (fillElement && percentElement) {
+                fillElement.style.width = '0%';
+                percentElement.textContent = '0%';
+            }
+        }
+    };
+
+    const updateWordLengthAccuracyFromServer = (serverStats) => {
+        // For server data, we don't have detailed word-length breakdown
+        // So we'll show a simplified accuracy based on overall stats
+        const overallAccuracy = serverStats.total_alphagrams > 0 ? 
+            Math.round((serverStats.alphagrams_solved / serverStats.total_alphagrams) * 100) : 0;
+        
+        // Apply same accuracy to all word lengths (simplified approach)
+        for (let length = 2; length <= 5; length++) {
+            const fillElement = document.getElementById(`accuracy-${length}-fill`);
+            const percentElement = document.getElementById(`accuracy-${length}-percent`);
+            
+            if (fillElement && percentElement) {
+                fillElement.style.width = `${overallAccuracy}%`;
+                percentElement.textContent = `${overallAccuracy}%`;
+            }
         }
     };
 
