@@ -139,12 +139,10 @@ class AuthManager {
     }
 
     getCurrentUser() {
-        console.log('getCurrentUser called, returning:', this.user);
         return this.user;
     }
 
     isSignedIn() {
-        console.log('isSignedIn called, user:', this.user, 'returning:', this.user !== null);
         return this.user !== null;
     }
 

@@ -27,7 +27,6 @@ class GameAnalytics {
         
         // Add test function for debugging notifications
         window.testNotification = () => {
-            console.log('Test notification called');
             this.showSessionInvalidatedNotification();
         };
     }
@@ -148,19 +147,14 @@ class GameAnalytics {
             // Check if we have a valid existing session first
             const existingToken = localStorage.getItem('shabble_session_token');
             if (existingToken) {
-                console.log('Checking existing session token validity...');
                 const isValid = await this.validateExistingSession(user.uid, existingToken);
                 if (isValid) {
-                    console.log('Existing session is valid, using it');
                     this.sessionToken = existingToken;
                     this.registrationAttempts = 0; // Reset counter on success
                     await this.syncUserDataFromServer(user.uid);
                     return;
                 } else {
-                    console.log('Existing session invalid or invalidated, creating new session');
                     localStorage.removeItem('shabble_session_token');
-                    // Don't show invalidation notification here - this is the new browser
-                    // The old browser will show the notification when it tries to use its invalid token
                 }
             }
             
@@ -181,7 +175,6 @@ class GameAnalytics {
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('User registered with server analytics:', result);
                 
                 // Store session token for future requests
                 this.sessionToken = result.sessionToken;
@@ -228,7 +221,6 @@ class GameAnalytics {
     async syncUserDataFromServer(firebaseUid) {
         // Check if we need to re-register after session invalidation
         if (this.needsReregistration && !this.sessionToken) {
-            console.log('Re-registering user before syncing data');
             await this.registerUserWithServer();
             this.needsReregistration = false;
         }
@@ -247,9 +239,6 @@ class GameAnalytics {
                 const result = await response.json();
                 const serverStats = result.stats;
                 
-                console.log('Syncing user data from server:', serverStats);
-                
-                // Merge server data with local data
                 this.mergeServerData(serverStats);
             } else if (response.status === 401) {
                 // Session invalid, clear token and show notification
@@ -270,8 +259,6 @@ class GameAnalytics {
             return;
         }
         
-        console.log('Raw server stats received:', serverStats);
-        
         // Handle different response formats
         let user, recentGames;
         if (serverStats.user) {
@@ -281,11 +268,9 @@ class GameAnalytics {
         } else {
             // Direct format - serverStats is the user data
             user = serverStats;
-            recentGames = serverStats.recentGames || [];
+            recentGames = [];
         }
         
-        console.log('Processed user data:', user);
-        console.log('Recent games count:', recentGames.length);
         
         // Update total statistics with server data
         this.analyticsData.totalStats = {
@@ -343,14 +328,10 @@ class GameAnalytics {
         // Save updated data
         this.saveAnalyticsData();
         
-        console.log('User data synced successfully');
-        console.log('Updated game history count:', this.analyticsData.gameHistory.length);
-        console.log('Recent games after sync:', this.analyticsData.gameHistory.slice(0, 5));
     }
 
     async startServerSession(wordLengths) {
         if (!this.serverEnabled || !this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled) {
-            console.log('Server session not started - serverEnabled:', this.serverEnabled, 'trackingEnabled:', this.analyticsData?.preferences?.trackingEnabled);
             return;
         }
         
@@ -426,14 +407,6 @@ class GameAnalytics {
 
     async recordServerAttempt(alphagram, wordLength, solved, firstAttemptCorrect, secondAttemptCorrect, userAnswers, correctAnswers) {
         if (!this.serverEnabled || !this.serverSessionId || !this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled) return;
-        
-        console.log('DEBUG: Recording server attempt:', {
-            alphagram,
-            wordLength,
-            solved,
-            firstAttemptCorrect,
-            secondAttemptCorrect
-        });
         
         try {
             const response = await fetch('/api/analytics/attempt', {
@@ -557,8 +530,6 @@ class GameAnalytics {
     trackFirstAttempt(results) {
         if (!this.analyticsData || !this.analyticsData.preferences || !this.analyticsData.preferences.trackingEnabled || !this.currentSession) return;
 
-        console.log('trackFirstAttempt called with results:', results);
-        console.log('DEBUG: trackFirstAttempt - results.score from game:', results.score);
         
         this.currentSession.firstAttemptResults = results.results || [];
         this.currentSession.finalScore = results.score || 0;
@@ -753,10 +724,6 @@ class GameAnalytics {
             (session.firstAttemptResults ? 
                 session.firstAttemptResults.reduce((sum, result) => sum + (result.score || 0), 0) : 0);
         
-        console.log('processCompletedGame - firstAttemptScore:', firstAttemptScore);
-        console.log('processCompletedGame - session.finalScore:', session.finalScore);
-        console.log('processCompletedGame - session.firstAttemptScore:', session.firstAttemptScore);
-        console.log('processCompletedGame - DEBUG: About to use finalScore for server:', session.finalScore);
 
         // Calculate counts for display
         const correctFirstCount = session.alphagrams.filter(a => a.firstAttemptCorrect).length;
@@ -808,18 +775,7 @@ class GameAnalytics {
             const correctlySolved = alphagrams.filter(a => a.firstAttemptCorrect || a.secondAttemptCorrect).length;
             const finalScore = session.finalScore || 0;
             const gameDuration = session.timeTaken || 0;
-            console.log('DEBUG: session.finalScore value being sent to server:', finalScore);
             
-            console.log('About to call finishServerSession with:', {
-                totalAlphagrams: alphagrams.length,
-                alphagramsSolved: correctlySolved,
-                finalScore: finalScore,
-                firstAttemptScore: firstAttemptScore,
-                completed: true,
-                gameDuration: gameDuration,
-                serverSessionId: this.serverSessionId,
-                serverEnabled: this.serverEnabled
-            });
             
             this.finishServerSession(
                 alphagrams.length,
@@ -835,9 +791,7 @@ class GameAnalytics {
 
             // Record individual alphagram attempts to server
             alphagrams.forEach(alphagram => {
-                console.log('DEBUG: Processing alphagram for server attempt:', alphagram);
                 const wordLength = alphagram.length || alphagram.alphagram?.length || 0;
-                console.log('DEBUG: Calculated word length:', wordLength);
                 
                 this.recordServerAttempt(
                     alphagram.alphagram,
@@ -888,9 +842,7 @@ class GameAnalytics {
                 
                 // Record individual alphagram attempts to server
                 alphagrams.forEach(alphagram => {
-                    console.log('DEBUG: Processing finishGame alphagram for server attempt:', alphagram);
                     const wordLength = alphagram.length || alphagram.alphagram?.length || 0;
-                    console.log('DEBUG: Calculated word length for finishGame:', wordLength);
                     
                     this.recordServerAttempt(
                         alphagram.alphagram,
@@ -984,9 +936,7 @@ class GameAnalytics {
         
         // Record individual alphagram attempts to server
         alphagrams.forEach(alphagram => {
-            console.log('DEBUG: Processing finishGame alphagram for server attempt:', alphagram);
             const wordLength = alphagram.length || alphagram.alphagram?.length || 0;
-            console.log('DEBUG: Calculated word length for finishGame:', wordLength);
             
             this.recordServerAttempt(
                 alphagram.alphagram,

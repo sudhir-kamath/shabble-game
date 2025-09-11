@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const date = new Date(dateString);
         if (isNaN(date.getTime())) {
-            console.warn('Invalid date string:', dateString);
+            console.error('Invalid date string:', dateString);
             return 'Invalid Date';
         }
         
@@ -306,7 +306,6 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const sessionToken = localStorage.getItem('shabble_session_token');
             if (!sessionToken) {
-                console.log('No session token available for server stats');
                 return null;
             }
 
@@ -319,14 +318,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('Server stats fetched for display:', result.stats);
                 return result.stats;
             } else {
-                console.error('Failed to fetch server stats:', response.status);
                 return null;
             }
         } catch (error) {
-            console.error('Error fetching server stats:', error);
             return null;
         }
     };
@@ -338,7 +334,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.authManager?.isSignedIn()) {
             const user = window.authManager.getCurrentUser();
             if (user?.uid) {
-                console.log('Fetching fresh stats directly from server for display');
                 
                 // Fetch server stats (includes recent games)
                 const serverStats = await fetchServerStats(user.uid);
@@ -351,7 +346,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Fallback to local data if server fetch fails or user not signed in
-        console.log('Falling back to local stats data for display');
         if (window.gameAnalytics) {
             const stats = window.gameAnalytics.getStats();
             displayLocalStats(stats);
@@ -361,7 +355,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const displayServerStats = (serverStats, recentGames = []) => {
-        console.log('Displaying server stats:', serverStats);
         
         // Update main stats with server data
         document.getElementById('total-games').textContent = serverStats.total_games || 0;
@@ -378,15 +371,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update recent games with server data
         const recentGamesContainer = document.getElementById('recent-games-list');
         if (recentGames && recentGames.length > 0) {
-            console.log('Processing recent games for display:', recentGames);
             recentGamesContainer.innerHTML = recentGames.map(game => {
-                console.log('Game object:', game);
-                console.log('Available date fields:', {
-                    date: game.date,
-                    session_start: game.session_start,
-                    created_at: game.created_at
-                });
-                
+                const gameDate = game.date || game.session_start || game.created_at;
                 const wordLengthDisplay = game.word_lengths ? 
                     (typeof game.word_lengths === 'string' ? JSON.parse(game.word_lengths).join(',') : game.word_lengths.join(',')) : 
                     'mixed';
@@ -394,9 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const totalAlphagrams = game.total_alphagrams || 0;
                 const firstScore = game.first_attempt_score || 0;
                 const finalScore = game.final_score || 0;
-                
-                // Try multiple possible date field names
-                const gameDate = game.date || game.session_start || game.created_at;
                 
                 return `
                 <div class="game-item">
@@ -427,7 +410,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const displayLocalStats = (stats) => {
-        console.log('Displaying local fallback stats:', stats);
         
         // Update main stats
         document.getElementById('total-games').textContent = stats.gamesPlayed || 0;
@@ -478,7 +460,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const displayEmptyStats = () => {
-        console.log('Displaying empty stats - no data available');
         
         // Show zero values
         document.getElementById('total-games').textContent = '0';
@@ -507,26 +488,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Use server-provided word length accuracy data
         const wordLengthAccuracy = serverStats.wordLengthAccuracy || [];
         
-        console.log('DEBUG: Server stats received:', serverStats);
-        console.log('DEBUG: Word length accuracy data:', wordLengthAccuracy);
-        
         // Create a map for quick lookup
         const accuracyMap = {};
         wordLengthAccuracy.forEach(stat => {
-            console.log(`DEBUG: Processing word length ${stat.word_length}:`, {
-                total_attempts: stat.total_attempts,
-                first_attempt_correct: stat.first_attempt_correct,
-                total_solved: stat.total_solved
-            });
-            
             const accuracy = stat.total_attempts > 0 ? 
                 Math.round((stat.first_attempt_correct / stat.total_attempts) * 100) : 0;
             accuracyMap[stat.word_length] = accuracy;
-            
-            console.log(`DEBUG: Calculated accuracy for length ${stat.word_length}: ${accuracy}%`);
         });
-        
-        console.log('DEBUG: Final accuracy map:', accuracyMap);
         
         // Update each word length (2, 3, 4, 5)
         for (let length = 2; length <= 5; length++) {
@@ -537,7 +505,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const accuracy = accuracyMap[length] || 0;
                 fillElement.style.width = `${accuracy}%`;
                 percentElement.textContent = `${accuracy}%`;
-                console.log(`DEBUG: Set accuracy for length ${length}: ${accuracy}%`);
             }
         }
     };
@@ -695,16 +662,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const startGame = async (selectedLengths) => {
         // Enforce authentication requirement
-        console.log('Auth check - authManager exists:', !!window.authManager);
-        console.log('Auth check - isSignedIn:', window.authManager?.isSignedIn());
         
         if (!window.authManager || !window.authManager.isSignedIn()) {
-            console.log('Authentication failed - showing modal');
             showAuthRequiredModal();
             return;
         }
         
-        console.log('Authentication passed - starting game');
 
         const initialState = await game.startNewGame(selectedLengths);
         

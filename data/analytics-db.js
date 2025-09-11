@@ -219,15 +219,6 @@ class AnalyticsDB {
                                     console.error('Error fetching word length stats:', err);
                                     reject(err);
                                 } else {
-                                    console.log('DEBUG: Raw word length stats from DB:', wordLengthStats);
-                                    console.log('DEBUG: Number of word length records:', wordLengthStats ? wordLengthStats.length : 0);
-                                    
-                                    // Debug: Check if alphagram_attempts table has any data at all
-                                    this.db.get(`SELECT COUNT(*) as total FROM alphagram_attempts`, [], (err, countResult) => {
-                                        if (!err) {
-                                            console.log('DEBUG: Total alphagram_attempts records in DB:', countResult.total);
-                                        }
-                                    });
                                     
                                     resolve({
                                         ...row,

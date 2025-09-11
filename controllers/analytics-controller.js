@@ -88,9 +88,6 @@ class AnalyticsController {
                 });
             }
 
-            console.log('DEBUG: getUserStats API response for', firebaseUid);
-            console.log('DEBUG: userStats object:', JSON.stringify(userStats, null, 2));
-            console.log('DEBUG: wordLengthAccuracy:', userStats.wordLengthAccuracy);
 
             res.json({
                 success: true,
