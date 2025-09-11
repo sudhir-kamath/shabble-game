@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="game-info">
                         <div class="game-date">${formatDate(game.date)}</div>
                         <div class="game-details">
-                            ${game.wordLength}-letter words • ${game.correctFirst}/${game.alphagramCount} first attempt
+                            ${game.wordLength}-letter words • ${game.correctFirst || game.correctlySolved || 0}/${game.alphagramCount || game.alphagrams || 0} first attempt
                         </div>
                     </div>
                     <div class="game-scores">
@@ -610,9 +610,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 window.gameAnalytics.trackFirstAttempt(results);
             }
-            
-            // Finish the game session with final results
-            window.gameAnalytics.finishGame(results);
+            // Note: trackFirstAttempt() calls processCompletedGame() which handles the game record
+            // No need to call finishGame() as it would create duplicates
         }
         
         // Calculate score percentage and set dynamic message
@@ -679,9 +678,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 window.gameAnalytics.trackFirstAttempt(results);
             }
-            
-            // Finish the game session with final results
-            window.gameAnalytics.finishGame(results);
+            // Note: trackFirstAttempt() calls processCompletedGame() which handles the game record
+            // No need to call finishGame() as it would create duplicates
         }
         
         // Calculate score percentage and set dynamic message

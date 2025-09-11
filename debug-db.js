@@ -48,7 +48,28 @@ db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
                         console.log(sessions);
                     }
                     
-                    db.close();
+                    // Show user data
+                    db.all("SELECT * FROM users", (err, users) => {
+                        if (err) {
+                            console.error('Error getting users:', err);
+                        } else {
+                            console.log('\nUsers:');
+                            console.log(users);
+                        }
+                        
+                        // Update the user with Firebase UID to use actual email
+                        db.run(`UPDATE users SET email = ? WHERE firebase_uid = ?`, 
+                            [null, '1RPUeP94HiguABdJrtPeVOyvGTb2'], 
+                            function(err) {
+                                if (err) {
+                                    console.error('Error updating user email:', err);
+                                } else {
+                                    console.log('\nCleared hardcoded email for Firebase user. The system will now use the actual Firebase email.');
+                                }
+                                db.close();
+                            }
+                        );
+                    });
                 });
             });
         });
