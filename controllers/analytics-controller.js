@@ -104,7 +104,12 @@ class AnalyticsController {
     async finishSession(req, res) {
         try {
             const { sessionId, totalAlphagrams, alphagramsSolved, finalScore, 
-                    completed, gameDuration } = req.body;
+                firstAttemptScore, completed, gameDuration } = req.body;
+
+            console.log('Finishing session with data:', {
+                sessionId, totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration
+            });
+            console.log('DEBUG: firstAttemptScore type and value:', typeof firstAttemptScore, firstAttemptScore);
 
             if (!sessionId) {
                 return res.status(400).json({
@@ -113,14 +118,16 @@ class AnalyticsController {
                 });
             }
 
-            await this.db.finishGameSession(sessionId, {
+            const result = await this.db.finishGameSession(sessionId, {
                 totalAlphagrams,
                 alphagramsSolved,
                 finalScore,
+                firstAttemptScore,
                 completed,
                 gameDuration
             });
 
+            console.log('Session finish result:', result);
             res.json({ success: true });
         } catch (error) {
             console.error('Error finishing session:', error);
@@ -346,6 +353,7 @@ class AnalyticsController {
                     alphagramsSeen: game.total_alphagrams,
                     alphagramsSolved: game.alphagrams_solved,
                     score: game.final_score,
+                    firstAttemptScore: game.first_attempt_score || 0,
                     completed: game.completed === 1,
                     duration: Math.round((game.game_duration || 0) / 60 * 100) / 100 // minutes
                 }))

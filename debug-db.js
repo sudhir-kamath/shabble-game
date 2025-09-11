@@ -45,7 +45,12 @@ db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
                         console.error('Error getting recent sessions:', err);
                     } else {
                         console.log('\nRecent sessions:');
-                        console.log(sessions);
+                        sessions.forEach(session => {
+                            console.log(`ID: ${session.id}, Start: ${session.session_start}, End: ${session.session_end}`);
+                            console.log(`  Score: ${session.final_score}, Solved: ${session.alphagrams_solved}/${session.total_alphagrams}, Completed: ${session.completed}`);
+                            console.log(`  User ID: ${session.user_id}, Duration: ${session.game_duration}`);
+                            console.log('---');
+                        });
                     }
                     
                     // Show user data

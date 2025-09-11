@@ -117,24 +117,40 @@ class AnalyticsDB {
     }
 
     async finishGameSession(sessionId, sessionResults) {
-        const { totalAlphagrams, alphagramsSolved, finalScore, completed, gameDuration } = sessionResults;
+        const { totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration } = sessionResults;
+        
+        console.log('DEBUG: finishGameSession received firstAttemptScore:', typeof firstAttemptScore, firstAttemptScore);
         
         return new Promise((resolve, reject) => {
+            // First update the game session
             this.db.run(`
                 UPDATE game_sessions 
                 SET session_end = CURRENT_TIMESTAMP,
                     total_alphagrams = ?,
                     alphagrams_solved = ?,
                     final_score = ?,
+                    first_attempt_score = ?,
                     completed = ?,
                     game_duration = ?
                 WHERE id = ?
-            `, [totalAlphagrams, alphagramsSolved, finalScore, completed, gameDuration, sessionId], function(err) {
+            `, [totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration, sessionId], (err) => {
                 if (err) {
                     reject(err);
-                } else {
-                    resolve({ changes: this.changes });
+                    return;
                 }
+                
+                // Then update the user's last_active timestamp
+                this.db.run(`
+                    UPDATE users 
+                    SET last_active = CURRENT_TIMESTAMP 
+                    WHERE id = (SELECT user_id FROM game_sessions WHERE id = ?)
+                `, [sessionId], function(err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({ changes: this.changes });
+                    }
+                });
             });
         });
     }
@@ -388,6 +404,7 @@ class AnalyticsDB {
                     gs.total_alphagrams,
                     gs.alphagrams_solved,
                     gs.final_score,
+                    gs.first_attempt_score,
                     gs.completed,
                     gs.game_duration
                 FROM users u

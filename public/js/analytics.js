@@ -154,6 +154,8 @@ class GameAnalytics {
             return;
         }
         
+        console.log('Starting server session for word lengths:', wordLengths);
+        
         try {
             // Try multiple ways to get the authenticated user
             let userId = null;
@@ -234,11 +236,24 @@ class GameAnalytics {
         }
     }
 
-    async finishServerSession(totalAlphagrams, alphagramsSolved, finalScore, completed, gameDuration) {
-        if (!this.serverEnabled || !this.serverSessionId) return;
+    async finishServerSession(totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration) {
+        if (!this.serverEnabled || !this.serverSessionId) {
+            console.log('finishServerSession skipped - serverEnabled:', this.serverEnabled, 'serverSessionId:', this.serverSessionId);
+            return;
+        }
         
         try {
-            await fetch('/api/analytics/session/finish', {
+            console.log('Finishing server session with data:', {
+                sessionId: this.serverSessionId,
+                totalAlphagrams,
+                alphagramsSolved,
+                finalScore,
+                firstAttemptScore,
+                completed,
+                gameDuration
+            });
+            
+            const response = await fetch('/api/analytics/session/finish', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -248,13 +263,20 @@ class GameAnalytics {
                     totalAlphagrams,
                     alphagramsSolved,
                     finalScore,
+                    firstAttemptScore,
                     completed,
                     gameDuration
                 })
             });
             
-            this.serverSessionId = null;
-            console.log('Server analytics session finished');
+            if (!response.ok) {
+                console.error('Server session finish failed:', response.status, response.statusText);
+            } else {
+                console.log('Server analytics session finished successfully');
+            }
+            
+            // Don't null the session ID yet - second attempt may need it
+            // this.serverSessionId = null;
         } catch (error) {
             console.warn('Failed to finish server analytics session:', error);
         }
@@ -292,6 +314,7 @@ class GameAnalytics {
         if (!this.analyticsData.preferences.trackingEnabled || !this.currentSession) return;
 
         console.log('trackFirstAttempt called with results:', results);
+        console.log('DEBUG: trackFirstAttempt - results.score from game:', results.score);
         
         this.currentSession.firstAttemptResults = results.results || [];
         this.currentSession.finalScore = results.score || 0;
@@ -327,8 +350,8 @@ class GameAnalytics {
         console.log('First attempt score calculated:', firstAttemptScore);
         console.log('Session alphagrams after processing:', this.currentSession.alphagrams);
 
-        // Process and save the completed game
-        this.processCompletedGame();
+        // Process and save the completed game (but don't finish server session yet)
+        this.processCompletedGame(false); // false = don't finish server session
 
     }
 
@@ -354,8 +377,8 @@ class GameAnalytics {
             }
         });
 
-        // Update the existing game record instead of creating a new one
-        this.updateExistingGameRecord();
+        // Process and save the completed game with server session finish
+        this.processCompletedGame(true); // true = finish server session with final score
 
     }
 
@@ -387,9 +410,10 @@ class GameAnalytics {
         }
     }
 
-    processCompletedGame() {
+    processCompletedGame(finishServerSession = true) {
         if (!this.currentSession || !this.currentSession.completed) return;
 
+        console.log('processCompletedGame called - finishServerSession:', finishServerSession);
         const session = this.currentSession;
         const stats = this.analyticsData.totalStats;
 
@@ -480,6 +504,8 @@ class GameAnalytics {
         
         console.log('processCompletedGame - firstAttemptScore:', firstAttemptScore);
         console.log('processCompletedGame - session.finalScore:', session.finalScore);
+        console.log('processCompletedGame - session.firstAttemptScore:', session.firstAttemptScore);
+        console.log('processCompletedGame - DEBUG: About to use finalScore for server:', session.finalScore);
 
         // Calculate counts for display
         const correctFirstCount = session.alphagrams.filter(a => a.firstAttemptCorrect).length;
@@ -510,8 +536,50 @@ class GameAnalytics {
             this.analyticsData.gameHistory = this.analyticsData.gameHistory.slice(0, 100);
         }
 
-        // Save updated analytics
+        console.log('About to save analytics data and call server finish');
         this.saveAnalyticsData();
+
+        // Send data to server only if requested
+        if (finishServerSession) {
+            const alphagrams = session.alphagrams || [];
+            const correctlySolved = alphagrams.filter(a => a.firstAttemptCorrect || a.secondAttemptCorrect).length;
+            const finalScore = session.finalScore || 0;
+            const gameDuration = session.timeTaken || 0;
+            console.log('DEBUG: session.finalScore value being sent to server:', finalScore);
+            
+            console.log('About to call finishServerSession with:', {
+                totalAlphagrams: alphagrams.length,
+                alphagramsSolved: correctlySolved,
+                finalScore: finalScore,
+                firstAttemptScore: firstAttemptScore,
+                completed: true,
+                gameDuration: gameDuration,
+                serverSessionId: this.serverSessionId,
+                serverEnabled: this.serverEnabled
+            });
+            
+            this.finishServerSession(
+                alphagrams.length,
+                correctlySolved,
+                finalScore,
+                firstAttemptScore,
+                true,
+                gameDuration
+            );
+
+            // Record individual alphagram attempts to server
+            alphagrams.forEach(alphagram => {
+                this.recordServerAttempt(
+                    alphagram.alphagram,
+                    alphagram.length,
+                    alphagram.firstAttemptCorrect || alphagram.secondAttemptCorrect,
+                    alphagram.firstAttemptCorrect,
+                    alphagram.secondAttemptCorrect,
+                    alphagram.userAnswers || [],
+                    alphagram.correctAnswers || []
+                );
+            });
+        }
 
     }
 
@@ -527,13 +595,14 @@ class GameAnalytics {
             const finalScore = session.finalScore || session.score || 0;
             const gameDuration = session.timeTaken || 0;
             
-            this.finishServerSession(
-                alphagrams.length,
-                correctlySolved,
-                finalScore,
-                true,
-                gameDuration
-            );
+            // Don't call finishServerSession here - it's already handled by trackFirstAttempt/trackSecondAttempt
+            // this.finishServerSession(
+            //     alphagrams.length,
+            //     correctlySolved,
+            //     finalScore,
+            //     true,
+            //     gameDuration
+            // );
 
             // Record individual alphagram attempts to server
             alphagrams.forEach(alphagram => {
@@ -599,20 +668,27 @@ class GameAnalytics {
             this.analyticsData.gameHistory = this.analyticsData.gameHistory.slice(0, 100);
         }
 
+        console.log('About to save analytics data and call server finish');
+        this.saveAnalyticsData();
+
         // Send data to server
         const gameDuration = session.timeTaken || 0;
-        console.log('Finishing server session with data:', {
+        console.log('About to call finishServerSession with:', {
             totalAlphagrams: alphagrams.length,
             alphagramsSolved: correctlySolved,
             finalScore: finalScore,
+            firstAttemptScore: firstAttemptScore,
             completed: true,
-            gameDuration: gameDuration
+            gameDuration: gameDuration,
+            serverSessionId: this.serverSessionId,
+            serverEnabled: this.serverEnabled
         });
         
         this.finishServerSession(
             alphagrams.length,
             correctlySolved,
             finalScore,
+            firstAttemptScore,
             true,
             gameDuration
         );

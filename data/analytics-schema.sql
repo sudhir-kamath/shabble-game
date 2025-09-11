@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     total_alphagrams INTEGER DEFAULT 0,
     alphagrams_solved INTEGER DEFAULT 0,
     final_score INTEGER DEFAULT 0,
+    first_attempt_score INTEGER DEFAULT 0,
     completed BOOLEAN DEFAULT FALSE,
     game_duration INTEGER, -- seconds
     ip_hash TEXT, -- hashed IP for anonymous tracking
