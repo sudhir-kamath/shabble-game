@@ -286,10 +286,12 @@ class GameAnalytics {
     trackGameStart(wordLength, alphagrams) {
         if (!this.analyticsData.preferences.trackingEnabled) return;
 
-        // Ensure we have a valid session
-        if (!this.currentSession) {
-            this.startNewSession();
-        }
+        // Reset any existing session to prevent conflicts
+        this.currentSession = null;
+        this.serverSessionId = null;
+
+        // Start a fresh session
+        this.startNewSession();
 
         this.currentSession.gameStartTime = new Date().toISOString();
         this.currentSession.wordLength = wordLength;
@@ -351,6 +353,7 @@ class GameAnalytics {
         console.log('Session alphagrams after processing:', this.currentSession.alphagrams);
 
         // Process and save the completed game (but don't finish server session yet)
+        // We'll finish the server session later when we know if there's a second attempt
         this.processCompletedGame(false); // false = don't finish server session
 
     }
@@ -414,6 +417,12 @@ class GameAnalytics {
         if (!this.currentSession || !this.currentSession.completed) return;
 
         console.log('processCompletedGame called - finishServerSession:', finishServerSession);
+        
+        // Prevent duplicate server session finish calls
+        if (finishServerSession && this.currentSession.serverSessionFinished) {
+            console.log('Server session already finished, skipping duplicate call');
+            return;
+        }
         const session = this.currentSession;
         const stats = this.analyticsData.totalStats;
 
@@ -566,6 +575,9 @@ class GameAnalytics {
                 true,
                 gameDuration
             );
+            
+            // Mark server session as finished to prevent duplicates
+            this.currentSession.serverSessionFinished = true;
 
             // Record individual alphagram attempts to server
             alphagrams.forEach(alphagram => {
@@ -586,38 +598,40 @@ class GameAnalytics {
     finishGame(session) {
         if (!this.analyticsData.preferences.trackingEnabled) return;
 
+        console.log('finishGame called with session:', session);
+        console.log('currentSession exists:', !!this.currentSession);
+        console.log('currentSession completed:', this.currentSession?.completed);
+        console.log('serverSessionFinished:', this.currentSession?.serverSessionFinished);
+
         // Check if this game was already processed by trackFirstAttempt/processCompletedGame
         if (this.currentSession && this.currentSession.completed) {
-            console.log('Game already processed by trackFirstAttempt, skipping finishGame record creation');
-            // Only handle server-side analytics, don't create duplicate records
-            const alphagrams = session.alphagrams || session.results || [];
-            const correctlySolved = alphagrams.filter(a => a.isCorrect === true).length;
-            const finalScore = session.finalScore || session.score || 0;
-            const gameDuration = session.timeTaken || 0;
+            console.log('Game already processed by trackFirstAttempt, checking if server session needs finishing');
             
-            // Don't call finishServerSession here - it's already handled by trackFirstAttempt/trackSecondAttempt
-            // this.finishServerSession(
-            //     alphagrams.length,
-            //     correctlySolved,
-            //     finalScore,
-            //     true,
-            //     gameDuration
-            // );
-
-            // Record individual alphagram attempts to server
-            alphagrams.forEach(alphagram => {
-                this.recordServerAttempt(
-                    alphagram.alphagram,
-                    alphagram.length,
-                    alphagram.isCorrect === true,
-                    alphagram.isCorrect === true,
-                    false,
-                    alphagram.userAnswers,
-                    []
+            // If server session hasn't been finished yet, finish it now (single-attempt games)
+            if (!this.currentSession.serverSessionFinished) {
+                console.log('Finishing server session for single-attempt game');
+                const alphagrams = session.alphagrams || session.results || [];
+                const correctlySolved = alphagrams.filter(a => a.isCorrect === true).length;
+                const finalScore = session.finalScore || session.score || 0;
+                const firstAttemptScore = this.currentSession.firstAttemptScore || finalScore;
+                const gameDuration = session.timeTaken || 0;
+                
+                this.finishServerSession(
+                    alphagrams.length,
+                    correctlySolved,
+                    finalScore,
+                    firstAttemptScore,
+                    true,
+                    gameDuration
                 );
-            });
+                
+                // Mark server session as finished
+                this.currentSession.serverSessionFinished = true;
+            } else {
+                console.log('Server session already finished, skipping duplicate finish call');
+            }
 
-            // Reset current session
+            // Reset current session to prevent duplicate processing
             this.currentSession = null;
             return;
         }

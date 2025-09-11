@@ -791,6 +791,12 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         e.stopPropagation();
 
+        // Finish analytics session for single-attempt games before starting new game
+        const gameState = game.getGameState();
+        if (window.gameAnalytics && !gameState.isSecondAttempt) {
+            window.gameAnalytics.finishGame(gameState);
+        }
+
         // Hide game over modal
         showOverlay(null);
 
@@ -868,6 +874,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const gameState = game.getGameState();
             if (!gameState.isSecondAttempt) {
                 elements.secondAttemptBtn.classList.remove('visually-hidden');
+            }
+            
+            // Finish analytics session for single-attempt games
+            if (window.gameAnalytics && !gameState.isSecondAttempt) {
+                window.gameAnalytics.finishGame(gameState);
             }
         });
     }
