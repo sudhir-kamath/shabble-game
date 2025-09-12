@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headerInstructionsBtn: document.getElementById('header-instructions-btn'),
         themeToggleBtn: document.getElementById('theme-toggle'),
         statsBtn: document.getElementById('stats-btn'),
+        homeStatsBtn: document.getElementById('home-stats-btn'),
         statsModal: document.getElementById('stats-modal'),
         closeStatsModal: document.getElementById('close-stats-modal'),
         clearStatsBtn: document.getElementById('clear-stats'),
@@ -1150,6 +1151,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Statistics event listeners
     if (elements.statsBtn) {
         elements.statsBtn.addEventListener('click', showStatsModal);
+    }
+    if (elements.homeStatsBtn) {
+        elements.homeStatsBtn.addEventListener('click', showStatsModal);
     }
     if (elements.closeStatsModal) {
         elements.closeStatsModal.addEventListener('click', () => showOverlay(null));
