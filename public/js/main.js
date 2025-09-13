@@ -1908,8 +1908,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('High priority problem alphagrams:', problemAlphagrams.length);
         
-        // 2. If we have fewer than 10, add more from other mastery levels
-        if (problemAlphagrams.length < 10) {
+        // 2. If we have fewer than 20, add more from other mastery levels
+        if (problemAlphagrams.length < 20) {
             // Get remaining alphagrams that:
             // - Have at least 1 attempt
             // - Mastery is not 3
@@ -1930,8 +1930,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return b.total_attempts - a.total_attempts;
             });
             
-            // Add enough to reach at least 10, but not more than 20 total
-            const needed = Math.min(10 - problemAlphagrams.length, 20 - problemAlphagrams.length);
+            // Add enough to reach up to 20 total
+            const needed = 20 - problemAlphagrams.length;
             problemAlphagrams = [...problemAlphagrams, ...additionalAlphagrams.slice(0, needed)];
             
             console.log(`Added ${Math.min(needed, additionalAlphagrams.length)} additional alphagrams`);
