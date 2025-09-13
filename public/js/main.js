@@ -1887,47 +1887,69 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('Total alphagrams:', advancedStatsData.alphagrams.length);
         
-        // Debug: Check distribution of attempts and mastery scores
-        const attemptCounts = {};
-        const masteryCounts = {};
-        advancedStatsData.alphagrams.forEach(item => {
-            attemptCounts[item.total_attempts] = (attemptCounts[item.total_attempts] || 0) + 1;
-            masteryCounts[item.mastery_score] = (masteryCounts[item.mastery_score] || 0) + 1;
-        });
-        console.log('Attempt distribution:', attemptCounts);
-        console.log('Mastery score distribution:', masteryCounts);
+        // Get all alphagrams with at least 1 attempt
+        const attemptedAlphagrams = advancedStatsData.alphagrams.filter(item => item.total_attempts > 0);
         
-        // Find alphagrams with >2 attempts and mastery score of -3 or -2
-        let problemAlphagrams = advancedStatsData.alphagrams.filter(item => {
-            return item.total_attempts > 2 && (item.mastery_score === -3 || item.mastery_score === -2);
-        });
-        
-        console.log('Problem alphagrams found (strict):', problemAlphagrams.length);
-        
-        // If no strict matches, try relaxed criteria
-        if (problemAlphagrams.length === 0) {
-            console.log('No strict matches, trying relaxed criteria...');
-            problemAlphagrams = advancedStatsData.alphagrams.filter(item => {
-                return item.total_attempts >= 2 && item.mastery_score < 0;
-            });
-            console.log('Relaxed criteria matches:', problemAlphagrams.length);
+        if (attemptedAlphagrams.length === 0) {
+            console.log('No attempted alphagrams found');
+            return;
         }
+        
+        // Calculate success rate for each alphagram
+        const alphagramsWithSuccess = attemptedAlphagrams.map(item => ({
+            ...item,
+            successRate: item.total_attempts > 0 ? (item.correct_attempts / item.total_attempts) * 100 : 0
+        }));
+        
+        // 1. First priority: mastery -3 or -2 with >2 attempts
+        let problemAlphagrams = alphagramsWithSuccess.filter(item => 
+            item.total_attempts > 2 && (item.mastery_score === -3 || item.mastery_score === -2)
+        );
+        
+        console.log('High priority problem alphagrams:', problemAlphagrams.length);
+        
+        // 2. If we have fewer than 10, add more from other mastery levels
+        if (problemAlphagrams.length < 10) {
+            // Get remaining alphagrams that:
+            // - Have at least 1 attempt
+            // - Mastery is not 3
+            // - Success rate is not 100%
+            const additionalAlphagrams = alphagramsWithSuccess.filter(item => 
+                !problemAlphagrams.includes(item) && // Not already in our list
+                item.mastery_score !== 3 && // Not already mastered
+                item.successRate < 100 // Not 100% success
+            );
+            
+            // Sort remaining by:
+            // 1. Lowest mastery score (most negative first)
+            // 2. Most attempts (for same mastery level)
+            additionalAlphagrams.sort((a, b) => {
+                if (a.mastery_score !== b.mastery_score) {
+                    return a.mastery_score - b.mastery_score;
+                }
+                return b.total_attempts - a.total_attempts;
+            });
+            
+            // Add enough to reach at least 10, but not more than 20 total
+            const needed = Math.min(10 - problemAlphagrams.length, 20 - problemAlphagrams.length);
+            problemAlphagrams = [...problemAlphagrams, ...additionalAlphagrams.slice(0, needed)];
+            
+            console.log(`Added ${Math.min(needed, additionalAlphagrams.length)} additional alphagrams`);
+        }
+        
+        // Limit to maximum 20 cards
+        problemAlphagrams = problemAlphagrams.slice(0, 20);
         
         console.log('Final problem alphagrams to display:', problemAlphagrams.length);
         
-        // Debug: Log all encountered alphagrams
-        const encounteredAlphagrams = advancedStatsData.alphagrams.filter(item => item.total_attempts > 0);
-        console.log('=== ENCOUNTERED ALPHAGRAMS DEBUG ===');
-        console.log('Total alphagrams in data:', advancedStatsData.alphagrams.length);
-        console.log('Encountered count:', encounteredAlphagrams.length);
-        console.log('Encountered alphagrams list:', encounteredAlphagrams.map(item => item.alphagram).sort());
-        
-        // Sort by worst mastery score first, then by most attempts
+        // Sort by priority:
+        // 1. Lowest mastery score (most negative first)
+        // 2. Most attempts (for same mastery level)
         problemAlphagrams.sort((a, b) => {
             if (a.mastery_score !== b.mastery_score) {
-                return a.mastery_score - b.mastery_score; // -3 comes before -2
+                return a.mastery_score - b.mastery_score;
             }
-            return b.total_attempts - a.total_attempts; // More attempts first
+            return b.total_attempts - a.total_attempts;
         });
         
         const workOnSection = document.getElementById('work-on-recommendations');
@@ -1945,17 +1967,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Show overflow message if more than 50
-        const hasOverflow = problemAlphagrams.length > 50;
-        const displayAlphagrams = problemAlphagrams.slice(0, 50);
-        
-        overflowDiv.style.display = hasOverflow ? 'block' : 'none';
+        // No overflow message needed since we're limiting to 20
+        overflowDiv.style.display = 'none';
         
         // Generate cards or show no results message
-        console.log('About to display alphagrams. Count:', displayAlphagrams.length);
-        console.log('First alphagram data:', displayAlphagrams[0]);
+        console.log('About to display alphagrams. Count:', problemAlphagrams.length);
+        console.log('First alphagram data:', problemAlphagrams[0]);
         
-        if (displayAlphagrams.length === 0) {
+        if (problemAlphagrams.length === 0) {
             console.log('Displaying no results message');
             workOnCards.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: var(--text-color); opacity: 0.7;">
@@ -1967,7 +1986,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         } else {
             console.log('Generating cards for alphagrams');
-            const cardsHTML = displayAlphagrams.map(item => {
+            const cardsHTML = problemAlphagrams.map(item => {
                 const successRate = item.total_attempts > 0 ? Math.round((item.correct_attempts / item.total_attempts) * 100) : 0;
                 const masteryScore = Math.max(-3, Math.min(3, item.mastery_score || 0));
                 
