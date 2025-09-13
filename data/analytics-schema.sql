@@ -80,16 +80,18 @@ CREATE TABLE IF NOT EXISTS word_stats (
 -- Player alphagram performance tracking (for advanced statistics)
 CREATE TABLE IF NOT EXISTS player_alphagram_stats (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT,
-    alphagram TEXT,
-    word_length INTEGER,
+    firebase_uid TEXT NOT NULL,
+    alphagram_hash TEXT NOT NULL,
+    alphagram TEXT NOT NULL,
+    word_length INTEGER NOT NULL,
     total_attempts INTEGER DEFAULT 0,
     correct_attempts INTEGER DEFAULT 0,
-    last_attempt_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    UNIQUE(user_id, alphagram)
+    success_rate REAL DEFAULT 0.0,
+    mastery_score INTEGER DEFAULT 0,
+    last_attempt_date TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(firebase_uid, alphagram_hash)
 );
 
 -- Create indexes for better performance

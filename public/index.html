@@ -455,54 +455,59 @@
                         </div>
                         
                         <div class="advanced-stats-content">
-                            <!-- Summary Dashboard -->
+                            <!-- Word Length Filter -->
                             <div class="stats-section">
-                                <h3><i class="fas fa-exclamation-triangle"></i> Your Biggest Challenges</h3>
-                                <div class="challenges-list" id="biggest-challenges">
-                                    <p class="loading-text">Loading challenges...</p>
-                                </div>
-                            </div>
-
-                            <!-- Interactive Filters -->
-                            <div class="stats-section">
-                                <h3><i class="fas fa-filter"></i> Filter Alphagrams</h3>
+                                <h3><i class="fas fa-filter"></i> Select Word Length</h3>
                                 
-                                <!-- Performance Filters -->
                                 <div class="filter-group">
-                                    <label>Performance:</label>
+                                    <label>Choose word length to analyze:</label>
                                     <div class="filter-buttons">
-                                        <button class="filter-btn active" data-filter="all">All</button>
-                                        <button class="filter-btn" data-filter="mastered">Mastered (90%+)</button>
-                                        <button class="filter-btn" data-filter="struggling">Struggling</button>
+                                        <button class="filter-btn" data-word-length="2">2 Letters</button>
+                                        <button class="filter-btn" data-word-length="3">3 Letters</button>
+                                        <button class="filter-btn" data-word-length="4">4 Letters</button>
+                                        <button class="filter-btn" data-word-length="5">5 Letters</button>
                                     </div>
                                 </div>
                                 
-                                <!-- Word Length Filters -->
+                                <!-- Go Button -->
                                 <div class="filter-group">
-                                    <label>Word Length:</label>
-                                    <div class="filter-buttons">
-                                        <button class="filter-btn active" data-word-length="all">All</button>
-                                        <button class="filter-btn" data-word-length="2">2L</button>
-                                        <button class="filter-btn" data-word-length="3">3L</button>
-                                        <button class="filter-btn" data-word-length="4">4L</button>
-                                        <button class="filter-btn" data-word-length="5">5L</button>
+                                    <button id="advanced-stats-go-btn" class="btn primary-btn" disabled>
+                                        <i class="fas fa-chart-area"></i> Show Mastery Carpet
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Mastery Carpet Display -->
+                            <div class="stats-section" id="mastery-carpet-section" style="display: none;">
+                                <h3 id="carpet-title"><i class="fas fa-th"></i> Mastery Carpet</h3>
+                                <p class="carpet-description">Each cell represents an alphagram. Colors show your mastery level: 
+                                    <span class="color-legend">
+                                        <span class="legend-item"><span class="legend-color" style="background: #8B0000;"></span>Struggling</span>
+                                        <span class="legend-item"><span class="legend-color" style="background: #FFFFFF; border: 1px solid #ccc;"></span>Neutral</span>
+                                        <span class="legend-item"><span class="legend-color" style="background: #006400;"></span>Mastered</span>
+                                    </span>
+                                </p>
+                                <div class="mastery-carpet" id="mastery-carpet">
+                                    <!-- Carpet cells will be generated here -->
+                                </div>
+                                
+                                <!-- What should I work on button -->
+                                <div class="work-on-section" style="margin-top: 20px; text-align: center;">
+                                    <button id="what-to-work-on-btn" class="btn secondary-btn" style="display: none;">
+                                        <i class="fas fa-target"></i> What should I work on?
+                                    </button>
+                                </div>
+                                
+                                <!-- Work on recommendations -->
+                                <div id="work-on-recommendations" style="display: none; margin-top: 20px;">
+                                    <h4><i class="fas fa-bullseye"></i> Alphagrams to Focus On</h4>
+                                    <p class="work-on-description">These alphagrams need the most attention based on your performance:</p>
+                                    <div id="work-on-cards" class="work-on-cards">
+                                        <!-- Cards will be generated here -->
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- Search -->
-                            <div class="stats-section">
-                                <div class="search-container">
-                                    <input type="text" id="alphagram-search" placeholder="Search for specific alphagram (e.g., AERT)" class="search-input">
-                                    <i class="fas fa-search search-icon"></i>
-                                </div>
-                            </div>
-
-                            <!-- Results Display -->
-                            <div class="stats-section">
-                                <h3 id="results-title"><i class="fas fa-list"></i> Alphagram Performance</h3>
-                                <div class="alphagram-results" id="alphagram-results">
-                                    <p class="loading-text">Loading alphagram data...</p>
+                                    <div id="work-on-overflow" class="work-on-overflow" style="display: none;">
+                                        <p class="overflow-message"><i class="fas fa-info-circle"></i> You have more than 50 alphagrams to work on. Focus on these first!</p>
+                                    </div>
                                 </div>
                             </div>
 

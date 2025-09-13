@@ -1354,6 +1354,14 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.startBtn.style.opacity = '1';
             elements.startBtn.style.cursor = 'pointer';
             
+            // Enable statistics buttons
+            elements.statsBtn.disabled = false;
+            elements.statsBtn.style.opacity = '1';
+            elements.statsBtn.style.cursor = 'pointer';
+            elements.homeStatsBtn.disabled = false;
+            elements.homeStatsBtn.style.opacity = '1';
+            elements.homeStatsBtn.style.cursor = 'pointer';
+            
             // Update user info
             const profile = authManager.getCurrentUserProfile();
             
@@ -1386,6 +1394,14 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.startBtn.disabled = true;
             elements.startBtn.style.opacity = '0.5';
             elements.startBtn.style.cursor = 'not-allowed';
+            
+            // Disable statistics buttons
+            elements.statsBtn.disabled = true;
+            elements.statsBtn.style.opacity = '0.5';
+            elements.statsBtn.style.cursor = 'not-allowed';
+            elements.homeStatsBtn.disabled = true;
+            elements.homeStatsBtn.style.opacity = '0.5';
+            elements.homeStatsBtn.style.cursor = 'not-allowed';
         }
     }
 
@@ -1512,8 +1528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let membershipStatus = null;
     let advancedStatsData = null;
     let currentFilters = {
-        wordLength: 'all',
-        performance: 'all'
+        wordLength: null
     };
 
     async function checkMembershipStatus() {
@@ -1558,9 +1573,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        await loadAdvancedStats();
-        showOverlay('advanced-stats-modal');
-        setupAdvancedStatsEventListeners();
+        // Clear previous data and show empty modal
+        advancedStatsData = null;
+        clearAdvancedStatsDisplay();
+        showOverlay(document.getElementById('advanced-stats-modal'));
+        
+        // Setup event listeners after a small delay to ensure DOM is ready
+        setTimeout(() => {
+            setupAdvancedStatsEventListeners();
+        }, 100);
     }
 
     function showNonMemberModal() {
@@ -1591,55 +1612,183 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function loadAdvancedStats() {
-        if (!authManager.isSignedIn()) return;
+        console.log('loadAdvancedStats called');
+        if (!authManager.isSignedIn()) {
+            console.log('User not signed in');
+            return;
+        }
 
         const currentUser = authManager.getCurrentUser();
-        if (!currentUser) return;
+        if (!currentUser) {
+            console.log('No current user');
+            return;
+        }
+
+        console.log('Current filters:', currentFilters);
+
+        if (!currentFilters.wordLength) {
+            console.log('No word length selected');
+            return;
+        }
 
         try {
             const params = new URLSearchParams({
-                wordLength: currentFilters.wordLength,
-                filter: currentFilters.performance
+                wordLength: currentFilters.wordLength
             });
             
+            console.log('Fetching:', `/api/analytics/advanced/${currentUser.uid}?${params}`);
             const response = await fetch(`/api/analytics/advanced/${currentUser.uid}?${params}`);
             const data = await response.json();
             
+            console.log('Response data:', data);
+            
             if (data.success) {
                 advancedStatsData = data;
-                updateAdvancedStatsDisplay();
+                showMasteryCarpet();
+            } else {
+                console.error('API returned error:', data);
             }
         } catch (error) {
             console.error('Error loading advanced stats:', error);
         }
     }
 
-    function updateAdvancedStatsDisplay() {
-        if (!advancedStatsData) return;
-
-        // Update biggest challenges
-        const challengesList = document.getElementById('biggest-challenges');
-        if (challengesList && advancedStatsData.summary?.biggestChallenges) {
-            challengesList.innerHTML = advancedStatsData.summary.biggestChallenges
-                .slice(0, 5)
-                .map(item => `
-                    <div class="challenge-item">
-                        <span class="alphagram">${item.alphagram}</span>
-                        <span class="success-rate">${item.success_rate}%</span>
-                        <span class="attempts">${item.correct_attempts}/${item.total_attempts}</span>
-                    </div>
-                `).join('');
+    function clearAdvancedStatsDisplay() {
+        // Hide mastery carpet section
+        const carpetSection = document.getElementById('mastery-carpet-section');
+        if (carpetSection) {
+            carpetSection.style.display = 'none';
         }
 
-        // Update filtered results
-        updateFilteredResults();
+        // Clear mastery carpet
+        const carpet = document.getElementById('mastery-carpet');
+        if (carpet) {
+            carpet.innerHTML = '';
+        }
+    }
+
+    function showMasteryCarpet() {
+        if (!advancedStatsData || !advancedStatsData.alphagrams) return;
+
+        const carpetSection = document.getElementById('mastery-carpet-section');
+        const carpet = document.getElementById('mastery-carpet');
+        const carpetTitle = document.getElementById('carpet-title');
+
+        if (!carpet || !carpetSection) return;
+
+        // Show the carpet section
+        carpetSection.style.display = 'block';
+        
+        // Update title with progress info using API response data
+        const playedCount = advancedStatsData.playedAlphagrams;
+        const totalCount = advancedStatsData.totalAlphagrams;
+        const progressPercent = Math.round((playedCount / totalCount) * 100);
+        
+        carpetTitle.innerHTML = `<i class="fas fa-th"></i> ${currentFilters.wordLength}-Letter Mastery Carpet (${playedCount}/${totalCount} - ${progressPercent}%)`;
+
+        // Calculate responsive grid dimensions
+        const totalCells = advancedStatsData.alphagrams.length;
+        const containerWidth = carpet.parentElement.clientWidth - 40; // Account for padding
+        const maxCellSize = 20;
+        const minCellSize = 6;
+        
+        // Calculate optimal columns based on container width and total cells
+        let cols = Math.ceil(Math.sqrt(totalCells * 1.2));
+        let cellSize = Math.floor(containerWidth / cols);
+        
+        // For large grids (4-5 letter words), be more aggressive with sizing
+        if (totalCells > 500) {
+            // For very large grids, prioritize fitting in container
+            cols = Math.floor(containerWidth / minCellSize);
+            cellSize = Math.floor(containerWidth / cols);
+        }
+        
+        // Adjust if cells are too small or too large
+        if (cellSize < minCellSize) {
+            cellSize = minCellSize;
+            cols = Math.floor(containerWidth / cellSize);
+        } else if (cellSize > maxCellSize) {
+            cellSize = maxCellSize;
+            cols = Math.floor(containerWidth / cellSize);
+        }
+        
+        // Ensure we don't exceed container width
+        const totalWidth = cols * cellSize + (cols - 1) * Math.max(1, Math.floor(cellSize / 10));
+        if (totalWidth > containerWidth) {
+            cols = Math.floor(containerWidth / (cellSize + Math.max(1, Math.floor(cellSize / 10))));
+        }
+        
+        carpet.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+        carpet.style.gap = `${Math.max(1, Math.floor(cellSize / 10))}px`;
+        
+        
+        // Generate carpet cells with responsive sizing
+        const cellsHTML = advancedStatsData.alphagrams.map((item, index) => {
+            const masteryScore = item.mastery_score || 0;
+            const totalAttempts = item.total_attempts || 0;
+            
+            
+            if (totalAttempts === 0) {
+                // Unplayed alphagrams: transparent/blank style
+                return `
+                    <div class="mastery-cell unplayed" 
+                         style="width: ${cellSize}px; height: ${cellSize}px; background-color: transparent; border: 1px solid #e0e0e0; opacity: 0.3;" 
+                         data-alphagram="${item.alphagram}"
+                         data-score="0"
+                         title="${item.alphagram}: Not yet encountered">
+                    </div>
+                `;
+            } else {
+                // Played alphagrams: color-coded by mastery score
+                const backgroundColor = getMasteryColor(masteryScore);
+                return `
+                    <div class="mastery-cell played" 
+                         style="width: ${cellSize}px; height: ${cellSize}px; background-color: ${backgroundColor};" 
+                         data-alphagram="${item.alphagram}"
+                         data-score="${masteryScore}"
+                         title="${item.alphagram}: ${masteryScore > 0 ? '+' : ''}${masteryScore} (${totalAttempts} attempts)">
+                    </div>
+                `;
+            }
+        }).join('');
+
+        carpet.innerHTML = cellsHTML;
+        
+        // Show the "What should I work on?" button after carpet is loaded
+        const workOnBtn = document.getElementById('what-to-work-on-btn');
+        if (workOnBtn) {
+            workOnBtn.style.display = 'inline-block';
+        }
+    }
+
+    function getMasteryColor(score) {
+        const colors = {
+            '-3': '#8B0000', // Deep red
+            '-2': '#DC143C', // Medium red  
+            '-1': '#FFB6C1', // Light red
+            '0': '#FFFFFF',  // White
+            '1': '#90EE90',  // Light green
+            '2': '#32CD32',  // Medium green
+            '3': '#006400'   // Deep green
+        };
+        
+        return colors[score.toString()] || colors['0'];
     }
 
     function updateFilteredResults() {
+        console.log('updateFilteredResults called');
         const resultsList = document.getElementById('alphagram-results');
-        if (!resultsList || !advancedStatsData?.alphagrams) return;
+        console.log('Results list element:', resultsList);
+        console.log('Advanced stats data:', advancedStatsData);
+        console.log('Alphagrams array:', advancedStatsData?.alphagrams);
+        
+        if (!resultsList || !advancedStatsData?.alphagrams) {
+            console.log('Early return - missing element or data');
+            return;
+        }
 
         let filteredData = advancedStatsData.alphagrams;
+        console.log('Filtered data length:', filteredData.length);
 
         // Apply search filter
         const searchTerm = document.getElementById('alphagram-search')?.value.toLowerCase();
@@ -1649,33 +1798,35 @@ document.addEventListener('DOMContentLoaded', function() {
             );
         }
 
-        resultsList.innerHTML = filteredData.map(item => `
-            <div class="stats-result-item" data-alphagram="${item.alphagram}">
-                <div class="result-header" onclick="toggleResultDetails('${item.alphagram}')">
-                    <span class="alphagram">${item.alphagram}</span>
-                    <span class="word-length">${item.word_length}L</span>
-                    <span class="success-rate ${item.success_rate >= 80 ? 'good' : item.success_rate >= 50 ? 'average' : 'poor'}">
-                        ${item.success_rate}%
-                    </span>
-                    <span class="attempts">${item.correct_attempts}/${item.total_attempts}</span>
-                    <span class="expand-icon">▼</span>
+        const htmlContent = filteredData.map(item => `
+            <div class="alphagram-bubble" data-alphagram="${item.alphagram}" onclick="toggleResultDetails('${item.alphagram}')">
+                <div class="bubble-header">
+                    <span class="alphagram-text">${item.alphagram}</span>
+                    <span class="word-length-badge">${item.word_length}L</span>
                 </div>
-                <div class="result-details" id="details-${item.alphagram}" style="display: none;">
-                    <div class="detail-row">
-                        <span>Last Attempt:</span>
-                        <span>${new Date(item.last_attempt_date).toLocaleDateString()}</span>
+                <div class="bubble-stats">
+                    <div class="success-rate ${item.success_rate >= 80 ? 'good' : item.success_rate >= 50 ? 'average' : 'poor'}">
+                        ${item.success_rate}%
+                    </div>
+                    <div class="attempts-count">${item.correct_attempts}/${item.total_attempts}</div>
+                </div>
+                <div class="bubble-details" id="details-${item.alphagram}" style="display: none;">
+                    <div class="detail-info">
+                        Last: ${new Date(item.last_attempt_date).toLocaleDateString()}
                     </div>
                     <div class="detail-actions">
-                        <button class="btn btn-sm btn-secondary" onclick="practiceAlphagram('${item.alphagram}')">
-                            Practice Mode
-                        </button>
-                        <button class="btn btn-sm btn-secondary" onclick="addToStudyList('${item.alphagram}')">
-                            Add to Study List
-                        </button>
+                        <button class="btn-mini" onclick="event.stopPropagation(); practiceAlphagram('${item.alphagram}')">Practice</button>
+                        <button class="btn-mini" onclick="event.stopPropagation(); addToStudyList('${item.alphagram}')">Study</button>
                     </div>
                 </div>
             </div>
         `).join('');
+
+        console.log('Generated HTML content length:', htmlContent.length);
+        console.log('First 500 chars of HTML:', htmlContent.substring(0, 500));
+        
+        resultsList.innerHTML = htmlContent;
+        console.log('HTML set to resultsList');
 
         // Update result count
         const resultCount = document.getElementById('results-title');
@@ -1685,28 +1836,168 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function setupAdvancedStatsEventListeners() {
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+        console.log('Setting up advanced stats event listeners');
+        
+        const goBtn = document.getElementById('advanced-stats-go-btn');
+        console.log('Go button found:', goBtn);
+        
+        if (goBtn) {
+            goBtn.addEventListener('click', () => {
+                console.log('Go button clicked!');
+                loadAdvancedStats();
+            });
+        }
+        
+        // Setup "What should I work on?" button
+        const workOnBtn = document.getElementById('what-to-work-on-btn');
+        if (workOnBtn) {
+            workOnBtn.addEventListener('click', () => {
+                showWorkOnRecommendations();
+            });
+        }
+        
+        // Word length filter buttons
+        document.querySelectorAll('.filter-btn[data-word-length]').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const filterType = e.target.dataset.filter ? 'performance' : 'wordLength';
-                const filterValue = e.target.dataset.filter || e.target.dataset.wordLength;
+                const wordLength = e.target.dataset.wordLength;
                 
                 // Update active state
                 const siblingButtons = e.target.parentNode.querySelectorAll('.filter-btn');
                 siblingButtons.forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 
-                // Update filter and reload data
-                currentFilters[filterType] = filterValue;
-                loadAdvancedStats();
+                // Update filter
+                currentFilters.wordLength = wordLength;
+                
+                // Enable/disable go button
+                const goBtn = document.getElementById('advanced-stats-go-btn');
+                if (goBtn) {
+                    goBtn.disabled = !wordLength;
+                }
             });
         });
+    }
 
-        // Search input
-        const searchInput = document.getElementById('alphagram-search');
-        if (searchInput) {
-            searchInput.addEventListener('input', debounce(updateFilteredResults, 300));
+    // Show work on recommendations
+    function showWorkOnRecommendations() {
+        if (!advancedStatsData?.alphagrams) {
+            console.log('No advanced stats data available');
+            return;
         }
+        
+        console.log('Total alphagrams:', advancedStatsData.alphagrams.length);
+        
+        // Debug: Check distribution of attempts and mastery scores
+        const attemptCounts = {};
+        const masteryCounts = {};
+        advancedStatsData.alphagrams.forEach(item => {
+            attemptCounts[item.total_attempts] = (attemptCounts[item.total_attempts] || 0) + 1;
+            masteryCounts[item.mastery_score] = (masteryCounts[item.mastery_score] || 0) + 1;
+        });
+        console.log('Attempt distribution:', attemptCounts);
+        console.log('Mastery score distribution:', masteryCounts);
+        
+        // Find alphagrams with >2 attempts and mastery score of -3 or -2
+        let problemAlphagrams = advancedStatsData.alphagrams.filter(item => {
+            return item.total_attempts > 2 && (item.mastery_score === -3 || item.mastery_score === -2);
+        });
+        
+        console.log('Problem alphagrams found (strict):', problemAlphagrams.length);
+        
+        // If no strict matches, try relaxed criteria
+        if (problemAlphagrams.length === 0) {
+            console.log('No strict matches, trying relaxed criteria...');
+            problemAlphagrams = advancedStatsData.alphagrams.filter(item => {
+                return item.total_attempts >= 2 && item.mastery_score < 0;
+            });
+            console.log('Relaxed criteria matches:', problemAlphagrams.length);
+        }
+        
+        console.log('Final problem alphagrams to display:', problemAlphagrams.length);
+        
+        // Debug: Log all encountered alphagrams
+        const encounteredAlphagrams = advancedStatsData.alphagrams.filter(item => item.total_attempts > 0);
+        console.log('=== ENCOUNTERED ALPHAGRAMS DEBUG ===');
+        console.log('Total alphagrams in data:', advancedStatsData.alphagrams.length);
+        console.log('Encountered count:', encounteredAlphagrams.length);
+        console.log('Encountered alphagrams list:', encounteredAlphagrams.map(item => item.alphagram).sort());
+        
+        // Sort by worst mastery score first, then by most attempts
+        problemAlphagrams.sort((a, b) => {
+            if (a.mastery_score !== b.mastery_score) {
+                return a.mastery_score - b.mastery_score; // -3 comes before -2
+            }
+            return b.total_attempts - a.total_attempts; // More attempts first
+        });
+        
+        const workOnSection = document.getElementById('work-on-recommendations');
+        const workOnCards = document.getElementById('work-on-cards');
+        const overflowDiv = document.getElementById('work-on-overflow');
+        
+        console.log('DOM elements found:', {
+            workOnSection: !!workOnSection,
+            workOnCards: !!workOnCards,
+            overflowDiv: !!overflowDiv
+        });
+        
+        if (!workOnSection || !workOnCards || !overflowDiv) {
+            console.log('Work on elements not found - missing DOM elements');
+            return;
+        }
+        
+        // Show overflow message if more than 50
+        const hasOverflow = problemAlphagrams.length > 50;
+        const displayAlphagrams = problemAlphagrams.slice(0, 50);
+        
+        overflowDiv.style.display = hasOverflow ? 'block' : 'none';
+        
+        // Generate cards or show no results message
+        console.log('About to display alphagrams. Count:', displayAlphagrams.length);
+        console.log('First alphagram data:', displayAlphagrams[0]);
+        
+        if (displayAlphagrams.length === 0) {
+            console.log('Displaying no results message');
+            workOnCards.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--text-color); opacity: 0.7;">
+                    <i class="fas fa-trophy" style="font-size: 3em; margin-bottom: 20px; color: var(--success);"></i>
+                    <h3>Great job! No alphagrams need immediate attention.</h3>
+                    <p>You don't have any alphagrams with 3+ attempts and poor mastery scores.</p>
+                    <p>Keep playing to encounter more challenging alphagrams!</p>
+                </div>
+            `;
+        } else {
+            console.log('Generating cards for alphagrams');
+            const cardsHTML = displayAlphagrams.map(item => {
+                const successRate = item.total_attempts > 0 ? Math.round((item.correct_attempts / item.total_attempts) * 100) : 0;
+                const masteryScore = Math.max(-3, Math.min(3, item.mastery_score || 0));
+                
+                return `
+                    <div class="work-on-card" data-mastery="${masteryScore}" title="Mastery: ${masteryScore}">
+                        <div class="alphagram-name">${item.alphagram}</div>
+                        <div class="performance-stats">
+                            <span>
+                                <div class="stat-label">Attempts</div>
+                                <div class="stat-value">${item.total_attempts}</div>
+                            </span>
+                            <span>
+                                <div class="stat-label">Success</div>
+                                <div class="stat-value">${successRate}%</div>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            console.log('Setting workOnCards innerHTML. HTML length:', cardsHTML.length);
+            console.log('First 200 chars of HTML:', cardsHTML.substring(0, 200));
+            workOnCards.innerHTML = cardsHTML;
+            console.log('After setting innerHTML, workOnCards children count:', workOnCards.children.length);
+        }
+        
+        workOnSection.style.display = 'block';
+        
+        // Scroll to the recommendations
+        workOnSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function toggleResultDetails(alphagram) {

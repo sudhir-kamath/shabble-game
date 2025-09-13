@@ -85,6 +85,13 @@ class AnalyticsDB {
                     }
                 });
                 
+                // Add mastery_score column to player_alphagram_stats
+                this.db.run(`ALTER TABLE player_alphagram_stats ADD COLUMN mastery_score INTEGER DEFAULT 0`, (err) => {
+                    if (err && !err.message.includes('duplicate column')) {
+                        console.error('Error adding mastery_score column:', err);
+                    }
+                });
+                
                 console.log('Analytics tables created successfully');
                 resolve();
             });
@@ -739,18 +746,20 @@ class AnalyticsDB {
                 return new Promise((resolveInner, rejectInner) => {
                     this.db.run(`
                         INSERT OR REPLACE INTO player_alphagram_stats 
-                        (user_id, alphagram, word_length, total_attempts, correct_attempts, last_attempt_date, updated_at)
+                        (user_id, alphagram, word_length, total_attempts, correct_attempts, mastery_score, last_attempt_date, updated_at)
                         VALUES (
                             ?, ?, ?, 
                             COALESCE((SELECT total_attempts FROM player_alphagram_stats WHERE user_id = ? AND alphagram = ?), 0) + 1,
                             COALESCE((SELECT correct_attempts FROM player_alphagram_stats WHERE user_id = ? AND alphagram = ?), 0) + ?,
+                            MAX(-3, MIN(3, COALESCE((SELECT mastery_score FROM player_alphagram_stats WHERE user_id = ? AND alphagram = ?), 0) + ?)),
                             CURRENT_TIMESTAMP,
                             CURRENT_TIMESTAMP
                         )
                     `, [
                         userId, result.alphagram, result.wordLength,
                         userId, result.alphagram,
-                        userId, result.alphagram, result.isCorrect ? 1 : 0
+                        userId, result.alphagram, result.isCorrect ? 1 : 0,
+                        userId, result.alphagram, result.isCorrect ? 1 : -1
                     ], function(err) {
                         if (err) {
                             rejectInner(err);
@@ -783,6 +792,7 @@ class AnalyticsDB {
                             total_attempts,
                             correct_attempts,
                             ROUND((correct_attempts * 100.0 / total_attempts), 1) as success_rate,
+                            mastery_score,
                             last_attempt_date
                         FROM player_alphagram_stats 
                         WHERE user_id = ?
@@ -806,6 +816,19 @@ class AnalyticsDB {
                 }
             });
         });
+    }
+
+    // Get all possible alphagrams for a given word length
+    async getAllAlphagramsForLength(wordLength) {
+        const dictionary = require('./dictionary');
+        const alphagramMap = dictionary.ALPHAGRAM_MAPS[wordLength];
+        
+        if (!alphagramMap) {
+            return [];
+        }
+        
+        // Return all alphagram keys sorted alphabetically
+        return Array.from(alphagramMap.keys()).sort();
     }
 }
 

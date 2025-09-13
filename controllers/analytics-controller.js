@@ -235,16 +235,24 @@ class AnalyticsController {
         }
     }
 
-    // Get advanced statistics for a member
+    // Get advanced statistics for a player (mastery carpet)
     async getAdvancedStats(req, res) {
         try {
             const { firebaseUid } = req.params;
-            const { wordLength, filter } = req.query;
-            
+            const { wordLength } = req.query;
+
             if (!firebaseUid) {
                 return res.status(400).json({
                     success: false,
                     error: 'Firebase UID is required'
+                });
+            }
+
+            // Validate word length parameter
+            if (!wordLength || !['2', '3', '4', '5'].includes(wordLength)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Word length must be 2, 3, 4, or 5'
                 });
             }
 
@@ -258,36 +266,54 @@ class AnalyticsController {
                 });
             }
 
-            // Apply filters
-            let filteredAlphagrams = result.alphagrams;
+            // Get all possible alphagrams for this word length
+            const allAlphagrams = await this.db.getAllAlphagramsForLength(parseInt(wordLength));
             
-            // Filter by word length
-            if (wordLength && wordLength !== 'all') {
-                filteredAlphagrams = filteredAlphagrams.filter(a => a.word_length == wordLength);
-            }
+            // Create a map of player's performance data (normalize to lowercase)
+            const playerDataMap = new Map();
+            result.alphagrams.forEach(item => {
+                if (item.word_length == wordLength) {
+                    playerDataMap.set(item.alphagram.toLowerCase(), item);
+                }
+            });
             
-            // Filter by performance
-            if (filter === 'mastered') {
-                filteredAlphagrams = filteredAlphagrams.filter(a => a.success_rate >= 90);
-            } else if (filter === 'struggling') {
-                const strugglingThreshold = result.averageSuccessRate * 0.8;
-                filteredAlphagrams = filteredAlphagrams.filter(a => a.success_rate < strugglingThreshold);
-            }
-            
-            // Sort by success rate (lowest first) for word length view
-            if (wordLength && wordLength !== 'all') {
-                filteredAlphagrams.sort((a, b) => a.success_rate - b.success_rate);
-            }
 
+            // Merge all alphagrams with player data
+            const completeAlphagrams = allAlphagrams.map(alphagram => {
+                const playerData = playerDataMap.get(alphagram);
+                if (playerData) {
+                    return {
+                        ...playerData,
+                        hasPlayed: true
+                    };
+                } else {
+                    // Player hasn't encountered this alphagram yet
+                    return {
+                        alphagram: alphagram,
+                        word_length: parseInt(wordLength),
+                        total_attempts: 0,
+                        correct_attempts: 0,
+                        success_rate: 0,
+                        mastery_score: 0,
+                        last_attempt_date: null,
+                        hasPlayed: false
+                    };
+                }
+            });
+
+            // Sort by alphagram for consistent ordering
+            completeAlphagrams.sort((a, b) => a.alphagram.localeCompare(b.alphagram));
+
+            // Count only alphagrams with actual attempts
+            const actuallyPlayedCount = completeAlphagrams.filter(item => item.total_attempts > 0).length;
+            
             res.json({
                 success: true,
                 isMember: true,
-                averageSuccessRate: result.averageSuccessRate,
-                alphagrams: filteredAlphagrams,
-                summary: {
-                    biggestChallenges: result.alphagrams.slice(0, 5), // Top 5 lowest success rates
-                    strugglingThreshold: result.averageSuccessRate * 0.8
-                }
+                wordLength: parseInt(wordLength),
+                totalAlphagrams: allAlphagrams.length,
+                playedAlphagrams: actuallyPlayedCount,
+                alphagrams: completeAlphagrams
             });
         } catch (error) {
             console.error('Error getting advanced statistics:', error);
