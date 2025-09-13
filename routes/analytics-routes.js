@@ -46,4 +46,8 @@ router.get('/players', (req, res) => analyticsController.getPlayerList(req, res)
 router.get('/players/:playerId', (req, res) => analyticsController.getPlayerStats(req, res));
 router.get('/players/:playerId/alphagrams', (req, res) => analyticsController.getPlayerAlphagramStats(req, res));
 
+// Advanced statistics and membership endpoints
+router.get('/membership/:firebaseUid', (req, res) => analyticsController.getMembershipStatus(req, res));
+router.get('/advanced/:firebaseUid', (req, res) => analyticsController.getAdvancedStats(req, res));
+
 module.exports = router;

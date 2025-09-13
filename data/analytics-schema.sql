@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
     total_games INTEGER DEFAULT 0,
     privacy_consent BOOLEAN DEFAULT FALSE,
     active_session_token TEXT,
-    session_created_at DATETIME
+    session_created_at DATETIME,
+    is_member BOOLEAN DEFAULT FALSE,
+    member_since DATETIME
 );
 
 -- Game sessions table
@@ -75,6 +77,21 @@ CREATE TABLE IF NOT EXISTS word_stats (
     last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Player alphagram performance tracking (for advanced statistics)
+CREATE TABLE IF NOT EXISTS player_alphagram_stats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT,
+    alphagram TEXT,
+    word_length INTEGER,
+    total_attempts INTEGER DEFAULT 0,
+    correct_attempts INTEGER DEFAULT 0,
+    last_attempt_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE(user_id, alphagram)
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON game_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_date ON game_sessions(session_start);
@@ -82,3 +99,6 @@ CREATE INDEX IF NOT EXISTS idx_attempts_session ON alphagram_attempts(session_id
 CREATE INDEX IF NOT EXISTS idx_attempts_alphagram ON alphagram_attempts(alphagram);
 CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid);
 CREATE INDEX IF NOT EXISTS idx_daily_stats_date ON daily_stats(date);
+CREATE INDEX IF NOT EXISTS idx_player_alphagram_user ON player_alphagram_stats(user_id);
+CREATE INDEX IF NOT EXISTS idx_player_alphagram_word_length ON player_alphagram_stats(word_length);
+CREATE INDEX IF NOT EXISTS idx_player_alphagram_success_rate ON player_alphagram_stats(user_id, correct_attempts, total_attempts);

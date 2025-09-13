@@ -167,12 +167,9 @@ class AnalyticsController {
     async finishSession(req, res) {
         try {
             const { sessionId, totalAlphagrams, alphagramsSolved, finalScore, 
-                firstAttemptScore, completed, gameDuration } = req.body;
+                firstAttemptScore, completed, gameDuration, alphagramResults } = req.body;
 
-            console.log('Finishing session with data:', {
-                sessionId, totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration
-            });
-            console.log('DEBUG: firstAttemptScore type and value:', typeof firstAttemptScore, firstAttemptScore);
+            console.log('Analytics session finish - sessionId:', sessionId, 'finalScore:', finalScore, 'firstAttemptScore:', firstAttemptScore);
 
             if (!sessionId) {
                 return res.status(400).json({
@@ -186,17 +183,117 @@ class AnalyticsController {
                 alphagramsSolved,
                 finalScore,
                 firstAttemptScore,
-                completed,
-                gameDuration
+                completed: completed ? 1 : 0,
+                gameDuration,
+                alphagramResults
             });
 
-            console.log('Session finish result:', result);
-            res.json({ success: true });
+            res.json({
+                success: true,
+                changes: result.changes,
+                membershipGranted: result.membershipGranted,
+                totalGames: result.totalGames
+            });
         } catch (error) {
-            console.error('Error finishing session:', error);
+            console.error('Error finishing analytics session:', error);
             res.status(500).json({
                 success: false,
-                error: 'Failed to finish session'
+                error: 'Failed to finish analytics session'
+            });
+        }
+    }
+
+    // Get membership status for a player
+    async getMembershipStatus(req, res) {
+        try {
+            const { firebaseUid } = req.params;
+            
+            if (!firebaseUid) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Firebase UID is required'
+                });
+            }
+
+            const userId = this.db.hashData(firebaseUid);
+            const result = await this.db.checkAndUpdateMembership(userId);
+            
+            const response = {
+                success: true,
+                isMember: result.membershipGranted || result.totalGames >= 25,
+                totalGames: result.totalGames,
+                membershipGranted: result.membershipGranted
+            };
+            
+            res.json(response);
+        } catch (error) {
+            console.error('Error getting membership status:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get membership status'
+            });
+        }
+    }
+
+    // Get advanced statistics for a member
+    async getAdvancedStats(req, res) {
+        try {
+            const { firebaseUid } = req.params;
+            const { wordLength, filter } = req.query;
+            
+            if (!firebaseUid) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Firebase UID is required'
+                });
+            }
+
+            const userId = this.db.hashData(firebaseUid);
+            const result = await this.db.getPlayerAdvancedStats(userId);
+            
+            if (!result.isMember) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'Advanced statistics are only available to members'
+                });
+            }
+
+            // Apply filters
+            let filteredAlphagrams = result.alphagrams;
+            
+            // Filter by word length
+            if (wordLength && wordLength !== 'all') {
+                filteredAlphagrams = filteredAlphagrams.filter(a => a.word_length == wordLength);
+            }
+            
+            // Filter by performance
+            if (filter === 'mastered') {
+                filteredAlphagrams = filteredAlphagrams.filter(a => a.success_rate >= 90);
+            } else if (filter === 'struggling') {
+                const strugglingThreshold = result.averageSuccessRate * 0.8;
+                filteredAlphagrams = filteredAlphagrams.filter(a => a.success_rate < strugglingThreshold);
+            }
+            
+            // Sort by success rate (lowest first) for word length view
+            if (wordLength && wordLength !== 'all') {
+                filteredAlphagrams.sort((a, b) => a.success_rate - b.success_rate);
+            }
+
+            res.json({
+                success: true,
+                isMember: true,
+                averageSuccessRate: result.averageSuccessRate,
+                alphagrams: filteredAlphagrams,
+                summary: {
+                    biggestChallenges: result.alphagrams.slice(0, 5), // Top 5 lowest success rates
+                    strugglingThreshold: result.averageSuccessRate * 0.8
+                }
+            });
+        } catch (error) {
+            console.error('Error getting advanced statistics:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get advanced statistics'
             });
         }
     }

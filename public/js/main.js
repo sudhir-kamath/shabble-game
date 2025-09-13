@@ -67,7 +67,11 @@ document.addEventListener('DOMContentLoaded', function() {
         cancelEditBtn: document.getElementById('cancel-edit-btn'),
         // Feedback modal elements
         feedbackModal: document.getElementById('feedback-modal'),
-        closeFeedbackModal: document.getElementById('close-feedback-modal')
+        closeFeedbackModal: document.getElementById('close-feedback-modal'),
+        // Advanced Statistics elements
+        advancedStatsBtn: document.getElementById('advanced-stats-btn'),
+        advancedStatsModal: document.getElementById('advanced-stats-modal'),
+        closeAdvancedStatsModal: document.getElementById('close-advanced-stats-modal')
     };
 
 
@@ -1162,6 +1166,14 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.clearStatsBtn.addEventListener('click', clearAllStats);
     }
 
+    // Advanced Statistics event listeners
+    if (elements.advancedStatsBtn) {
+        elements.advancedStatsBtn.addEventListener('click', showAdvancedStatsModal);
+    }
+    if (elements.closeAdvancedStatsModal) {
+        elements.closeAdvancedStatsModal.addEventListener('click', () => showOverlay(null));
+    }
+
     elements.playAgainBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1495,4 +1507,284 @@ document.addEventListener('DOMContentLoaded', function() {
             existingError.remove();
         }
     }
+
+    // Advanced Statistics Functions
+    let membershipStatus = null;
+    let advancedStatsData = null;
+    let currentFilters = {
+        wordLength: 'all',
+        performance: 'all'
+    };
+
+    async function checkMembershipStatus() {
+        if (!authManager.isSignedIn()) return false;
+        
+        const currentUser = authManager.getCurrentUser();
+        if (!currentUser) return false;
+        
+        try {
+            const response = await fetch(`/api/analytics/membership/${currentUser.uid}`);
+            
+            // Check if response is HTML (error page) instead of JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('API returned HTML instead of JSON. Response status:', response.status);
+                console.error('URL:', `/api/analytics/membership/${currentUser.uid}`);
+                const text = await response.text();
+                console.error('Response body:', text.substring(0, 200));
+                return false;
+            }
+            
+            const data = await response.json();
+            console.log('Membership API response:', data);
+            membershipStatus = data;
+            console.log('Is member check:', data.success && data.isMember);
+            return data.success && data.isMember;
+        } catch (error) {
+            console.error('Error checking membership:', error);
+            return false;
+        }
+    }
+
+    async function showAdvancedStatsModal() {
+        if (!authManager.isSignedIn()) {
+            showAuthRequiredModal();
+            return;
+        }
+
+        const isMember = await checkMembershipStatus();
+        if (!isMember) {
+            showNonMemberModal();
+            return;
+        }
+
+        await loadAdvancedStats();
+        showOverlay('advanced-stats-modal');
+        setupAdvancedStatsEventListeners();
+    }
+
+    function showNonMemberModal() {
+        const gamesNeeded = 25 - (membershipStatus?.totalGames || 0);
+        const nonMemberModal = document.createElement('div');
+        nonMemberModal.className = 'overlay active';
+        nonMemberModal.innerHTML = `
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>🔒 Membership Required</h2>
+                    <button class="close-btn" onclick="showOverlay(null)">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Advanced Statistics are available to members only.</p>
+                    <p>You need to play <strong>${gamesNeeded} more games</strong> to become a member automatically.</p>
+                    <p>Current games played: <strong>${membershipStatus?.totalGames || 0}</strong></p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${((membershipStatus?.totalGames || 0) / 25) * 100}%"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="showOverlay(null); startGame(getSelectedWordLengths())">Play Now</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(nonMemberModal);
+        setTimeout(() => nonMemberModal.remove(), 10000);
+    }
+
+    async function loadAdvancedStats() {
+        if (!authManager.isSignedIn()) return;
+
+        const currentUser = authManager.getCurrentUser();
+        if (!currentUser) return;
+
+        try {
+            const params = new URLSearchParams({
+                wordLength: currentFilters.wordLength,
+                filter: currentFilters.performance
+            });
+            
+            const response = await fetch(`/api/analytics/advanced/${currentUser.uid}?${params}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                advancedStatsData = data;
+                updateAdvancedStatsDisplay();
+            }
+        } catch (error) {
+            console.error('Error loading advanced stats:', error);
+        }
+    }
+
+    function updateAdvancedStatsDisplay() {
+        if (!advancedStatsData) return;
+
+        // Update biggest challenges
+        const challengesList = document.getElementById('biggest-challenges');
+        if (challengesList && advancedStatsData.summary?.biggestChallenges) {
+            challengesList.innerHTML = advancedStatsData.summary.biggestChallenges
+                .slice(0, 5)
+                .map(item => `
+                    <div class="challenge-item">
+                        <span class="alphagram">${item.alphagram}</span>
+                        <span class="success-rate">${item.success_rate}%</span>
+                        <span class="attempts">${item.correct_attempts}/${item.total_attempts}</span>
+                    </div>
+                `).join('');
+        }
+
+        // Update filtered results
+        updateFilteredResults();
+    }
+
+    function updateFilteredResults() {
+        const resultsList = document.getElementById('alphagram-results');
+        if (!resultsList || !advancedStatsData?.alphagrams) return;
+
+        let filteredData = advancedStatsData.alphagrams;
+
+        // Apply search filter
+        const searchTerm = document.getElementById('alphagram-search')?.value.toLowerCase();
+        if (searchTerm) {
+            filteredData = filteredData.filter(item => 
+                item.alphagram.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        resultsList.innerHTML = filteredData.map(item => `
+            <div class="stats-result-item" data-alphagram="${item.alphagram}">
+                <div class="result-header" onclick="toggleResultDetails('${item.alphagram}')">
+                    <span class="alphagram">${item.alphagram}</span>
+                    <span class="word-length">${item.word_length}L</span>
+                    <span class="success-rate ${item.success_rate >= 80 ? 'good' : item.success_rate >= 50 ? 'average' : 'poor'}">
+                        ${item.success_rate}%
+                    </span>
+                    <span class="attempts">${item.correct_attempts}/${item.total_attempts}</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="result-details" id="details-${item.alphagram}" style="display: none;">
+                    <div class="detail-row">
+                        <span>Last Attempt:</span>
+                        <span>${new Date(item.last_attempt_date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="detail-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="practiceAlphagram('${item.alphagram}')">
+                            Practice Mode
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="addToStudyList('${item.alphagram}')">
+                            Add to Study List
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        // Update result count
+        const resultCount = document.getElementById('results-title');
+        if (resultCount) {
+            resultCount.innerHTML = `<i class="fas fa-list"></i> Alphagram Performance (${filteredData.length})`;
+        }
+    }
+
+    function setupAdvancedStatsEventListeners() {
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const filterType = e.target.dataset.filter ? 'performance' : 'wordLength';
+                const filterValue = e.target.dataset.filter || e.target.dataset.wordLength;
+                
+                // Update active state
+                const siblingButtons = e.target.parentNode.querySelectorAll('.filter-btn');
+                siblingButtons.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Update filter and reload data
+                currentFilters[filterType] = filterValue;
+                loadAdvancedStats();
+            });
+        });
+
+        // Search input
+        const searchInput = document.getElementById('alphagram-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(updateFilteredResults, 300));
+        }
+    }
+
+    function toggleResultDetails(alphagram) {
+        const details = document.getElementById(`details-${alphagram}`);
+        const icon = document.querySelector(`[data-alphagram="${alphagram}"] .expand-icon`);
+        
+        if (details.style.display === 'none') {
+            details.style.display = 'block';
+            icon.textContent = '▲';
+        } else {
+            details.style.display = 'none';
+            icon.textContent = '▼';
+        }
+    }
+
+    function practiceAlphagram(alphagram) {
+        // Beta feature - show coming soon message
+        alert('🚧 Practice Mode is coming soon! This feature is currently in beta development.');
+    }
+
+    function addToStudyList(alphagram) {
+        // Beta feature - show coming soon message
+        alert('🚧 Study List is coming soon! This feature is currently in beta development.');
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Create enhanced stats modal function that includes membership checking
+    const showStatsModalWithMembership = async function() {
+        await showStatsModal();
+        
+        if (authManager.isSignedIn()) {
+            const isMember = await checkMembershipStatus();
+            console.log('isMember result:', isMember);
+            console.log('membershipStatus:', membershipStatus);
+            
+            // Update the frontend game count to match backend
+            if (membershipStatus && membershipStatus.totalGames !== undefined) {
+                const totalGamesElement = document.getElementById('total-games');
+                if (totalGamesElement) {
+                    totalGamesElement.textContent = membershipStatus.totalGames;
+                }
+            }
+            
+            const advancedStatsBtn = document.getElementById('advanced-stats-btn');
+            if (advancedStatsBtn) {
+                advancedStatsBtn.disabled = !isMember;
+                console.log('Advanced stats button disabled:', !isMember);
+                advancedStatsBtn.title = isMember ? 
+                    'View detailed alphagram performance statistics' : 
+                    `Play ${25 - (membershipStatus?.totalGames || 0)} more games to unlock`;
+                console.log('Button title:', advancedStatsBtn.title);
+            }
+        }
+    };
+
+    // Update event listeners to use the enhanced function
+    if (elements.statsBtn) {
+        elements.statsBtn.removeEventListener('click', showStatsModal);
+        elements.statsBtn.addEventListener('click', showStatsModalWithMembership);
+    }
+    if (elements.homeStatsBtn) {
+        elements.homeStatsBtn.removeEventListener('click', showStatsModal);
+        elements.homeStatsBtn.addEventListener('click', showStatsModalWithMembership);
+    }
+
+    // Make functions globally available
+    window.toggleResultDetails = toggleResultDetails;
+    window.practiceAlphagram = practiceAlphagram;
+    window.addToStudyList = addToStudyList;
 });

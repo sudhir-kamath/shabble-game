@@ -422,10 +422,99 @@
                                 </div>
                             </div>
                             
+                            <!-- Advanced Statistics Section -->
+                            <div class="stats-section" id="advanced-stats-section">
+                                <div class="advanced-stats-header">
+                                    <h3><i class="fas fa-microscope"></i> Advanced Statistics</h3>
+                                    <button id="advanced-stats-btn" class="btn secondary-btn" disabled>
+                                        <i class="fas fa-chart-line"></i> View Advanced Stats
+                                    </button>
+                                </div>
+                                <p class="advanced-stats-description" id="advanced-stats-description">
+                                    Play 25+ games to unlock detailed alphagram performance analysis
+                                </p>
+                            </div>
+                            
                             <div class="stats-actions">
                                 <button id="clear-stats" class="btn danger-btn">
                                     <i class="fas fa-trash"></i> Clear All Data
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Statistics Modal -->
+                <div id="advanced-stats-modal" class="overlay">
+                    <div class="overlay-content advanced-stats-modal">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-chart-line"></i> Advanced Statistics</h2>
+                            <button id="close-advanced-stats-modal" class="close-btn" title="Close">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="advanced-stats-content">
+                            <!-- Summary Dashboard -->
+                            <div class="stats-section">
+                                <h3><i class="fas fa-exclamation-triangle"></i> Your Biggest Challenges</h3>
+                                <div class="challenges-list" id="biggest-challenges">
+                                    <p class="loading-text">Loading challenges...</p>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Filters -->
+                            <div class="stats-section">
+                                <h3><i class="fas fa-filter"></i> Filter Alphagrams</h3>
+                                
+                                <!-- Performance Filters -->
+                                <div class="filter-group">
+                                    <label>Performance:</label>
+                                    <div class="filter-buttons">
+                                        <button class="filter-btn active" data-filter="all">All</button>
+                                        <button class="filter-btn" data-filter="mastered">Mastered (90%+)</button>
+                                        <button class="filter-btn" data-filter="struggling">Struggling</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Word Length Filters -->
+                                <div class="filter-group">
+                                    <label>Word Length:</label>
+                                    <div class="filter-buttons">
+                                        <button class="filter-btn active" data-word-length="all">All</button>
+                                        <button class="filter-btn" data-word-length="2">2L</button>
+                                        <button class="filter-btn" data-word-length="3">3L</button>
+                                        <button class="filter-btn" data-word-length="4">4L</button>
+                                        <button class="filter-btn" data-word-length="5">5L</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Search -->
+                            <div class="stats-section">
+                                <div class="search-container">
+                                    <input type="text" id="alphagram-search" placeholder="Search for specific alphagram (e.g., AERT)" class="search-input">
+                                    <i class="fas fa-search search-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- Results Display -->
+                            <div class="stats-section">
+                                <h3 id="results-title"><i class="fas fa-list"></i> Alphagram Performance</h3>
+                                <div class="alphagram-results" id="alphagram-results">
+                                    <p class="loading-text">Loading alphagram data...</p>
+                                </div>
+                            </div>
+
+                            <!-- Beta Recommendations -->
+                            <div class="stats-section">
+                                <h3><i class="fas fa-lightbulb"></i> Recommendations <span class="beta-badge">Beta</span></h3>
+                                <div class="recommendations" id="recommendations">
+                                    <p class="beta-notice">These recommendations are in beta and may not be fully accurate yet.</p>
+                                    <div id="recommendation-list">
+                                        <p class="loading-text">Analyzing patterns...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

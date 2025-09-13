@@ -72,6 +72,19 @@ class AnalyticsDB {
                     }
                 });
                 
+                // Add membership columns
+                this.db.run(`ALTER TABLE users ADD COLUMN is_member BOOLEAN DEFAULT FALSE`, (err) => {
+                    if (err && !err.message.includes('duplicate column')) {
+                        console.error('Error adding is_member column:', err);
+                    }
+                });
+                
+                this.db.run(`ALTER TABLE users ADD COLUMN member_since DATETIME`, (err) => {
+                    if (err && !err.message.includes('duplicate column')) {
+                        console.error('Error adding member_since column:', err);
+                    }
+                });
+                
                 console.log('Analytics tables created successfully');
                 resolve();
             });
@@ -330,7 +343,7 @@ class AnalyticsDB {
     }
 
     async finishGameSession(sessionId, sessionResults) {
-        const { totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration } = sessionResults;
+        const { totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration, alphagramResults } = sessionResults;
         
         console.log('DEBUG: finishGameSession received firstAttemptScore:', typeof firstAttemptScore, firstAttemptScore);
         
@@ -352,16 +365,60 @@ class AnalyticsDB {
                     return;
                 }
                 
-                // Then update the user's last_active timestamp
-                this.db.run(`
-                    UPDATE users 
-                    SET last_active = CURRENT_TIMESTAMP 
-                    WHERE id = (SELECT user_id FROM game_sessions WHERE id = ?)
-                `, [sessionId], function(err) {
+                // Get user ID for this session
+                this.db.get(`SELECT user_id FROM game_sessions WHERE id = ?`, [sessionId], async (err, sessionRow) => {
                     if (err) {
                         reject(err);
-                    } else {
-                        resolve({ changes: this.changes });
+                        return;
+                    }
+                    
+                    const userId = sessionRow.user_id;
+                    
+                    try {
+                        // Update player alphagram performance if alphagram results provided
+                        if (alphagramResults && alphagramResults.length > 0) {
+                            await this.updatePlayerAlphagramStats(userId, alphagramResults);
+                        }
+                        
+                        // Update user's last_active and total_games, then check membership
+                        this.db.run(`
+                            UPDATE users 
+                            SET last_active = CURRENT_TIMESTAMP,
+                                total_games = total_games + 1
+                            WHERE id = ?
+                        `, [userId], async (updateErr) => {
+                            if (updateErr) {
+                                reject(updateErr);
+                            } else {
+                                try {
+                                    // Check and update membership status
+                                    const membershipResult = await this.checkAndUpdateMembership(userId);
+                                    resolve({ 
+                                        changes: this.changes,
+                                        membershipGranted: membershipResult.membershipGranted,
+                                        totalGames: membershipResult.totalGames
+                                    });
+                                } catch (membershipErr) {
+                                    console.error('Error checking membership:', membershipErr);
+                                    resolve({ changes: this.changes }); // Don't fail the whole operation
+                                }
+                            }
+                        });
+                    } catch (statsErr) {
+                        console.error('Error updating alphagram stats:', statsErr);
+                        // Continue with user update even if stats fail
+                        this.db.run(`
+                            UPDATE users 
+                            SET last_active = CURRENT_TIMESTAMP,
+                                total_games = total_games + 1
+                            WHERE id = ?
+                        `, [userId], (updateErr) => {
+                            if (updateErr) {
+                                reject(updateErr);
+                            } else {
+                                resolve({ changes: this.changes });
+                            }
+                        });
                     }
                 });
             });
@@ -645,6 +702,110 @@ class AnalyticsDB {
                 }
             });
         }
+    }
+
+    // Check and update membership status based on game count
+    async checkAndUpdateMembership(userId) {
+        return new Promise((resolve, reject) => {
+            this.db.get('SELECT total_games, is_member FROM users WHERE id = ?', [userId], (err, user) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                if (user && user.total_games >= 25 && !user.is_member) {
+                    this.db.run(`
+                        UPDATE users 
+                        SET is_member = 1, member_since = CURRENT_TIMESTAMP 
+                        WHERE id = ?
+                    `, [userId], (updateErr) => {
+                        if (updateErr) {
+                            reject(updateErr);
+                        } else {
+                            resolve({ membershipGranted: true, totalGames: user.total_games });
+                        }
+                    });
+                } else {
+                    resolve({ membershipGranted: false, totalGames: user?.total_games || 0 });
+                }
+            });
+        });
+    }
+
+    // Update player alphagram performance (called after each game)
+    async updatePlayerAlphagramStats(userId, alphagramResults) {
+        return new Promise((resolve, reject) => {
+            const promises = alphagramResults.map(result => {
+                return new Promise((resolveInner, rejectInner) => {
+                    this.db.run(`
+                        INSERT OR REPLACE INTO player_alphagram_stats 
+                        (user_id, alphagram, word_length, total_attempts, correct_attempts, last_attempt_date, updated_at)
+                        VALUES (
+                            ?, ?, ?, 
+                            COALESCE((SELECT total_attempts FROM player_alphagram_stats WHERE user_id = ? AND alphagram = ?), 0) + 1,
+                            COALESCE((SELECT correct_attempts FROM player_alphagram_stats WHERE user_id = ? AND alphagram = ?), 0) + ?,
+                            CURRENT_TIMESTAMP,
+                            CURRENT_TIMESTAMP
+                        )
+                    `, [
+                        userId, result.alphagram, result.wordLength,
+                        userId, result.alphagram,
+                        userId, result.alphagram, result.isCorrect ? 1 : 0
+                    ], function(err) {
+                        if (err) {
+                            rejectInner(err);
+                        } else {
+                            resolveInner();
+                        }
+                    });
+                });
+            });
+
+            Promise.all(promises).then(() => resolve()).catch(reject);
+        });
+    }
+
+    // Get player's advanced statistics
+    async getPlayerAdvancedStats(userId) {
+        return new Promise((resolve, reject) => {
+            // First check if user is a member
+            this.db.get(`SELECT is_member FROM users WHERE id = ?`, [userId], (err, userRow) => {
+                if (err) {
+                    reject(err);
+                } else if (!userRow || !userRow.is_member) {
+                    resolve({ isMember: false });
+                } else {
+                    // Get alphagram performance data
+                    this.db.all(`
+                        SELECT 
+                            alphagram,
+                            word_length,
+                            total_attempts,
+                            correct_attempts,
+                            ROUND((correct_attempts * 100.0 / total_attempts), 1) as success_rate,
+                            last_attempt_date
+                        FROM player_alphagram_stats 
+                        WHERE user_id = ?
+                        ORDER BY success_rate ASC, total_attempts DESC
+                    `, [userId], (err, rows) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            // Calculate player's average success rate
+                            const totalAttempts = rows.reduce((sum, row) => sum + row.total_attempts, 0);
+                            const totalCorrect = rows.reduce((sum, row) => sum + row.correct_attempts, 0);
+                            const averageSuccessRate = totalAttempts > 0 ? (totalCorrect / totalAttempts) * 100 : 0;
+                            
+                            resolve({
+                                isMember: true,
+                                averageSuccessRate,
+                                alphagrams: rows
+                            });
+                        }
+                    });
+                }
+            });
+        });
     }
 }
 

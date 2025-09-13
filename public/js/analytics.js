@@ -437,7 +437,7 @@ class GameAnalytics {
         }
     }
 
-    async finishServerSession(totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration) {
+    async finishServerSession(totalAlphagrams, alphagramsSolved, finalScore, firstAttemptScore, completed, gameDuration, alphagramResults = []) {
         if (!this.serverEnabled || !this.serverSessionId) {
             console.log('finishServerSession skipped - serverEnabled:', this.serverEnabled, 'serverSessionId:', this.serverSessionId);
             return;
@@ -451,7 +451,8 @@ class GameAnalytics {
                 finalScore,
                 firstAttemptScore,
                 completed,
-                gameDuration
+                gameDuration,
+                alphagramResults: alphagramResults.length
             });
             
             try {
@@ -468,6 +469,7 @@ class GameAnalytics {
                         firstAttemptScore,
                         completed,
                         gameDuration,
+                        alphagramResults,
                         firebaseUid: this.analyticsData.userId,
                         sessionToken: this.sessionToken
                     })
@@ -776,14 +778,21 @@ class GameAnalytics {
             const finalScore = session.finalScore || 0;
             const gameDuration = session.timeTaken || 0;
             
-            
+            // Prepare alphagram results for server
+            const alphagramResults = alphagrams.map(alphagram => ({
+                alphagram: alphagram.alphagram,
+                wordLength: alphagram.length || alphagram.alphagram?.length || 0,
+                isCorrect: alphagram.firstAttemptCorrect || alphagram.secondAttemptCorrect
+            }));
+
             this.finishServerSession(
                 alphagrams.length,
                 correctlySolved,
                 finalScore,
                 firstAttemptScore,
                 true,
-                gameDuration
+                gameDuration,
+                alphagramResults
             );
             
             // Mark server session as finished to prevent duplicates
@@ -828,13 +837,21 @@ class GameAnalytics {
                 const firstAttemptScore = this.currentSession.firstAttemptScore || finalScore;
                 const gameDuration = this.currentSession.timeTaken || 0;
                 
+                // Prepare alphagram results for server
+                const alphagramResults = alphagrams.map(alphagram => ({
+                    alphagram: alphagram.alphagram,
+                    wordLength: alphagram.length || alphagram.alphagram?.length || 0,
+                    isCorrect: alphagram.firstAttemptCorrect || alphagram.secondAttemptCorrect
+                }));
+
                 this.finishServerSession(
                     alphagrams.length,
                     correctlySolved,
                     finalScore,
                     firstAttemptScore,
                     true,
-                    gameDuration
+                    gameDuration,
+                    alphagramResults
                 );
                 
                 // Mark server session as finished
@@ -925,13 +942,21 @@ class GameAnalytics {
             serverEnabled: this.serverEnabled
         });
         
+        // Prepare alphagram results for server
+        const alphagramResults = alphagrams.map(alphagram => ({
+            alphagram: alphagram.alphagram || alphagram.text,
+            wordLength: alphagram.length || alphagram.alphagram?.length || 0,
+            isCorrect: alphagram.isCorrect === true
+        }));
+
         this.finishServerSession(
             alphagrams.length,
             correctlySolved,
             finalScore,
-            finalScore,
+            finalScore, // firstAttemptScore equals finalScore for finishGame method
             true,
-            gameDuration
+            gameDuration,
+            alphagramResults
         );
         
         // Record individual alphagram attempts to server
