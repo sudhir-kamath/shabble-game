@@ -11,6 +11,23 @@ const startNewGame = (req, res) => {
     }
 };
 
+// Controller to start a targeted quiz
+const startTargetedQuiz = (req, res) => {
+    try {
+        const { targetLength, workOnAlphagrams } = req.body;
+        
+        if (!targetLength) {
+            return res.status(400).json({ error: 'Target length is required' });
+        }
+        
+        const gameData = dictionary.generateTargetedQuiz(targetLength, workOnAlphagrams || []);
+        res.json(gameData);
+    } catch (error) {
+        console.error('Error starting targeted quiz:', error);
+        res.status(500).json({ error: 'Failed to start targeted quiz' });
+    }
+};
+
 // Controller to submit all answers at the end of the game
 const submitAnswer = (req, res) => {
     try {
@@ -103,5 +120,6 @@ const submitAnswer = (req, res) => {
 
 module.exports = {
     startNewGame,
+    startTargetedQuiz,
     submitAnswer,
 };

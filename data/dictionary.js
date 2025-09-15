@@ -2177,6 +2177,95 @@ function factorial(n) {
     return n * factorial(n - 1);
 }
 
+// Generate a targeted quiz with specific alphagrams from work-on list
+function generateTargetedQuiz(targetLength, workOnAlphagrams = []) {
+    const totalAlphagrams = 20;
+    const alphagrams = [];
+    const usedAlphagrams = new Set();
+    
+    // Step 1: Add up to 10 alphagrams from work-on list (filtered by target length)
+    const workOnFiltered = workOnAlphagrams.filter(item => 
+        item.word_length === targetLength || item.alphagram.length === targetLength
+    );
+    const workOnCount = Math.min(10, workOnFiltered.length);
+    
+    // Randomly select from work-on list
+    const selectedWorkOn = workOnFiltered
+        .sort(() => Math.random() - 0.5)
+        .slice(0, workOnCount);
+    
+    // Add work-on alphagrams to the game
+    for (const item of selectedWorkOn) {
+        const upperAlphagram = item.alphagram.toUpperCase();
+        if (!usedAlphagrams.has(upperAlphagram)) {
+            usedAlphagrams.add(upperAlphagram);
+            
+            // Get valid words for this alphagram from the dictionary
+            const validWords = ALPHAGRAM_MAPS[targetLength]?.get(item.alphagram.toLowerCase()) || [];
+            
+            alphagrams.push({
+                alphagram: upperAlphagram,
+                validWords: [...new Set(validWords)],
+                isFake: false,
+                length: targetLength
+            });
+        }
+    }
+    
+    // Step 2: Add 4-6 invalid alphagrams
+    const invalidCount = 4 + Math.floor(Math.random() * 3); // Random between 4-6
+    let addedInvalid = 0;
+    let attempts = 0;
+    const maxAttempts = invalidCount * 10;
+    
+    while (addedInvalid < invalidCount && attempts < maxAttempts) {
+        const fakeAlphagram = generateFakeAlphagram(targetLength);
+        if (!usedAlphagrams.has(fakeAlphagram)) {
+            usedAlphagrams.add(fakeAlphagram);
+            alphagrams.push({
+                alphagram: fakeAlphagram,
+                validWords: [],
+                isFake: true,
+                length: targetLength
+            });
+            addedInvalid++;
+        }
+        attempts++;
+    }
+    
+    // Step 3: Fill remaining slots with random alphagrams of same length
+    const fillerCount = totalAlphagrams - alphagrams.length;
+    
+    if (fillerCount > 0) {
+        // Get all available alphagrams for this length, excluding already used ones
+        const availableAlphagrams = Array.from(ALPHAGRAM_MAPS[targetLength].entries())
+            .filter(([alphagram, words]) => 
+                words.length > 0 && !usedAlphagrams.has(alphagram.toUpperCase())
+            )
+            .sort(() => Math.random() - 0.5);
+        
+        let addedFillers = 0;
+        for (const [alphagram, words] of availableAlphagrams) {
+            if (addedFillers >= fillerCount) break;
+            
+            const upperAlphagram = alphagram.toUpperCase();
+            if (!usedAlphagrams.has(upperAlphagram)) {
+                usedAlphagrams.add(upperAlphagram);
+                alphagrams.push({
+                    alphagram: upperAlphagram,
+                    validWords: [...new Set(words)],
+                    isFake: false,
+                    length: targetLength
+                });
+                addedFillers++;
+            }
+        }
+    }
+    
+    // Shuffle the final alphagrams
+    return alphagrams.sort(() => Math.random() - 0.5);
+}
+
 // Generate a game with randomized real and fake alphagrams (always totaling 20)
 function generateGame(selectedLengths = [4]) {
     const totalAlphagrams = 20;
@@ -2324,13 +2413,13 @@ initializeAlphagramMaps();
 
 // Export the public API
 module.exports = {
-    DICTIONARIES,
-    DICTIONARY_SETS,
-    ALPHAGRAM_MAPS,
+    DICTIONARY_5,
     DICTIONARY_2,
     DICTIONARY_3,
     DICTIONARY_4,
     generateGame,
+    generateTargetedQuiz,
     calculateScore,
-    isValidWord
+    isValidWord,
+    ALPHAGRAM_MAPS
 };

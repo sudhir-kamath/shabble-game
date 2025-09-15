@@ -5,6 +5,9 @@ const gameController = require('../controllers/game-controller');
 // Route to start a new game
 router.post('/start', gameController.startNewGame);
 
+// Route to start a targeted quiz
+router.post('/start-targeted-quiz', gameController.startTargetedQuiz);
+
 // Route to submit an answer
 router.post('/submit', gameController.submitAnswer);
 

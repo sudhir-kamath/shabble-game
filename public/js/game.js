@@ -121,6 +121,66 @@ class ShabbleGame {
         return false;
     }
     
+    // Start a targeted quiz by fetching from the server
+    async startTargetedQuiz(targetLength, workOnAlphagrams = []) {
+        try {
+            const response = await fetch('/api/game/start-targeted-quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    targetLength: targetLength,
+                    workOnAlphagrams: workOnAlphagrams 
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to start targeted quiz.');
+            }
+
+            const gameData = await response.json();
+
+            // Reset game state (same as regular game)
+            this.gameState = {
+                isPlaying: true,
+                isPaused: false,
+                timeLeft: 120,
+                score: 0,
+                usedExtraTime: false,
+                isSecondAttempt: false,
+                initialScore: 0,
+                alphagrams: gameData, // Alphagrams from server
+                answers: {},
+                startTime: new Date(),
+                timerInterval: null
+            };
+
+            // Initialize answers object
+            this.gameState.alphagrams.forEach(alphagram => {
+                this.gameState.answers[alphagram.alphagram] = {
+                    userInput: '',
+                    isCorrect: null,
+                    score: 0
+                };
+            });
+
+            this.startTimer();
+
+            return {
+                alphagrams: this.gameState.alphagrams.map(a => ({
+                    alphagram: a.alphagram,
+                    length: a.length || a.alphagram.length
+                })),
+                timeLeft: this.gameState.timeLeft,
+                score: this.gameState.score
+            };
+        } catch (error) {
+            console.error('Error starting targeted quiz:', error);
+            return null;
+        }
+    }
+    
     startSecondAttempt() {
         if (this.gameState.isPlaying || this.gameState.isSecondAttempt) {
             return { success: false, message: 'Invalid state for second attempt.' };

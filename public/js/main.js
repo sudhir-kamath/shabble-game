@@ -1856,6 +1856,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
+        // Setup "Work on this- NOW!" button
+        const workOnNowBtn = document.getElementById('work-on-now-btn');
+        if (workOnNowBtn) {
+            workOnNowBtn.addEventListener('click', () => {
+                startTargetedQuizFromRecommendations();
+            });
+        }
+        
         // Word length filter buttons
         document.querySelectorAll('.filter-btn[data-word-length]').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -2015,6 +2023,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         workOnSection.style.display = 'block';
         
+        // Show the "Work on this now" button when recommendations are displayed
+        const workOnNowBtn = document.getElementById('work-on-now-btn');
+        if (workOnNowBtn && problemAlphagrams.length > 0) {
+            workOnNowBtn.style.display = 'inline-block';
+            
+            // Store the current problem alphagrams for the quiz
+            window.currentProblemAlphagrams = problemAlphagrams;
+        }
+        
         // Scroll to the recommendations
         workOnSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -2040,6 +2057,73 @@ document.addEventListener('DOMContentLoaded', function() {
     function addToStudyList(alphagram) {
         // Beta feature - show coming soon message
         alert('🚧 Study List is coming soon! This feature is currently in beta development.');
+    }
+
+    // Start targeted quiz from recommendations
+    async function startTargetedQuizFromRecommendations() {
+        // Enforce authentication requirement
+        if (!window.authManager || !window.authManager.isSignedIn()) {
+            showAuthRequiredModal();
+            return;
+        }
+
+        // Check if we have problem alphagrams and current filters
+        if (!window.currentProblemAlphagrams || !currentFilters.wordLength) {
+            alert('No recommendations available. Please generate recommendations first.');
+            return;
+        }
+
+        const targetLength = parseInt(currentFilters.wordLength);
+        const workOnAlphagrams = window.currentProblemAlphagrams;
+
+        console.log('Starting targeted quiz:', {
+            targetLength,
+            workOnAlphagramsCount: workOnAlphagrams.length
+        });
+
+        // Start the targeted quiz using the game engine
+        const initialState = await game.startTargetedQuiz(targetLength, workOnAlphagrams);
+        
+        if (!initialState) {
+            console.error('Failed to start targeted quiz');
+            alert('Failed to start the targeted quiz. Please try again.');
+            return;
+        }
+
+        // Track game start in analytics (same as regular game)
+        if (window.gameAnalytics) {
+            window.gameAnalytics.trackGameStart([targetLength], initialState.alphagrams);
+        }
+
+        // Render the game board
+        renderGameBoard(initialState.alphagrams);
+        elements.gameBoard.style.display = 'grid';
+        updateTimerDisplay(initialState.timeLeft);
+
+        // Hide the advanced stats modal
+        showOverlay(null);
+        
+        // Show the game screen
+        const gameScreen = document.getElementById('game-screen');
+        if (gameScreen) {
+            gameScreen.classList.remove('hidden');
+        }
+        
+        elements.timerDisplay.classList.remove('hidden');
+        elements.extraTimeBtn.classList.remove('hidden');
+        elements.headerFinalScore.classList.add('hidden');
+        
+        // Enable game control buttons
+        elements.doneBtn.disabled = false;
+        elements.extraTimeBtn.disabled = false;
+        
+        // Reset extra time button to initial state
+        elements.extraTimeBtn.innerHTML = '<i class="fas fa-clock"></i> <span class="btn-text">+30s</span>';
+        
+        // Set up timer update callback
+        game.onTimeUpdate = updateTimerDisplay;
+
+        console.log('Targeted quiz started successfully');
     }
 
     function debounce(func, wait) {
